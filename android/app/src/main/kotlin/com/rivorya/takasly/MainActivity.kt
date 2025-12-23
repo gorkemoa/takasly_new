@@ -1,4 +1,4 @@
-package com.example.takasly_new
+package com.rivorya.takasly
 
 import io.flutter.embedding.android.FlutterActivity
 

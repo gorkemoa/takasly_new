@@ -1,0 +1,91 @@
+{
+  "project_info": {
+    "project_number": "422264804561",
+    "firebase_url": "https://takasla-b2aa5-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "takasla-b2aa5",
+    "storage_bucket": "takasla-b2aa5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:422264804561:android:c96ee7ef79f29220ce61f0",
+        "android_client_info": {
+          "package_name": "com.rivorya.takasly"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "422264804561-jo429jh0c16gk38d3jdaikob0iet5mpd.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBrF93iVesLFoTpDXBQG6ILnd_Z1B7jeI4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "422264804561-jo429jh0c16gk38d3jdaikob0iet5mpd.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "422264804561-llio284tijfqkh873at3ci09fna2epl0.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.rivorya.takaslyapp"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:422264804561:android:ba599e0c5a5186b7ce61f0",
+        "android_client_info": {
+          "package_name": "com.rivorya.takaslyapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "422264804561-5vusvdlo298es4p8dsg1dvhar7lih11u.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.rivorya.takaslyapp",
+            "certificate_hash": "02b9cf5a9e996d7eb2d8ef6c7904dda8525a4da6"
+          }
+        },
+        {
+          "client_id": "422264804561-jo429jh0c16gk38d3jdaikob0iet5mpd.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBrF93iVesLFoTpDXBQG6ILnd_Z1B7jeI4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "422264804561-jo429jh0c16gk38d3jdaikob0iet5mpd.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "422264804561-llio284tijfqkh873at3ci09fna2epl0.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.rivorya.takaslyapp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

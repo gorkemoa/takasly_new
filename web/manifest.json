@@ -1,6 +1,6 @@
 {
-    "name": "takasly_new",
-    "short_name": "takasly_new",
+    "name": "takasly",
+    "short_name": "takasly",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
