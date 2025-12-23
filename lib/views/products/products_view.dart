@@ -177,7 +177,7 @@ class ProductCard extends StatelessWidget {
                         ),
                         child: Text(
                           product.productCondition!,
-                          style: AppTheme.safeInter(
+                          style: AppTheme.safePoppins(
                             fontSize: 10,
                             fontWeight: FontWeight.w600,
                             color: AppTheme.textPrimary,
@@ -201,7 +201,7 @@ class ProductCard extends StatelessWidget {
                     product.productTitle ?? 'İsimsiz',
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: AppTheme.safeInter(
+                    style: AppTheme.safePoppins(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: AppTheme.textPrimary,
@@ -222,7 +222,7 @@ class ProductCard extends StatelessWidget {
                           Expanded(
                             child: Text(
                               '${product.cityTitle} / ${product.districtTitle}',
-                              style: AppTheme.safeInter(
+                              style: AppTheme.safePoppins(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w400,
                                 color: AppTheme.textSecondary,

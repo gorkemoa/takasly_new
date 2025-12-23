@@ -3,8 +3,11 @@ import '../models/products/product_models.dart';
 import '../services/product_service.dart';
 import '../services/api_service.dart';
 
+import 'package:logger/logger.dart';
+
 class ProductViewModel extends ChangeNotifier {
   final ProductService _productService = ProductService();
+  final Logger _logger = Logger();
 
   List<Product> products = [];
   bool isLoading = false;
@@ -21,24 +24,39 @@ class ProductViewModel extends ChangeNotifier {
   }
 
   Future<void> fetchProducts({bool isRefresh = false}) async {
-    if (isLoading && isRefresh)
+    if (isLoading && isRefresh) {
+      _logger.d('İlk yükleme devam ederken yenileme denendi. İptal ediliyor.');
       return; // Don't refresh if already loading initial
-    if (isLoadMoreRunning && !isRefresh)
+    }
+    if (isLoadMoreRunning && !isRefresh) {
+      _logger.d(
+        'Daha fazla yükleme devam ederken yeni yükleme denendi. İptal ediliyor.',
+      );
       return; // Don't load more if already loading more
-    if (!isRefresh && isLastPage) return;
+    }
+    if (!isRefresh && isLastPage) {
+      _logger.d('Son sayfadayken daha fazla yükleme denendi. İptal ediliyor.');
+      return;
+    }
 
     if (isRefresh) {
+      _logger.i('İlk ürün getirme/yenileme başlatılıyor.');
       isLoading = true;
       isLastPage = false;
       currentPage = 1;
       errorMessage = null;
       notifyListeners();
     } else {
+      _logger.i('"Daha fazla yükle" ürün getirme başlatılıyor.');
       isLoadMoreRunning = true;
       notifyListeners();
     }
 
     _currentFilter.page = isRefresh ? 1 : currentPage;
+
+    _logger.i(
+      'Ürünler getiriliyor. Yenileme: $isRefresh, Sayfa: ${_currentFilter.page}',
+    );
 
     try {
       final response = await _productService.getAllProducts(_currentFilter);
@@ -65,17 +83,27 @@ class ProductViewModel extends ChangeNotifier {
             currentPage++;
           }
         }
+        _logger.i(
+          '${newProducts.length} ürün getirildi. Toplam ürün: ${products.length}',
+        );
       } else {
         errorMessage = response.message ?? "Veri alınamadı";
+        _logger.w('Ürün getirme başarısız: $errorMessage');
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       if (e is EndOfListException) {
+        _logger.i('Ürün listesinin sonuna ulaşıldı.');
         isLastPage = true;
       } else if (e is BusinessException) {
         errorMessage = e.message;
+        _logger.w('Ürünleri getirirken iş mantığı hatası: $errorMessage');
       } else {
         errorMessage = "Bir hata oluştu: $e";
-        debugPrint(e.toString());
+        _logger.e(
+          'Ürünleri getirirken beklenmedik hata',
+          error: e,
+          stackTrace: stackTrace,
+        );
       }
     } finally {
       isLoading = false;

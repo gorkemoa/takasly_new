@@ -5,6 +5,8 @@ import 'firebase_options.dart';
 import 'views/products/products_view.dart';
 import 'viewmodels/product_viewmodel.dart';
 
+import 'theme/app_theme.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
@@ -20,10 +22,8 @@ class MyApp extends StatelessWidget {
       providers: [ChangeNotifierProvider(create: (_) => ProductViewModel())],
       child: MaterialApp(
         title: 'Takasly',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-          useMaterial3: true,
-        ),
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.lightTheme,
         home: const ProductsView(),
       ),
     );

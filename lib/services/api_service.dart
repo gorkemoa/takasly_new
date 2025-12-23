@@ -35,7 +35,7 @@ class ApiService {
 
   Future<dynamic> post(String endpoint, Map<String, dynamic> body) async {
     final url = Uri.parse('${ApiConstants.baseUrl}$endpoint');
-    _logger.i('POST Request to: $url\nHeaders: $_headers\nBody: $body');
+    _logger.i('POST İsteği: $url\nBaşlıklar: $_headers\nGövde: $body');
 
     try {
       final response = await _client.post(
@@ -45,35 +45,39 @@ class ApiService {
       );
 
       _logger.d(
-        'Response Status: ${response.statusCode}\nBody: ${response.body}',
+        'Yanıt Durumu: ${response.statusCode}\nGövde: ${response.body}',
       );
       return _handleResponse(response);
+    } on http.ClientException catch (e) {
+      _logger.e('Ağ Hatası (Bağlantı Hatası): $e');
+      throw Exception('Ağ hatası: Lütfen bağlantınızı kontrol edin. $e');
     } catch (e) {
-      _logger.e('Network Error: $e');
-      throw Exception('Network error: $e');
+      rethrow;
     }
   }
 
   Future<dynamic> get(String endpoint) async {
     final url = Uri.parse('${ApiConstants.baseUrl}$endpoint');
-    _logger.i('GET Request to: $url\nHeaders: $_headers');
+    _logger.i('GET İsteği: $url\nBaşlıklar: $_headers');
 
     try {
       final response = await _client.get(url, headers: _headers);
 
       _logger.d(
-        'Response Status: ${response.statusCode}\nBody: ${response.body}',
+        'Yanıt Durumu: ${response.statusCode}\nGövde: ${response.body}',
       );
       return _handleResponse(response);
+    } on http.ClientException catch (e) {
+      _logger.e('Ağ Hatası (Bağlantı Hatası): $e');
+      throw Exception('Ağ hatası: Lütfen bağlantınızı kontrol edin. $e');
     } catch (e) {
-      _logger.e('Network Error: $e');
-      throw Exception('Network error: $e');
+      rethrow;
     }
   }
 
   dynamic _handleResponse(http.Response response) {
     if (response.body.isEmpty) {
-      _logger.w('Empty Response Body');
+      _logger.w('Boş Yanıt Gövdesi');
       throw Exception('Empty response');
     }
 
@@ -82,17 +86,21 @@ class ApiService {
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return body;
     } else if (response.statusCode == 417) {
-      // Business logic error
-      _logger.w('Business Error (417): ${body['message']}');
+      // İş mantığı hatası
+      _logger.w('İş Mantığı Hatası (417): ${body['message']}');
       throw BusinessException(body['message'] ?? 'Bir hata oluştu');
     } else if (response.statusCode == 410) {
-      // Resource gone / Last page
-      // In the context of pagination, this might be handled by the caller or we can throw specific exception
-      _logger.i('End of List (410)');
+      // Listenin sonu / Kaynak artık yok
+      // Eğer body içerisinde data varsa, bunu son sayfa olarak kabul edip veriyi döndürmeliyiz
+      if (body['success'] == true && body['data'] != null) {
+        _logger.i('Listenin Sonu (410) - Son verilerle birlikte.');
+        return body;
+      }
+      _logger.i('Listenin Sonu (410)');
       throw EndOfListException('Son sayfa');
     } else {
       _logger.e(
-        'HTTP Error ${response.statusCode}: ${body['message'] ?? response.reasonPhrase}',
+        'HTTP Hatası ${response.statusCode}: ${body['message'] ?? response.reasonPhrase}',
       );
       throw Exception(
         'HTTP Error ${response.statusCode}: ${body['message'] ?? response.reasonPhrase}',

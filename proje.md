@@ -95,6 +95,12 @@ if (response.statusCode == 417) {
 - Use `json_serializable` or manual `fromJson`/`toJson` factories.
 - All models must reside in `lib/models/`.
 
+### 5. Logging Standards
+- Use the `logger` package for all debug information.
+- Use `_logger.i()` for info, `_logger.e()` for errors, and `_logger.d()` for debug tracing.
+- Logging is essential for monitoring API flows and UI state changes.
+
+
 ---
 
 ## 🚀 Workflow: Adding a New Feature
