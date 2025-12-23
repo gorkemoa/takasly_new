@@ -125,6 +125,15 @@ class ApiService {
       rethrow;
     }
   }
+
+  Future<Map<String, dynamic>> getNotifications(int userId) async {
+    try {
+      final response = await get('service/user/account/$userId/notifications');
+      return response;
+    } catch (e) {
+      rethrow;
+    }
+  }
 }
 
 class BusinessException implements Exception {

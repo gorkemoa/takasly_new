@@ -2,9 +2,12 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
+
 import 'views/home/home_view.dart'; // Import HomeView
+
 import 'viewmodels/product_viewmodel.dart';
 import 'viewmodels/home_viewmodel.dart'; // Import HomeViewModel
+import 'viewmodels/notification_viewmodel.dart'; // Import NotificationViewModel
 
 import 'theme/app_theme.dart';
 
@@ -22,9 +25,10 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ProductViewModel()),
+        ChangeNotifierProvider(create: (_) => HomeViewModel()),
         ChangeNotifierProvider(
-          create: (_) => HomeViewModel(),
-        ), // Add HomeViewModel
+          create: (_) => NotificationViewModel(),
+        ), // Register NotificationViewModel
       ],
       child: MaterialApp(
         title: 'Takasly',

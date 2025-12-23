@@ -5,6 +5,7 @@ import '../../viewmodels/product_viewmodel.dart';
 import '../../theme/app_theme.dart';
 import '../widgets/category_card.dart';
 import '../widgets/product_card.dart';
+import '../notifications/notifications_view.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -104,39 +105,48 @@ class _HomeViewState extends State<HomeView> {
                         const SizedBox(width: 12),
 
                         // Notification Icon
-                        Stack(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.white,
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => const NotificationsView(),
                               ),
-                              child: const Icon(
-                                Icons.notifications_none,
-                                color: AppTheme.textPrimary,
-                              ),
-                            ),
-                            Positioned(
-                              top: 0,
-                              right: 0,
-                              child: Container(
-                                padding: const EdgeInsets.all(4),
+                            );
+                          },
+                          child: Stack(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
                                 decoration: const BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: Colors.red,
+                                  color: Colors.white,
                                 ),
-                                child: const Text(
-                                  '1',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
+                                child: const Icon(
+                                  Icons.notifications_none,
+                                  color: AppTheme.textPrimary,
+                                ),
+                              ),
+                              Positioned(
+                                top: 0,
+                                right: 0,
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: const BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.red,
+                                  ),
+                                  child: const Text(
+                                    '1',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -194,11 +204,14 @@ class _HomeViewState extends State<HomeView> {
                 // Categories
                 SliverToBoxAdapter(
                   child: SizedBox(
-                    height: 110,
+                    height: 90,
                     child: homeViewModel.isLoading
                         ? const Center(child: CircularProgressIndicator())
                         : ListView.separated(
-                            padding: const EdgeInsets.all(16),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
                             scrollDirection: Axis.horizontal,
                             itemCount: homeViewModel.categories.isEmpty
                                 ? 1
