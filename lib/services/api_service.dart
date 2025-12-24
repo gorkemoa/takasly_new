@@ -84,15 +84,26 @@ class ApiService {
 
     final body = jsonDecode(response.body);
 
+    // Helper to extract error message
+    String? getErrorMessage() {
+      return body['error_message'] ?? body['message'];
+    }
+
     if (response.statusCode >= 200 && response.statusCode < 300) {
+      // Check if the response body itself indicates an error despite 200 OK
+      if (body is Map && body['error'] == true) {
+        final errorMsg = getErrorMessage() ?? 'Bir hata oluştu';
+        _logger.w('İş Mantığı Hatası (Success False): $errorMsg');
+        throw BusinessException(errorMsg);
+      }
       return body;
     } else if (response.statusCode == 417) {
       // İş mantığı hatası
-      _logger.w('İş Mantığı Hatası (417): ${body['message']}');
-      throw BusinessException(body['message'] ?? 'Bir hata oluştu');
+      final errorMsg = getErrorMessage() ?? 'Bir hata oluştu';
+      _logger.w('İş Mantığı Hatası (417): $errorMsg');
+      throw BusinessException(errorMsg);
     } else if (response.statusCode == 410) {
       // Listenin sonu / Kaynak artık yok
-      // Eğer body içerisinde data varsa, bunu son sayfa olarak kabul edip veriyi döndürmeliyiz
       if (body['success'] == true && body['data'] != null) {
         _logger.i('Listenin Sonu (410) - Son verilerle birlikte.');
         return body;
@@ -100,12 +111,9 @@ class ApiService {
       _logger.i('Listenin Sonu (410)');
       throw EndOfListException('Son sayfa');
     } else {
-      _logger.e(
-        'HTTP Hatası ${response.statusCode}: ${body['message'] ?? response.reasonPhrase}',
-      );
-      throw Exception(
-        'HTTP Error ${response.statusCode}: ${body['message'] ?? response.reasonPhrase}',
-      );
+      final errorMsg = getErrorMessage() ?? response.reasonPhrase;
+      _logger.e('HTTP Hatası ${response.statusCode}: $errorMsg');
+      throw Exception('HTTP Error ${response.statusCode}: $errorMsg');
     }
   }
 

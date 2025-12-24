@@ -8,6 +8,8 @@ import 'views/home/home_view.dart'; // Import HomeView
 import 'viewmodels/product_viewmodel.dart';
 import 'viewmodels/home_viewmodel.dart'; // Import HomeViewModel
 import 'viewmodels/notification_viewmodel.dart'; // Import NotificationViewModel
+import 'viewmodels/event_viewmodel.dart'; // Import EventViewModel
+import 'viewmodels/auth_viewmodel.dart'; // Import AuthViewModel
 
 import 'theme/app_theme.dart';
 
@@ -26,9 +28,11 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => ProductViewModel()),
         ChangeNotifierProvider(create: (_) => HomeViewModel()),
+        ChangeNotifierProvider(create: (_) => NotificationViewModel()),
         ChangeNotifierProvider(
-          create: (_) => NotificationViewModel(),
-        ), // Register NotificationViewModel
+          create: (_) => EventViewModel(),
+        ), // Register EventViewModel
+        ChangeNotifierProvider(create: (_) => AuthViewModel()),
       ],
       child: MaterialApp(
         title: 'Takasly',

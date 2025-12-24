@@ -207,7 +207,7 @@ class _ProductDetailViewState extends State<ProductDetailView> {
                   itemBuilder: (context, index) {
                     return Image.network(
                       images[index],
-                      fit: BoxFit.contain,
+                      fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) =>
                           Container(color: Colors.grey[200]),
                     );
@@ -264,7 +264,7 @@ class _ProductDetailViewState extends State<ProductDetailView> {
           Text(
             product.productTitle ?? '',
             style: const TextStyle(
-              fontSize: 20,
+              fontSize: 18,
               fontWeight: FontWeight.bold,
               color: Color(0xFF333333),
             ),
@@ -276,7 +276,7 @@ class _ProductDetailViewState extends State<ProductDetailView> {
               const SizedBox(width: 4),
               Text(
                 '${product.cityTitle?.toUpperCase() ?? ''} / ${product.districtTitle?.toUpperCase() ?? ''}',
-                style: const TextStyle(color: Colors.grey, fontSize: 13),
+                style: const TextStyle(color: Colors.grey, fontSize: 12),
               ),
             ],
           ),
@@ -293,7 +293,7 @@ class _ProductDetailViewState extends State<ProductDetailView> {
         children: [
           const Text(
             "Kullanıcı Bilgileri",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 12),
           Container(
@@ -337,7 +337,7 @@ class _ProductDetailViewState extends State<ProductDetailView> {
                       Text(
                         product.userFullname ?? '',
                         style: const TextStyle(
-                          fontSize: 15,
+                          fontSize: 14,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -386,7 +386,7 @@ class _ProductDetailViewState extends State<ProductDetailView> {
         children: [
           const Text(
             "İlan Bilgileri",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 16),
           _buildDetailRow("İlan Sahibi :", product.userFullname ?? '', true),
@@ -401,27 +401,27 @@ class _ProductDetailViewState extends State<ProductDetailView> {
           _buildDetailRow(
             "Görüntülenme :",
             "Bu ilan ${product.proView?.replaceAll(RegExp(r'[^0-9]'), '') ?? '0'} kere görüntülendi",
-            false,
+            true,
           ),
 
           const SizedBox(height: 8),
           Row(
             children: [
               Expanded(
-                flex: 4,
+                flex: 3,
                 child: Text(
                   "İlan Kodu :",
-                  style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
                 ),
               ),
               Expanded(
-                flex: 6,
+                flex: 7,
                 child: Row(
                   children: [
                     Text(
                       product.productCode ?? '',
                       style: const TextStyle(
-                        fontSize: 14,
+                        fontSize: 12,
                         fontWeight: FontWeight.w500,
                         color: Color(0xFF333333),
                       ),
@@ -458,25 +458,25 @@ class _ProductDetailViewState extends State<ProductDetailView> {
 
   Widget _buildDetailRow(String label, String value, bool addSeparator) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 8),
       child: Column(
         children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                flex: 4,
+                flex: 3,
                 child: Text(
                   label,
-                  style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                  style: TextStyle(color: Colors.grey[700], fontSize: 12),
                 ),
               ),
               Expanded(
-                flex: 6,
+                flex: 7,
                 child: Text(
                   value,
                   style: const TextStyle(
-                    fontSize: 14,
+                    fontSize: 12,
                     fontWeight: FontWeight.w500,
                     color: Color(0xFF333333),
                   ),
