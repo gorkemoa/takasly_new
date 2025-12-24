@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import '../models/products/product_models.dart';
 import '../services/product_service.dart';
 import '../services/api_service.dart';
+import '../services/location_service.dart';
 
 import 'package:logger/logger.dart';
 
 class ProductViewModel extends ChangeNotifier {
   final ProductService _productService = ProductService();
+  final LocationService _locationService = LocationService();
   final Logger _logger = Logger();
 
   List<Product> products = [];
@@ -20,7 +22,31 @@ class ProductViewModel extends ChangeNotifier {
   ProductRequestModel _currentFilter = ProductRequestModel(page: 1);
 
   Future<void> init() async {
+    // Try to get location first
+    await _fetchLocation();
     fetchProducts(isRefresh: true);
+  }
+
+  Future<void> _fetchLocation() async {
+    try {
+      final position = await _locationService.getCurrentLocation();
+      if (position != null) {
+        _currentFilter.userLat = position.latitude.toString();
+        _currentFilter.userLong = position.longitude.toString();
+        _currentFilter.sortType = 'location'; // Set sort type to location
+        _logger.i(
+          'Location fetched: ${position.latitude}, ${position.longitude}. Sort type set to location.',
+        );
+      } else {
+        _logger.w('Location could not be fetched. Using default sort.');
+        _currentFilter.sortType = 'default';
+        _currentFilter.userLat = "";
+        _currentFilter.userLong = "";
+      }
+    } catch (e) {
+      _logger.e('Error fetching location: $e');
+      _currentFilter.sortType = 'default';
+    }
   }
 
   Future<void> fetchProducts({bool isRefresh = false}) async {
@@ -56,7 +82,7 @@ class ProductViewModel extends ChangeNotifier {
     _currentFilter.page = startPage;
 
     _logger.i(
-      'Ürünler getiriliyor. Yenileme: $isRefresh, Başlangıç Sayfası: ${_currentFilter.page}',
+      'Ürünler getiriliyor. Yenileme: $isRefresh, Başlangıç Sayfası: ${_currentFilter.page}, Sort: ${_currentFilter.sortType}, Lat: ${_currentFilter.userLat}, Long: ${_currentFilter.userLong}',
     );
 
     try {

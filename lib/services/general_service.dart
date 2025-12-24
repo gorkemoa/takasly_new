@@ -1,5 +1,6 @@
 import 'api_service.dart';
 import '../core/constants/api_constants.dart';
+import '../models/general_models.dart';
 
 class GeneralService {
   final ApiService _apiService = ApiService();
@@ -22,6 +23,34 @@ class GeneralService {
         '${ApiConstants.categories}$parentId',
       );
       return response;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<List<City>> getCities() async {
+    try {
+      final response = await _apiService.get(ApiConstants.cities);
+      if (response['success'] == true && response['data'] != null) {
+        final List list = response['data']['cities'];
+        return list.map((e) => City.fromJson(e)).toList();
+      }
+      return [];
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<List<District>> getDistricts(int cityId) async {
+    try {
+      final response = await _apiService.get(
+        '${ApiConstants.districts}$cityId',
+      );
+      if (response['success'] == true && response['data'] != null) {
+        final List list = response['data']['districts'];
+        return list.map((e) => District.fromJson(e)).toList();
+      }
+      return [];
     } catch (e) {
       rethrow;
     }

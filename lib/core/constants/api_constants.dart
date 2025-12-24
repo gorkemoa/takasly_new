@@ -29,6 +29,9 @@ class ApiConstants {
   static const String logos = 'service/general/general/logos';
   static const String categories =
       'service/general/general/categories/'; // + {parentId}
+  static const String cities = 'service/general/general/cities/all';
+  static const String districts =
+      'service/general/general/districts/'; // + {cityId}
 
   // Notification Endpoints
   static const String notAllRead = 'service/user/account/notification/allRead';

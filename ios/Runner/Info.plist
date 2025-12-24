@@ -56,6 +56,8 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Konumuna en yakın ürünleri göstermek için konum iznine ihtiyacımız var.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
