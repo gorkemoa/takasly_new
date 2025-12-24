@@ -3,6 +3,8 @@ import '../services/general_service.dart';
 import '../models/home/home_models.dart';
 import '../models/general_models.dart';
 import 'package:logger/logger.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 
 class HomeViewModel extends ChangeNotifier {
   final GeneralService _generalService = GeneralService();
@@ -61,12 +63,93 @@ class HomeViewModel extends ChangeNotifier {
         fetchCities(),
         fetchConditions(),
       ]);
+
+      // Auto-detect location after basic data is loaded
+      await detectUserLocation();
     } catch (e) {
       _errorMessage = e.toString();
       _logger.e('Home init error: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  Future<void> detectUserLocation() async {
+    try {
+      bool serviceEnabled;
+      LocationPermission permission;
+
+      // Test if location services are enabled.
+      serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        _logger.w('Location services are disabled.');
+        return;
+      }
+
+      permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          _logger.w('Location permissions are denied');
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        _logger.w('Location permissions are permanently denied');
+        return;
+      }
+
+      // Get current position
+      final position = await Geolocator.getCurrentPosition();
+
+      // Get placemarks (address info)
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
+
+      if (placemarks.isNotEmpty) {
+        final place = placemarks.first;
+        final city = place.administrativeArea; // e.g., "Ankara"
+        final district =
+            place.subAdministrativeArea; // e.g., "Yenimahalle" or "Çankaya"
+
+        _logger.i('Detected location: City=$city, District=$district');
+
+        if (city != null) {
+          // Find matching city in our list
+          final matchedCity = _cities.firstWhere(
+            (c) => c.cityName?.toLowerCase() == city.toLowerCase(),
+            orElse: () => City(), // Return empty if not found
+          );
+
+          if (matchedCity.cityNo != null) {
+            _selectedCity = matchedCity;
+
+            // Now fetch districts for this city
+            await fetchDistricts(matchedCity.cityNo!);
+
+            if (district != null) {
+              // Find matching district
+              // Note: Administrative areas might vary slightly in naming, simple case insensitive match
+              final matchedDistrict = _districts.firstWhere(
+                (d) => d.districtName?.toLowerCase() == district.toLowerCase(),
+                orElse: () => District(),
+              );
+
+              if (matchedDistrict.districtNo != null) {
+                _selectedDistrict = matchedDistrict;
+              }
+            }
+          }
+        }
+        notifyListeners();
+      }
+    } catch (e) {
+      _logger.e('Error auto-detecting location: $e');
+      // Don't block the app flow if location detection fails
     }
   }
 
