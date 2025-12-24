@@ -13,6 +13,8 @@ import 'viewmodels/auth_viewmodel.dart'; // Import AuthViewModel
 
 import 'theme/app_theme.dart';
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
@@ -38,6 +40,7 @@ class MyApp extends StatelessWidget {
         title: 'Takasly',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
+        navigatorKey: navigatorKey,
         home: const HomeView(),
       ),
     );

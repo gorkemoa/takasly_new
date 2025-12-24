@@ -4,6 +4,7 @@ import 'package:takasly/views/products/product_detail_view.dart';
 import '../../viewmodels/home_viewmodel.dart';
 import '../../viewmodels/product_viewmodel.dart';
 import '../../viewmodels/product_detail_viewmodel.dart';
+import '../../viewmodels/auth_viewmodel.dart';
 import '../../theme/app_theme.dart';
 import '../widgets/category_card.dart';
 import '../widgets/product_card.dart';
@@ -32,8 +33,29 @@ class _HomeViewState extends State<HomeView> {
     // Fetch Data
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<HomeViewModel>().init();
+      // ProductViewModel init happens after token sync in didChangeDependencies or we call it here?
+      // Better to let didChangeDependencies handle the token set and fetch.
+      // But if token is null (guest), we still want to fetch.
+      // So we call init() here, and if token comes later, it refreshes.
       context.read<ProductViewModel>().init();
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    try {
+      final authVM = context.watch<AuthViewModel>();
+      final productVM = context.read<ProductViewModel>();
+
+      if (productVM.userToken != authVM.user?.token) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          productVM.setUserToken(authVM.user?.token);
+        });
+      }
+    } catch (e) {
+      // In case providers are not ready
+    }
   }
 
   @override

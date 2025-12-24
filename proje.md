@@ -111,6 +111,13 @@ if (response.statusCode == 417) {
 4.  **Build View**: Create UI in `lib/views/<feature>/` and connect to ViewModel.
 5.  **Register Provider**: Add the new ViewModel to the global provider list (if using MultiProvider).
 
+### 6. User Token Integration (New)
+- **Requirement**: If the user is logged in, the `userToken` must be included in the API requests for:
+    - Ad Details (`getProductDetail`)
+    - All Ads (`getAllProducts`)
+    - Any other relevant APIs functionality requires user context.
+- **Implementation**: Pass `userToken` as a query parameter (GET) or body field (POST) depending on the endpoint.
+
 ---
 
 ## 📡 API Reference Example
@@ -137,3 +144,8 @@ if (response.statusCode == 417) {
   }
 }
 ```
+
+### 7. Session Management & Security
+- **Persistent Login**: Users must remain logged in until they explicitly log out. Store `userToken` and `userId` in `SharedPreferences`.
+- **Global 403 Handling**: If ANY endpoint returns HTTP 403 (Forbidden), the application must immediately log the user out and redirect to the Login screen. This indicates the session is invalid or another login occurred.
+- **User Token**: Ensure `userToken` is consistently used across all authenticated endpoints.

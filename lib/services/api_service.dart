@@ -99,6 +99,9 @@ class ApiService {
     }
   }
 
+  // Callback for 403 errors
+  Function? onForbidden;
+
   dynamic _handleResponse(http.Response response) {
     if (response.body.isEmpty) {
       _logger.w('Boş Yanıt Gövdesi');
@@ -120,6 +123,10 @@ class ApiService {
         throw BusinessException(errorMsg);
       }
       return body;
+    } else if (response.statusCode == 403) {
+      _logger.w('Erişim Reddedildi (403). Oturum sonlandırılıyor.');
+      onForbidden?.call();
+      throw Exception('Oturum süresi doldu veya yetkisiz erişim.');
     } else if (response.statusCode == 417) {
       // İş mantığı hatası
       final errorMsg = getErrorMessage() ?? 'Bir hata oluştu';
@@ -167,11 +174,16 @@ class ApiService {
     }
   }
 
-  Future<ProductDetailModel> getProductDetail(int productId) async {
+  Future<ProductDetailModel> getProductDetail(
+    int productId, {
+    String? userToken,
+  }) async {
     try {
-      final response = await get(
-        '${ApiConstants.productDetail}$productId/productDetail',
-      );
+      String url = '${ApiConstants.productDetail}$productId/productDetail';
+      if (userToken != null && userToken.isNotEmpty) {
+        url += '?userToken=$userToken';
+      }
+      final response = await get(url);
       // The _handleResponse returns dynamic (Map<String, dynamic>), so we parse it here
       return ProductDetailModel.fromJson(response);
     } catch (e) {

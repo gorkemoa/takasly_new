@@ -10,6 +10,7 @@ import '../../theme/app_theme.dart';
 import '../../viewmodels/product_detail_viewmodel.dart';
 import '../../models/product_detail_model.dart';
 import '../../viewmodels/profile_viewmodel.dart';
+import '../../viewmodels/auth_viewmodel.dart';
 import '../profile/user_profile_view.dart';
 
 class ProductDetailView extends StatefulWidget {
@@ -28,7 +29,11 @@ class _ProductDetailViewState extends State<ProductDetailView> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ProductDetailViewModel>().getProductDetail(widget.productId);
+      final userToken = context.read<AuthViewModel>().user?.token;
+      context.read<ProductDetailViewModel>().getProductDetail(
+        widget.productId,
+        userToken: userToken,
+      );
     });
   }
 

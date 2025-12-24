@@ -11,13 +11,16 @@ class ProductDetailViewModel extends ChangeNotifier {
   bool isLoading = false;
   String? errorMessage;
 
-  Future<void> getProductDetail(int productId) async {
+  Future<void> getProductDetail(int productId, {String? userToken}) async {
     isLoading = true;
     errorMessage = null;
     notifyListeners();
 
     try {
-      final response = await _apiService.getProductDetail(productId);
+      final response = await _apiService.getProductDetail(
+        productId,
+        userToken: userToken,
+      );
       if (response.success == true && response.data?.product != null) {
         productDetail = response.data!.product;
       } else {

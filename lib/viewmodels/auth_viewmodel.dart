@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/auth/login_model.dart';
 import '../models/auth/register_model.dart';
 import '../models/auth/verification_model.dart';
 import '../models/auth/forgot_password_model.dart';
 import '../models/auth/get_user_model.dart';
 import '../services/auth_service.dart';
+import '../services/api_service.dart';
+import '../main.dart'; // For navigatorKey
+import '../views/auth/login_view.dart';
 
 enum AuthState { idle, busy, error, success }
 
@@ -39,6 +43,33 @@ class AuthViewModel extends ChangeNotifier {
 
   String? _passToken;
 
+  AuthViewModel() {
+    _init();
+  }
+
+  Future<void> _init() async {
+    // Setup Global 403 Handler
+    ApiService().onForbidden = () {
+      logout(autoRedirect: true);
+    };
+
+    await _checkLoginStatus();
+  }
+
+  Future<void> _checkLoginStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('userToken');
+    final userId = prefs.getInt('userId');
+
+    if (token != null && userId != null) {
+      _user = LoginResponseModel(userID: userId, token: token);
+      _logger.i("Restored session for user: $userId");
+      notifyListeners();
+      // Optionally refresh user profile
+      getUser();
+    }
+  }
+
   Future<void> login(String email, String password) async {
     _state = AuthState.busy;
     _errorMessage = null;
@@ -50,6 +81,14 @@ class AuthViewModel extends ChangeNotifier {
         userPassword: password,
       );
       _user = await _authService.login(request);
+
+      // Save session
+      if (_user != null) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('userToken', _user!.token);
+        await prefs.setInt('userId', _user!.userID);
+      }
+
       _state = AuthState.success;
       _logger.i("Login successful for user: ${_user?.userID}");
     } catch (e) {
@@ -194,6 +233,12 @@ class AuthViewModel extends ChangeNotifier {
             userID: _tempUserId!,
             token: _tempUserToken!,
           );
+
+          // Save session
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('userToken', _user!.token);
+          await prefs.setInt('userId', _user!.userID);
+
           _logger.i(
             "Verification successful (Register). User logged in: ${_user?.userID}",
           );
@@ -328,12 +373,25 @@ class AuthViewModel extends ChangeNotifier {
     }
   }
 
-  void logout() {
+  Future<void> logout({bool autoRedirect = false}) async {
     _user = null;
+    _userProfile = null;
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('userToken');
+    await prefs.remove('userId');
+
     _state = AuthState.idle;
     _errorMessage = null;
     _logger.i("User logged out");
     notifyListeners();
+
+    if (autoRedirect) {
+      navigatorKey.currentState?.pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const LoginView()),
+        (route) => false,
+      );
+    }
   }
 
   // Reset state method in case we leave the page and come back
