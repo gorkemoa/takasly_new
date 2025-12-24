@@ -258,20 +258,28 @@ class _HomeViewState extends State<HomeView> {
                                             vertical: 0,
                                           ),
                                     ),
+                                    onChanged: (val) {
+                                      // Search debouncing could be added here
+                                    },
                                   ),
                                 ),
                                 const SizedBox(width: 12),
-                                Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: const Color(
-                                      0xFF424242,
-                                    ), // Dark Grey for filter bg
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: const Icon(
-                                    Icons.filter_list,
-                                    color: Colors.white,
+                                GestureDetector(
+                                  onTap: () {
+                                    _showFilterBottomSheet(context);
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: const Color(
+                                        0xFF424242,
+                                      ), // Dark Grey for filter bg
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: const Icon(
+                                      Icons.filter_list,
+                                      color: Colors.white,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -438,6 +446,468 @@ class _HomeViewState extends State<HomeView> {
           });
         },
       ),
+    );
+  }
+
+  void _showFilterBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.85,
+          minChildSize: 0.6,
+          maxChildSize: 0.95,
+          builder: (context, scrollController) {
+            return Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              child: Consumer<HomeViewModel>(
+                builder: (context, homeVM, child) {
+                  return Column(
+                    children: [
+                      Center(
+                        child: Container(
+                          margin: const EdgeInsets.only(top: 12, bottom: 8),
+                          width: 40,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 8,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Filtrele',
+                              style: AppTheme.safePoppins(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.textPrimary,
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.close),
+                              onPressed: () => Navigator.pop(context),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Divider(),
+                      Expanded(
+                        child: ListView(
+                          controller: scrollController,
+                          padding: const EdgeInsets.all(20.0),
+                          children: [
+                            Text(
+                              'Sıralama',
+                              style: AppTheme.safePoppins(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                _buildSortChip(homeVM, 'default', 'Varsayılan'),
+                                _buildSortChip(homeVM, 'newest', 'En Yeni'),
+                                _buildSortChip(homeVM, 'oldest', 'En Eski'),
+                                _buildSortChip(
+                                  homeVM,
+                                  'location',
+                                  'Konuma Göre',
+                                ),
+                                _buildSortChip(homeVM, 'popular', 'Popüler'),
+                              ],
+                            ),
+                            const SizedBox(height: 24),
+
+                            Text(
+                              'Kategori',
+                              style: AppTheme.safePoppins(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            InkWell(
+                              onTap: () {
+                                _showCategorySelector(context, homeVM);
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 14,
+                                ),
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.grey[300]!),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      homeVM.selectedCategory?.catName ??
+                                          'Kategori Seç',
+                                      style: AppTheme.safePoppins(
+                                        color: homeVM.selectedCategory != null
+                                            ? AppTheme.textPrimary
+                                            : AppTheme.textSecondary,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const Icon(
+                                      Icons.chevron_right,
+                                      color: Colors.grey,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+
+                            Text(
+                              'Konum',
+                              style: AppTheme.safePoppins(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: Colors.grey[300]!,
+                                      ),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: DropdownButtonHideUnderline(
+                                      child: DropdownButton<int>(
+                                        value: homeVM.selectedCity?.cityNo,
+                                        hint: const Text("İl"),
+                                        isExpanded: true,
+                                        items: homeVM.cities.map((city) {
+                                          return DropdownMenuItem<int>(
+                                            value: city.cityNo,
+                                            child: Text(
+                                              city.cityName ?? "",
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          );
+                                        }).toList(),
+                                        onChanged: (cityNo) {
+                                          if (cityNo != null) {
+                                            final city = homeVM.cities
+                                                .firstWhere(
+                                                  (c) => c.cityNo == cityNo,
+                                                );
+                                            homeVM.setSelectedCity(city);
+                                          }
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: Colors.grey[300]!,
+                                      ),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: DropdownButtonHideUnderline(
+                                      child: DropdownButton<int>(
+                                        value:
+                                            homeVM.selectedDistrict?.districtNo,
+                                        hint: const Text("İlçe"),
+                                        isExpanded: true,
+                                        disabledHint: const Text("Önce İl"),
+                                        items: homeVM.districts.isEmpty
+                                            ? null
+                                            : homeVM.districts.map((district) {
+                                                return DropdownMenuItem<int>(
+                                                  value: district.districtNo,
+                                                  child: Text(
+                                                    district.districtName ?? "",
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                );
+                                              }).toList(),
+                                        onChanged: homeVM.districts.isEmpty
+                                            ? null
+                                            : (districtNo) {
+                                                if (districtNo != null) {
+                                                  final district = homeVM
+                                                      .districts
+                                                      .firstWhere(
+                                                        (d) =>
+                                                            d.districtNo ==
+                                                            districtNo,
+                                                      );
+                                                  homeVM.setSelectedDistrict(
+                                                    district,
+                                                  );
+                                                }
+                                              },
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 24),
+
+                            if (homeVM.conditions.isNotEmpty) ...[
+                              Text(
+                                'Ürün Durumu',
+                                style: AppTheme.safePoppins(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppTheme.textPrimary,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: homeVM.conditions.map((condition) {
+                                  final isSelected = homeVM.selectedConditionIds
+                                      .contains(condition.id);
+                                  return FilterChip(
+                                    label: Text(condition.name ?? ''),
+                                    selected: isSelected,
+                                    onSelected: (bool selected) {
+                                      if (condition.id != null) {
+                                        homeVM.toggleCondition(condition.id!);
+                                      }
+                                    },
+                                    selectedColor: AppTheme.primary.withOpacity(
+                                      0.2,
+                                    ),
+                                    checkmarkColor: AppTheme.primary,
+                                    labelStyle: TextStyle(
+                                      color: isSelected
+                                          ? AppTheme.primary
+                                          : Colors.black87,
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                              const SizedBox(height: 24),
+                            ],
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () {
+                                  homeVM.clearFilters();
+                                  context
+                                      .read<ProductViewModel>()
+                                      .updateAllFilters(
+                                        sortType: 'default',
+                                        categoryID: 0,
+                                        conditionIDs: [],
+                                        cityID: 0,
+                                        districtID: 0,
+                                      );
+                                  Navigator.pop(context);
+                                },
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                  ),
+                                  side: const BorderSide(color: Colors.red),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Temizle',
+                                  style: TextStyle(color: Colors.red),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  final cityId =
+                                      homeVM.selectedCity?.cityNo ?? 0;
+                                  final districtId =
+                                      homeVM.selectedDistrict?.districtNo ?? 0;
+                                  final sortType = homeVM.sortType;
+                                  final catId =
+                                      homeVM.selectedCategory?.catID ?? 0;
+                                  final conds = homeVM.selectedConditionIds;
+
+                                  context
+                                      .read<ProductViewModel>()
+                                      .updateAllFilters(
+                                        sortType: sortType,
+                                        categoryID: catId,
+                                        conditionIDs: conds,
+                                        cityID: cityId,
+                                        districtID: districtId,
+                                      );
+                                  Navigator.pop(context);
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppTheme.primary,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Sonuçları Göster',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildSortChip(HomeViewModel homeVM, String type, String label) {
+    final isSelected = homeVM.sortType == type;
+    return ChoiceChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: (selected) {
+        if (selected) {
+          homeVM.setSortType(type);
+        }
+      },
+      selectedColor: AppTheme.primary,
+      labelStyle: TextStyle(color: isSelected ? Colors.white : Colors.black87),
+    );
+  }
+
+  void _showCategorySelector(BuildContext context, HomeViewModel homeVM) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return DraggableScrollableSheet(
+              initialChildSize: 0.9,
+              builder: (context, scrollController) {
+                return Consumer<HomeViewModel>(
+                  builder: (context, vm, child) {
+                    final listToShow = (vm.selectedCategory == null)
+                        ? vm.categories
+                        : vm.subCategories;
+                    return Column(
+                      children: [
+                        AppBar(
+                          title: Text(
+                            vm.selectedCategory?.catName ?? 'Kategoriler',
+                          ),
+                          leading: IconButton(
+                            icon: Icon(
+                              vm.selectedCategory == null
+                                  ? Icons.close
+                                  : Icons.arrow_back,
+                            ),
+                            onPressed: () {
+                              if (vm.selectedCategory == null) {
+                                Navigator.pop(context);
+                              } else {
+                                vm.setSelectedCategory(null);
+                              }
+                            },
+                          ),
+                          automaticallyImplyLeading: false,
+                        ),
+                        Expanded(
+                          child:
+                              listToShow.isEmpty && vm.selectedCategory != null
+                              ? const Center(
+                                  child: Text("Alt kategori bulunamadı"),
+                                )
+                              : ListView.builder(
+                                  itemCount: listToShow.length,
+                                  itemBuilder: (context, index) {
+                                    final cat = listToShow[index];
+                                    return ListTile(
+                                      title: Text(cat.catName),
+                                      trailing: const Icon(Icons.chevron_right),
+                                      onTap: () {
+                                        vm.setSelectedCategory(cat);
+                                      },
+                                    );
+                                  },
+                                ),
+                        ),
+                        if (vm.selectedCategory != null)
+                          Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                              child: const Text("Bu Kategoriyi Seç"),
+                            ),
+                          ),
+                      ],
+                    );
+                  },
+                );
+              },
+            );
+          },
+        );
+      },
     );
   }
 }

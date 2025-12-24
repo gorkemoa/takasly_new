@@ -55,4 +55,18 @@ class GeneralService {
       rethrow;
     }
   }
+
+  Future<List<Condition>> getConditions() async {
+    try {
+      final response = await _apiService.get(ApiConstants.conditions);
+      if (response['success'] == true && response['data'] != null) {
+        final List list = response['data']['conditions'];
+        return list.map((e) => Condition.fromJson(e)).toList();
+      }
+      return [];
+    } catch (e) {
+      // Return empty list instead of rethrowing to not break entire filter UI if just this fails
+      return [];
+    }
+  }
 }

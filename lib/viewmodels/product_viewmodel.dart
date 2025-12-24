@@ -50,10 +50,18 @@ class ProductViewModel extends ChangeNotifier {
   }
 
   Future<void> fetchProducts({bool isRefresh = false}) async {
+    // Race condition fix: Allow refresh even if isLoading is true,
+    // because we might be switching from "default sort" to "location sort"
+    // immediately after app start.
     if (isLoading && isRefresh) {
-      _logger.d('İlk yükleme devam ederken yenileme denendi. İptal ediliyor.');
-      return; // Don't refresh if already loading initial
+      // We log but continue, effectively cancelling/overriding the previous request logically
+      // (though network request might still finish, we'll overwrite the data)
+      _logger.d(
+        'Yükleme devam ederken yenileme istendi (Olası Konum/Token güncellemesi). Devam ediliyor.',
+      );
+      // Don't return here!
     }
+
     if (isLoadMoreRunning && !isRefresh) {
       _logger.d(
         'Daha fazla yükleme devam ederken yeni yükleme denendi. İptal ediliyor.',
@@ -152,6 +160,25 @@ class ProductViewModel extends ChangeNotifier {
     if (!isLastPage && !isLoading && !isLoadMoreRunning) {
       fetchProducts();
     }
+  }
+
+  void updateAllFilters({
+    String? sortType,
+    int? categoryID,
+    List<int>? conditionIDs,
+    int? cityID,
+    int? districtID,
+  }) {
+    if (sortType != null) _currentFilter.sortType = sortType;
+    if (categoryID != null) _currentFilter.categoryID = categoryID;
+    if (conditionIDs != null) _currentFilter.conditionIDs = conditionIDs;
+    if (cityID != null) _currentFilter.cityID = cityID;
+    if (districtID != null) _currentFilter.districtID = districtID;
+
+    _logger.i(
+      'Full Filter updated: Sort: $sortType, Cat: $categoryID, Conds: $conditionIDs, Loc: $cityID/$districtID',
+    );
+    fetchProducts(isRefresh: true);
   }
 
   String? get userToken => _currentFilter.userToken;

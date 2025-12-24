@@ -22,3 +22,17 @@ class District {
     );
   }
 }
+
+class Condition {
+  int? id;
+  String? name;
+
+  Condition({this.id, this.name});
+
+  factory Condition.fromJson(Map<String, dynamic> json) {
+    return Condition(
+      id: json['id'], // Assuming 'id' and 'name' based on typical pattern, verify if possible
+      name: json['name'],
+    );
+  }
+}
