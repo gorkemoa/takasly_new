@@ -168,240 +168,135 @@ class _TradeItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFF1F5F9)),
       ),
       child: Column(
         children: [
-          // Header: Date & Status
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.calendar_today_rounded,
-                      size: 14,
-                      color: Color(0xFF94A3B8),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      trade.createdAt ?? '',
-                      style: AppTheme.safePoppins(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFF94A3B8),
-                      ),
-                    ),
-                  ],
+          // Header: Status and Date
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                trade.createdAt?.split(' ').first ?? '',
+                style: AppTheme.safePoppins(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF94A3B8),
                 ),
-                _buildStatusBadge(trade.senderStatusTitle ?? 'İşlemde'),
-              ],
-            ),
+              ),
+              _buildSimpleStatus(trade.senderStatusTitle ?? ''),
+            ],
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12),
+            child: Divider(height: 1, color: Color(0xFFF1F5F9)),
           ),
 
-          const Divider(height: 1, color: Color(0xFFF1F5F9)),
-
-          // Main Content: Product Swap
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                // My Product
-                Expanded(
-                  child: _buildProductColumn(
-                    title: 'Benim Ürünüm',
-                    product: trade.myProduct,
-                    isMe: true,
-                  ),
+          // Row: My Product -> Arrow -> Their Product
+          Row(
+            children: [
+              Expanded(child: _buildMiniProduct(trade.myProduct, true)),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Icon(
+                  Icons.arrow_forward_rounded,
+                  size: 20,
+                  color: AppTheme.primary.withOpacity(0.5),
                 ),
-
-                // Swap Indicator
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
-                    ),
-                    child: const Icon(
-                      Icons.swap_horiz_rounded,
-                      color: AppTheme.primary,
-                      size: 24,
-                    ),
-                  ),
-                ),
-
-                // Their Product
-                Expanded(
-                  child: _buildProductColumn(
-                    title: 'Takaslanan',
-                    product: trade.theirProduct,
-                    isMe: false,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Footer: Info
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: const BoxDecoration(
-              color: Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
-            ),
-            child: Row(
-              children: [
-                _buildInfoChip(
-                  Icons.local_shipping_outlined,
-                  trade.deliveryType ?? 'Teslimat Yok',
-                ),
-                const SizedBox(width: 12),
-                if (trade.meetingLocation != null &&
-                    trade.meetingLocation!.isNotEmpty)
-                  Expanded(
-                    child: _buildInfoChip(
-                      Icons.location_on_outlined,
-                      trade.meetingLocation!,
-                    ),
-                  ),
-              ],
-            ),
+              ),
+              Expanded(child: _buildMiniProduct(trade.theirProduct, false)),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildProductColumn({
-    required String title,
-    required Product? product,
-    required bool isMe,
-  }) {
-    return Column(
-      crossAxisAlignment: isMe
-          ? CrossAxisAlignment.start
-          : CrossAxisAlignment.end,
-      children: [
-        Text(
-          title,
-          style: AppTheme.safePoppins(
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF94A3B8),
-            letterSpacing: 0.5,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          height: 100,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            color: Colors.white,
-            border: Border.all(color: const Color(0xFFE2E8F0)),
-            image: product?.productImage != null
-                ? DecorationImage(
-                    image: NetworkImage(product!.productImage!),
-                    fit: BoxFit.cover,
-                  )
-                : null,
-          ),
-          child: product?.productImage == null
-              ? const Center(
-                  child: Icon(
-                    Icons.image_not_supported_rounded,
-                    color: Color(0xFFCBD5E1),
-                  ),
-                )
-              : null,
-        ),
-        const SizedBox(height: 8),
-        Text(
-          product?.productTitle ?? 'Ürün Silinmiş',
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          textAlign: isMe ? TextAlign.start : TextAlign.end,
-          style: AppTheme.safePoppins(
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-            color: const Color(0xFF1E293B),
-            height: 1.3,
-          ),
-        ),
-      ],
-    );
-  }
+  Widget _buildSimpleStatus(String status) {
+    Color color = AppTheme.primary;
+    if (status.toLowerCase().contains('bekle')) color = Colors.orange;
+    if (status.toLowerCase().contains('red') ||
+        status.toLowerCase().contains('iptal'))
+      color = Colors.red;
+    if (status.toLowerCase().contains('tamam')) color = Colors.green;
 
-  Widget _buildStatusBadge(String status) {
-    Color bgColor;
-    Color textColor;
-
-    // Simple heuristic for colors
-    final s = status.toLowerCase();
-    if (s.contains('tamam') || s.contains('onay')) {
-      bgColor = const Color(0xFFDCFCE7); // Green-100
-      textColor = const Color(0xFF166534); // Green-800
-    } else if (s.contains('red') || s.contains('iptal')) {
-      bgColor = const Color(0xFFFEE2E2); // Red-100
-      textColor = const Color(0xFF991B1B); // Red-800
-    } else if (s.contains('bekle')) {
-      bgColor = const Color(0xFFFEF3C7); // Amber-100
-      textColor = const Color(0xFF92400E); // Amber-800
-    } else {
-      bgColor = const Color(0xFFE0F2FE); // Sky-100
-      textColor = const Color(0xFF075985); // Sky-800
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        status,
-        style: AppTheme.safePoppins(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          color: textColor,
-        ),
+    return Text(
+      status,
+      style: AppTheme.safePoppins(
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+        color: color,
       ),
     );
   }
 
-  Widget _buildInfoChip(IconData icon, String label) {
+  Widget _buildMiniProduct(Product? product, bool isMe) {
+    if (product == null) return const SizedBox();
     return Row(
-      mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 14, color: const Color(0xFF64748B)),
-        const SizedBox(width: 4),
-        Flexible(
-          child: Text(
-            label,
-            style: AppTheme.safePoppins(
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-              color: const Color(0xFF64748B),
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+        if (!isMe) ...[
+          _buildImage(product.productImage),
+          const SizedBox(width: 8),
+        ],
+        Expanded(
+          child: Column(
+            crossAxisAlignment: isMe
+                ? CrossAxisAlignment.end
+                : CrossAxisAlignment.start,
+            children: [
+              Text(
+                isMe ? 'Siz' : 'Karşı Taraf',
+                style: AppTheme.safePoppins(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF94A3B8),
+                ),
+              ),
+              Text(
+                product.productTitle ?? '',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: isMe ? TextAlign.end : TextAlign.start,
+                style: AppTheme.safePoppins(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF334155),
+                ),
+              ),
+            ],
           ),
         ),
+        if (isMe) ...[
+          const SizedBox(width: 8),
+          _buildImage(product.productImage),
+        ],
       ],
+    );
+  }
+
+  Widget _buildImage(String? url) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: Image.network(
+        url ?? '',
+        width: 40,
+        height: 40,
+        fit: BoxFit.cover,
+        errorBuilder: (c, e, s) => Container(
+          width: 40,
+          height: 40,
+          color: const Color(0xFFF1F5F9),
+          child: const Icon(
+            Icons.image_not_supported,
+            size: 16,
+            color: Color(0xFFCBD5E1),
+          ),
+        ),
+      ),
     );
   }
 }

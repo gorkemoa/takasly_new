@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_html/flutter_html.dart';
 import '../../theme/app_theme.dart';
 import '../../viewmodels/event_viewmodel.dart';
 
@@ -26,33 +27,60 @@ class _EventDetailViewState extends State<EventDetailView> {
     });
   }
 
-  String _parseHtmlString(String htmlString) {
-    // Basic HTML stripper
-    final RegExp exp = RegExp(r"<[^>]*>", multiLine: true, caseSensitive: true);
-    String result = htmlString.replaceAll(exp, '').trim();
-    // Replace HTML entities if necessary (basic set)
-    result = result.replaceAll('&nbsp;', ' ');
-    result = result.replaceAll('&amp;', '&');
-    result = result.replaceAll('&lt;', '<');
-    result = result.replaceAll('&gt;', '>');
-    result = result.replaceAll('&quot;', '"');
-    result = result.replaceAll('&rsquo;', "'");
-    return result;
+  void _showFullScreenImage(BuildContext context, String imageUrl) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black,
+      builder: (context) {
+        return Stack(
+          children: [
+            InteractiveViewer(
+              minScale: 0.5,
+              maxScale: 4.0,
+              child: Center(
+                child: Image.network(imageUrl, fit: BoxFit.contain),
+              ),
+            ),
+            Positioned(
+              top: 40,
+              right: 20,
+              child: GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: const BoxDecoration(
+                    color: Colors.black54,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.close, color: Colors.white, size: 24),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(
-          widget.eventTitle,
-          style: AppTheme.lightTheme.textTheme.titleLarge,
+          'Etkinlik Detayı',
+          style: AppTheme.safePoppins(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
         ),
-        backgroundColor: AppTheme.background,
+        backgroundColor: AppTheme.primary,
+        elevation: 0,
         centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.white),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: AppTheme.textPrimary),
+          icon: const Icon(Icons.arrow_back_ios_new, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -60,7 +88,7 @@ class _EventDetailViewState extends State<EventDetailView> {
         builder: (context, viewModel, child) {
           if (viewModel.isLoading) {
             return const Center(
-              child: CircularProgressIndicator(color: AppTheme.primary),
+              child: CircularProgressIndicator(strokeWidth: 2),
             );
           }
 
@@ -74,101 +102,171 @@ class _EventDetailViewState extends State<EventDetailView> {
           }
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(20.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Main Image
-                ClipRRect(
-                  borderRadius: AppTheme.borderRadius,
-                  child: Image.network(
-                    event.eventImage,
-                    width: double.infinity,
-                    height: 250,
-                    fit: BoxFit.cover,
-                    errorBuilder: (c, e, s) => Container(
-                      height: 250,
-                      color: Colors.grey[200],
-                      child: const Icon(Icons.broken_image),
+                // Main Image - Tappable
+                GestureDetector(
+                  onTap: () => _showFullScreenImage(context, event.eventImage),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Stack(
+                      children: [
+                        Image.network(
+                          event.eventImage,
+                          width: double.infinity,
+                          height: 240,
+                          fit: BoxFit.cover,
+                          errorBuilder: (c, e, s) => Container(
+                            height: 240,
+                            color: const Color(0xFFF8FAFC),
+                            child: const Center(
+                              child: Icon(
+                                Icons.broken_image,
+                                size: 40,
+                                color: Color(0xFFCBD5E1),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          bottom: 12,
+                          right: 12,
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.6),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.zoom_in,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
+
+                const SizedBox(height: 24),
 
                 // Title
                 Text(
                   event.eventTitle,
-                  style: AppTheme.lightTheme.textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
+                  style: AppTheme.safePoppins(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF0F172A),
+                    height: 1.3,
                   ),
                 ),
-                const SizedBox(height: 12),
+
+                const SizedBox(height: 20),
 
                 // Info Rows
-                _buildInfoRow(
-                  Icons.calendar_month,
-                  'Başlangıç: ${event.eventStartDate}',
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: Column(
+                    children: [
+                      _buildInfoRow(
+                        Icons.calendar_today_outlined,
+                        'Başlangıç',
+                        event.eventStartDate,
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        child: Divider(height: 1, color: Color(0xFFE2E8F0)),
+                      ),
+                      _buildInfoRow(
+                        Icons.event_outlined,
+                        'Bitiş',
+                        event.eventEndDate,
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        child: Divider(height: 1, color: Color(0xFFE2E8F0)),
+                      ),
+                      _buildInfoRow(
+                        Icons.location_on_outlined,
+                        'Konum',
+                        event.eventLocation,
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 8),
-                _buildInfoRow(
-                  Icons.calendar_today,
-                  'Bitiş: ${event.eventEndDate}',
-                ),
-                const SizedBox(height: 8),
-                _buildInfoRow(Icons.location_on, event.eventLocation),
 
-                const SizedBox(height: 24),
-                const Divider(),
-                const SizedBox(height: 16),
+                const SizedBox(height: 32),
 
-                // Description
                 Text(
-                  "Etkinlik Detayı",
-                  style: AppTheme.lightTheme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
+                  "Açıklama",
+                  style: AppTheme.safePoppins(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF0F172A),
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  _parseHtmlString(event.eventDesc),
-                  style: AppTheme.lightTheme.textTheme.bodyLarge?.copyWith(
-                    height: 1.5,
-                  ),
+
+                // HTML Description
+                Html(
+                  data: event.eventDesc,
+                  style: {
+                    "body": Style(
+                      margin: Margins.zero,
+                      padding: HtmlPaddings.zero,
+                      fontFamily: 'Poppins',
+                      fontSize: FontSize(15),
+                      color: const Color(0xFF334155),
+                      lineHeight: LineHeight(1.6),
+                    ),
+                    "p": Style(margin: Margins.only(bottom: 12)),
+                  },
                 ),
 
-                const SizedBox(height: 24),
-
-                // Gallery
                 if (event.images != null && event.images!.isNotEmpty) ...[
+                  const SizedBox(height: 32),
                   Text(
-                    "Görseller",
-                    style: AppTheme.lightTheme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
+                    "Galeri",
+                    style: AppTheme.safePoppins(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF0F172A),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
                   SizedBox(
-                    height: 120,
+                    height: 100,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       itemCount: event.images!.length,
                       separatorBuilder: (context, index) =>
                           const SizedBox(width: 12),
                       itemBuilder: (context, index) {
-                        return ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: GestureDetector(
-                            onTap: () {
-                              // Optional: Open full screen image
-                            },
+                        final img = event.images![index];
+                        return GestureDetector(
+                          onTap: () =>
+                              _showFullScreenImage(context, img.imagePath),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
                             child: Image.network(
-                              event.images![index].imagePath,
-                              width: 160,
+                              img.imagePath,
+                              width: 140,
                               fit: BoxFit.cover,
                               errorBuilder: (c, e, s) => Container(
-                                width: 160,
-                                color: Colors.grey[200],
-                                child: const Icon(Icons.broken_image),
+                                width: 140,
+                                color: const Color(0xFFF8FAFC),
+                                child: const Icon(
+                                  Icons.broken_image,
+                                  color: Color(0xFFCBD5E1),
+                                ),
                               ),
                             ),
                           ),
@@ -176,8 +274,9 @@ class _EventDetailViewState extends State<EventDetailView> {
                       },
                     ),
                   ),
-                  const SizedBox(height: 32),
                 ],
+
+                const SizedBox(height: 40),
               ],
             ),
           );
@@ -186,14 +285,34 @@ class _EventDetailViewState extends State<EventDetailView> {
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String text) {
+  Widget _buildInfoRow(IconData icon, String label, String value) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Icon(icon, size: 20, color: AppTheme.primary),
         const SizedBox(width: 12),
-        Expanded(
-          child: Text(text, style: AppTheme.lightTheme.textTheme.bodyLarge),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: AppTheme.safePoppins(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF94A3B8),
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              value,
+              style: AppTheme.safePoppins(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF334155),
+              ),
+            ),
+          ],
         ),
       ],
     );

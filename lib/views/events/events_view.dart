@@ -23,190 +23,152 @@ class _EventsViewState extends State<EventsView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(
           'Etkinlikler',
-          style: AppTheme.lightTheme.textTheme.titleLarge,
+          style: AppTheme.safePoppins(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: AppTheme.background,
+          ),
         ),
-        backgroundColor: AppTheme.background,
+        backgroundColor: AppTheme.primary,
+        elevation: 0,
         centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            size: 20,
+            color: AppTheme.background,
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(color: AppTheme.background, height: 1),
+        ),
       ),
-      backgroundColor: AppTheme.background,
       body: Consumer<EventViewModel>(
         builder: (context, viewModel, child) {
           if (viewModel.isLoading) {
             return const Center(
-              child: CircularProgressIndicator(color: AppTheme.primary),
+              child: CircularProgressIndicator(strokeWidth: 2),
             );
           }
 
           if (viewModel.errorMessage != null) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      viewModel.errorMessage!,
-                      textAlign: TextAlign.center,
-                      style: AppTheme.lightTheme.textTheme.bodyLarge?.copyWith(
-                        color: AppTheme.error,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () => viewModel.fetchEvents(),
-                      child: const Text('Tekrar Dene'),
-                    ),
-                  ],
-                ),
-              ),
-            );
+            return Center(child: Text(viewModel.errorMessage!));
           }
 
           if (viewModel.events.isEmpty) {
-            return Center(
-              child: Text(
-                'Henüz etkinlik bulunmamaktadır.',
-                style: AppTheme.lightTheme.textTheme.bodyLarge,
-              ),
-            );
+            return const Center(child: Text('Etkinlik bulunamadı.'));
           }
 
           return RefreshIndicator(
             onRefresh: () => viewModel.fetchEvents(),
-            color: AppTheme.primary,
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16.0),
+            child: ListView.separated(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
               itemCount: viewModel.events.length,
+              separatorBuilder: (context, index) => const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Divider(height: 1, color: Color(0xFFF1F5F9)),
+              ),
               itemBuilder: (context, index) {
                 final event = viewModel.events[index];
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 16.0),
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => EventDetailView(
-                            eventId: event.eventID,
-                            eventTitle: event.eventTitle,
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => EventDetailView(
+                          eventId: event.eventID,
+                          eventTitle: event.eventTitle,
+                        ),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    color: Colors.transparent, // Hit test area
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Minimal Thumb
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.network(
+                            event.eventImage,
+                            width: 100,
+                            height: 100,
+                            fit: BoxFit.cover,
+                            errorBuilder: (c, e, s) => Container(
+                              width: 100,
+                              height: 100,
+                              color: const Color(0xFFF8FAFC),
+                              child: const Icon(
+                                Icons.image_not_supported_outlined,
+                                color: Color(0xFFCBD5E1),
+                              ),
+                            ),
                           ),
                         ),
-                      );
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: AppTheme.surface,
-                        borderRadius: AppTheme.borderRadius,
-                        boxShadow: AppTheme.cardShadow,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ClipRRect(
-                            borderRadius: const BorderRadius.vertical(
-                              top: Radius.circular(12.0),
-                            ),
-                            child: Image.network(
-                              event.eventImage,
-                              height: 200,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  Container(
-                                    height: 200,
-                                    color: Colors.grey[200],
-                                    child: const Center(
-                                      child: Icon(
-                                        Icons.broken_image,
-                                        color: Colors.grey,
+                        const SizedBox(width: 16),
+
+                        // Content
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Date Badge (Minimal)
+                              Text(
+                                event.eventStartDate.split(' ').first,
+                                style: AppTheme.safePoppins(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppTheme.primary,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+
+                              Text(
+                                event.eventTitle,
+                                style: AppTheme.safePoppins(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF0F172A),
+                                  height: 1.3,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 8),
+
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.location_on_outlined,
+                                    size: 14,
+                                    color: Color(0xFF64748B),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Expanded(
+                                    child: Text(
+                                      event.eventLocation,
+                                      style: AppTheme.safePoppins(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w400,
+                                        color: const Color(0xFF64748B),
                                       ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
-                              loadingBuilder:
-                                  (context, child, loadingProgress) {
-                                    if (loadingProgress == null) return child;
-                                    return Container(
-                                      height: 200,
-                                      color: Colors.grey[200],
-                                      child: Center(
-                                        child: CircularProgressIndicator(
-                                          color: AppTheme.primary,
-                                          value:
-                                              loadingProgress
-                                                      .expectedTotalBytes !=
-                                                  null
-                                              ? loadingProgress
-                                                        .cumulativeBytesLoaded /
-                                                    loadingProgress
-                                                        .expectedTotalBytes!
-                                              : null,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                            ),
+                                ],
+                              ),
+                            ],
                           ),
-                          Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  event.eventTitle,
-                                  style: AppTheme
-                                      .lightTheme
-                                      .textTheme
-                                      .titleLarge
-                                      ?.copyWith(fontWeight: FontWeight.bold),
-                                ),
-                                const SizedBox(height: 8),
-                                Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.calendar_today_outlined,
-                                      size: 16,
-                                      color: AppTheme.textSecondary,
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      event.eventStartDate,
-                                      style: AppTheme
-                                          .lightTheme
-                                          .textTheme
-                                          .bodyMedium,
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 6),
-                                Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.location_on_outlined,
-                                      size: 16,
-                                      color: AppTheme.textSecondary,
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Expanded(
-                                      child: Text(
-                                        event.eventLocation,
-                                        style: AppTheme
-                                            .lightTheme
-                                            .textTheme
-                                            .bodyMedium,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 );
