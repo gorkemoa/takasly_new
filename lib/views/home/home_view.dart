@@ -14,6 +14,7 @@ import 'widgets/filter_bottom_sheet.dart';
 
 import '../events/events_view.dart';
 import '../profile/profile_view.dart';
+import '../profile/my_trades_view.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -93,6 +94,8 @@ class _HomeViewState extends State<HomeView> {
       extendBody: true,
       body: _selectedIndex == 4
           ? const ProfileView()
+          : _selectedIndex == 3
+          ? const MyTradesView(showBackButton: false)
           : SafeArea(
               child: _selectedIndex != 0
                   ? Center(

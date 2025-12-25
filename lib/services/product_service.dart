@@ -1,6 +1,7 @@
 import 'api_service.dart';
 import '../core/constants/api_constants.dart';
 import '../models/products/product_models.dart';
+import '../models/trade_model.dart';
 import '../models/product_detail_model.dart';
 
 class ProductService {
@@ -38,11 +39,37 @@ class ProductService {
     }
   }
 
-  Future<ProductResponseModel> getUserFavorites(int userId) async {
+  Future<List<Product>> getUserFavorites(int userId) async {
     try {
-      final url = '${ApiConstants.favoriteList}$userId/favoriteList';
-      final response = await _apiService.get(url);
-      return ProductResponseModel.fromJson(response);
+      final response = await _apiService.get(
+        '${ApiConstants.favoriteList}$userId/favoriteList',
+      );
+
+      final result = ProductResponseModel.fromJson(response);
+
+      if (result.success == true && result.data?.products != null) {
+        return result.data!.products!;
+      } else {
+        return [];
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<List<Trade>> getUserTrades(int userId) async {
+    try {
+      final response = await _apiService.get(
+        '${ApiConstants.tradeList}$userId/tradeList',
+      );
+
+      final result = TradeResponseModel.fromJson(response);
+
+      if (result.success == true && result.data?.trades != null) {
+        return result.data!.trades!;
+      } else {
+        return [];
+      }
     } catch (e) {
       rethrow;
     }

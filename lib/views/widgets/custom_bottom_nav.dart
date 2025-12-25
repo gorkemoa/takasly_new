@@ -39,11 +39,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
                 _buildNavItem(1, Icons.messenger, 'Sohbet'),
                 // Placeholder for the center item (it will be positioned absolutely)
                 const SizedBox(width: 70),
-                _buildNavItem(
-                  3,
-                  Icons.format_list_bulleted_rounded,
-                  'Takaslarım',
-                ),
+                _buildNavItem(3, Icons.swap_horiz_rounded, 'Takaslarım'),
                 _buildNavItem(4, Icons.person_rounded, 'Hesap'),
               ],
             ),

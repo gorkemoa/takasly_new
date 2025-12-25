@@ -18,6 +18,7 @@ class ApiConstants {
       'service/user/product/'; // + {id}/productDetail
   static const String favoriteList =
       'service/user/product/'; // + {id}/favoriteList
+  static const String tradeList = 'service/user/product/'; // + {id}/tradeList
   static const String addFavorite = 'service/user/product/addFavorite';
   static const String removeFavorite = 'service/user/product/removeFavorite';
 
@@ -37,6 +38,10 @@ class ApiConstants {
   static const String districts =
       'service/general/general/districts/'; // + {cityId}
   static const String conditions = 'service/general/general/conditions';
+
+  // Contact Endpoints
+  static const String contactSubjects = 'service/general/contact/subjects';
+  static const String sendMessage = 'service/general/contact/sendMessage';
 
   // Notification Endpoints
   static const String notAllRead = 'service/user/account/notification/allRead';

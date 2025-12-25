@@ -7,9 +7,11 @@ import '../auth/login_view.dart';
 import '../auth/register_view.dart';
 import 'favorites_view.dart';
 import 'my_ads_view.dart';
+import 'my_trades_view.dart';
 import 'profile_edit_view.dart';
 import 'change_password_view.dart';
 import 'settings_view.dart';
+import 'contact_view.dart';
 
 class ProfileView extends StatefulWidget {
   const ProfileView({super.key});
@@ -88,6 +90,19 @@ class _ProfileViewState extends State<ProfileView> {
                 ),
                 _buildMenuItem(
                   context,
+                  icon: Icons.swap_horiz,
+                  title: 'Takaslarım',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const MyTradesView(),
+                      ),
+                    );
+                  },
+                ),
+                _buildMenuItem(
+                  context,
                   icon: Icons.notifications_none_rounded,
                   title: "Bildirimler",
                   onTap: () {
@@ -126,6 +141,19 @@ class _ProfileViewState extends State<ProfileView> {
                       context,
                       MaterialPageRoute(
                         builder: (context) => const ChangePasswordView(),
+                      ),
+                    );
+                  },
+                ),
+                _buildMenuItem(
+                  context,
+                  icon: Icons.support_agent_rounded,
+                  title: "Bize Ulaşın",
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ContactView(),
                       ),
                     );
                   },
@@ -178,7 +206,7 @@ class _ProfileViewState extends State<ProfileView> {
                 ),
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 140),
           ],
         ),
       ),

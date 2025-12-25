@@ -36,3 +36,17 @@ class Condition {
     );
   }
 }
+
+class ContactSubject {
+  int? subjectID;
+  String? subjectTitle;
+
+  ContactSubject({this.subjectID, this.subjectTitle});
+
+  factory ContactSubject.fromJson(Map<String, dynamic> json) {
+    return ContactSubject(
+      subjectID: json['subjectID'],
+      subjectTitle: json['subjectTitle'],
+    );
+  }
+}

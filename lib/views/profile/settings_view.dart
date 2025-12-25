@@ -5,6 +5,7 @@ import '../../theme/app_theme.dart';
 import '../../viewmodels/auth_viewmodel.dart';
 import 'profile_edit_view.dart';
 import 'change_password_view.dart';
+import 'contact_view.dart';
 
 class SettingsView extends StatelessWidget {
   const SettingsView({super.key});
@@ -59,6 +60,24 @@ class SettingsView extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                         builder: (context) => const ChangePasswordView(),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            _buildSettingsSection(
+              children: [
+                _buildSettingsItem(
+                  context,
+                  icon: Icons.support_agent_rounded,
+                  title: "Bize Ulaşın",
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ContactView(),
                       ),
                     );
                   },

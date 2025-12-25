@@ -69,4 +69,34 @@ class GeneralService {
       return [];
     }
   }
+
+  Future<List<ContactSubject>> getContactSubjects() async {
+    try {
+      final response = await _apiService.get(ApiConstants.contactSubjects);
+      if (response['success'] == true && response['data'] != null) {
+        final List list = response['data']['subjects'];
+        return list.map((e) => ContactSubject.fromJson(e)).toList();
+      }
+      return [];
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> sendMessage({
+    required String userToken,
+    required int subjectId,
+    required String message,
+  }) async {
+    try {
+      final response = await _apiService.post(ApiConstants.sendMessage, {
+        'userToken': userToken,
+        'subject': subjectId,
+        'message': message,
+      });
+      return response;
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

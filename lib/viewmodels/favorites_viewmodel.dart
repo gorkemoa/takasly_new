@@ -17,19 +17,14 @@ class FavoritesViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await _productService.getUserFavorites(userId);
-      if (response.success == true && response.data != null) {
-        favorites = (response.data!.products ?? []).map((product) {
-          product.isFavorite = true;
-          return product;
-        }).toList();
-        _logger.i(
-          'Fetched ${favorites.length} favorite products for user $userId',
-        );
-      } else {
-        errorMessage = response.message ?? 'Favoriler alınamadı.';
-        _logger.w('Failed to fetch favorites: $errorMessage');
-      }
+      final products = await _productService.getUserFavorites(userId);
+      favorites = products.map((product) {
+        product.isFavorite = true;
+        return product;
+      }).toList();
+      _logger.i(
+        'Fetched ${favorites.length} favorite products for user $userId',
+      );
     } catch (e) {
       errorMessage = 'Bir hata oluştu: $e';
       _logger.e('Error fetching favorites', error: e);
