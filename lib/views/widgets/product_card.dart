@@ -42,20 +42,30 @@ class ProductCard extends StatelessWidget {
             // Image Area
             Stack(
               children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(5), // Radius 10
+                Container(
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(
+                        color: Colors.grey.withOpacity(0.2),
+                        width: 1,
+                      ),
+                    ),
                   ),
-                  child: AspectRatio(
-                    aspectRatio: 1.0, // Square image
-                    child: product.productImage != null
-                        ? Image.network(
-                            product.productImage!,
-                            fit: BoxFit.contain,
-                            errorBuilder: (context, error, stackTrace) =>
-                                Container(color: Colors.grey[100]),
-                          )
-                        : Container(color: Colors.grey[100]),
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(5), // Radius 10
+                    ),
+                    child: AspectRatio(
+                      aspectRatio: 1.0, // Square image
+                      child: product.productImage != null
+                          ? Image.network(
+                              product.productImage!,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  Container(color: Colors.grey[100]),
+                            )
+                          : Container(color: Colors.grey[100]),
+                    ),
                   ),
                 ),
                 // Top Right Badge (Favorite)

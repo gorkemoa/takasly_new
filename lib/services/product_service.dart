@@ -3,6 +3,7 @@ import '../core/constants/api_constants.dart';
 import '../models/products/product_models.dart';
 import '../models/trade_model.dart';
 import '../models/product_detail_model.dart';
+import '../models/trade_detail_model.dart';
 
 class ProductService {
   final ApiService _apiService = ApiService();
@@ -88,6 +89,24 @@ class ProductService {
     try {
       final payload = {"userToken": userToken, "productID": productId};
       await _apiService.post(ApiConstants.removeFavorite, payload);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<TradeDetailData> getTradeDetail(int offerId, String userToken) async {
+    try {
+      final response = await _apiService.get(
+        '${ApiConstants.tradeList}$offerId/tradeDetail?userToken=$userToken',
+      );
+
+      final result = TradeDetailResponseModel.fromJson(response);
+
+      if (result.success == true && result.data != null) {
+        return result.data!; // Return the TradeDetailData object
+      } else {
+        throw Exception('Takas detayı yüklenemedi.');
+      }
     } catch (e) {
       rethrow;
     }

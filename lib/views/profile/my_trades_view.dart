@@ -4,7 +4,9 @@ import '../../theme/app_theme.dart';
 import '../../viewmodels/trade_viewmodel.dart';
 import '../../viewmodels/auth_viewmodel.dart';
 import '../../models/trade_model.dart';
+
 import '../../models/products/product_models.dart';
+import 'trade_detail_view.dart';
 
 class MyTradesView extends StatelessWidget {
   final bool showBackButton;
@@ -151,7 +153,20 @@ class _MyTradesViewContentState extends State<_MyTradesViewContent> {
             separatorBuilder: (context, index) => const SizedBox(height: 16),
             itemBuilder: (context, index) {
               final trade = viewModel.trades[index];
-              return _TradeItem(trade: trade);
+              return GestureDetector(
+                onTap: () {
+                  if (trade.offerID != null) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            TradeDetailView(offerId: trade.offerID!),
+                      ),
+                    );
+                  }
+                },
+                child: _TradeItem(trade: trade),
+              );
             },
           );
         },
