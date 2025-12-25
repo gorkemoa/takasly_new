@@ -10,7 +10,7 @@ import 'viewmodels/home_viewmodel.dart'; // Import HomeViewModel
 import 'viewmodels/notification_viewmodel.dart'; // Import NotificationViewModel
 import 'viewmodels/event_viewmodel.dart'; // Import EventViewModel
 import 'viewmodels/auth_viewmodel.dart'; // Import AuthViewModel
-
+import 'viewmodels/profile_viewmodel.dart';
 import 'theme/app_theme.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -35,6 +35,7 @@ class MyApp extends StatelessWidget {
           create: (_) => EventViewModel(),
         ), // Register EventViewModel
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
+        ChangeNotifierProvider(create: (_) => ProfileViewModel()),
       ],
       child: MaterialApp(
         title: 'Takasly',

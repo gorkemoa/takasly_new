@@ -51,7 +51,7 @@ class ProductCard extends StatelessWidget {
                     child: product.productImage != null
                         ? Image.network(
                             product.productImage!,
-                            fit: BoxFit.cover,
+                            fit: BoxFit.contain,
                             errorBuilder: (context, error, stackTrace) =>
                                 Container(color: Colors.grey[100]),
                           )

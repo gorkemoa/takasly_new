@@ -38,7 +38,7 @@ class HomeViewModel extends ChangeNotifier {
   List<Condition> get conditions => _conditions;
 
   // Filter State
-  String _sortType = 'default';
+  String _sortType = 'location';
   String get sortType => _sortType;
 
   List<int> _selectedConditionIds = [];
@@ -207,7 +207,7 @@ class HomeViewModel extends ChangeNotifier {
     _selectedCity = null;
     _selectedDistrict = null;
     _districts = [];
-    _sortType = 'default';
+    _sortType = 'location';
     _selectedConditionIds = [];
     _selectedCategory = null;
     _subCategories = [];

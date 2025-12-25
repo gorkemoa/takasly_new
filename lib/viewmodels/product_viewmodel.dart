@@ -185,12 +185,15 @@ class ProductViewModel extends ChangeNotifier {
 
   String? get userToken => _currentFilter.userToken;
 
-  void setUserToken(String? token) {
+  void setUserToken(String? token, {bool refresh = true}) {
     if (_currentFilter.userToken != token) {
       _currentFilter.userToken = token;
-      _logger.i('User token updated in ProductViewModel: $token');
-      // Refresh products with new token
-      fetchProducts(isRefresh: true);
+      _logger.i(
+        'User token updated in ProductViewModel: $token. Refresh products: $refresh',
+      );
+      if (refresh) {
+        fetchProducts(isRefresh: true);
+      }
     }
   }
 

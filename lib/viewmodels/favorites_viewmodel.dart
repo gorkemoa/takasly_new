@@ -19,7 +19,10 @@ class FavoritesViewModel extends ChangeNotifier {
     try {
       final response = await _productService.getUserFavorites(userId);
       if (response.success == true && response.data != null) {
-        favorites = response.data!.products ?? [];
+        favorites = (response.data!.products ?? []).map((product) {
+          product.isFavorite = true;
+          return product;
+        }).toList();
         _logger.i(
           'Fetched ${favorites.length} favorite products for user $userId',
         );

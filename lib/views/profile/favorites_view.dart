@@ -27,15 +27,30 @@ class _FavoritesViewContent extends StatefulWidget {
 }
 
 class _FavoritesViewContentState extends State<_FavoritesViewContent> {
+  bool _isInitDone = false;
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final authVM = context.read<AuthViewModel>();
+    // Fetching handled in didChangeDependencies to wait for Auth Check
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_isInitDone) return;
+
+    final authVM = context.watch<AuthViewModel>();
+    if (authVM.isAuthCheckComplete) {
+      _isInitDone = true;
       if (authVM.user != null) {
-        context.read<FavoritesViewModel>().fetchFavorites(authVM.user!.userID);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          context.read<FavoritesViewModel>().fetchFavorites(
+            authVM.user!.userID,
+          );
+        });
       }
-    });
+    }
   }
 
   @override
@@ -43,22 +58,22 @@ class _FavoritesViewContentState extends State<_FavoritesViewContent> {
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
+        backgroundColor: AppTheme.primary,
         title: Text(
           'Favorilerim',
           style: AppTheme.safePoppins(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: AppTheme.textPrimary,
+            color: AppTheme.background,
           ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.white,
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
           icon: const Icon(
             Icons.arrow_back_ios_new,
-            color: AppTheme.textPrimary,
+            color: AppTheme.background,
           ),
           onPressed: () => Navigator.pop(context),
         ),
@@ -87,18 +102,40 @@ class _FavoritesViewContentState extends State<_FavoritesViewContent> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.favorite_border_rounded,
-                    size: 64,
-                    color: Colors.grey[300],
+                  Container(
+                    width: 120,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      color: AppTheme.primary.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.favorite_border_rounded,
+                      size: 64,
+                      color: AppTheme.primary,
+                    ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
                   Text(
-                    'Henüz favori ürününüz yok.',
+                    'Favori Ürün Bulunamadı',
                     style: AppTheme.safePoppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: AppTheme.textSecondary,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 40),
+                    child: Text(
+                      'Beğendiğiniz ürünleri favorilere ekleyerek burada görebilirsiniz.',
+                      textAlign: TextAlign.center,
+                      style: AppTheme.safePoppins(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                        color: AppTheme.textSecondary,
+                        height: 1.5,
+                      ),
                     ),
                   ),
                 ],
@@ -110,7 +147,7 @@ class _FavoritesViewContentState extends State<_FavoritesViewContent> {
             padding: const EdgeInsets.all(16),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              childAspectRatio: 0.65,
+              childAspectRatio: 0.62, // Optimized for ProductCard
               crossAxisSpacing: 16,
               mainAxisSpacing: 16,
             ),

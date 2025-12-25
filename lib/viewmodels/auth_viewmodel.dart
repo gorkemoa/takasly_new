@@ -62,6 +62,9 @@ class AuthViewModel extends ChangeNotifier {
     await _checkLoginStatus();
   }
 
+  bool _isAuthCheckComplete = false;
+  bool get isAuthCheckComplete => _isAuthCheckComplete;
+
   Future<void> _checkLoginStatus() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('userToken');
@@ -74,6 +77,8 @@ class AuthViewModel extends ChangeNotifier {
       // Optionally refresh user profile
       getUser();
     }
+    _isAuthCheckComplete = true;
+    notifyListeners();
   }
 
   Future<void> login(String email, String password) async {
