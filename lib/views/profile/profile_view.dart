@@ -9,6 +9,7 @@ import 'favorites_view.dart';
 import 'my_ads_view.dart';
 import 'profile_edit_view.dart';
 import 'change_password_view.dart';
+import 'settings_view.dart';
 
 class ProfileView extends StatefulWidget {
   const ProfileView({super.key});
@@ -37,14 +38,14 @@ class _ProfileViewState extends State<ProfileView> {
     if (!isLoggedIn) {
       return Scaffold(
         backgroundColor: AppTheme.background,
-        appBar: _buildAppBar(),
+        appBar: _buildAppBar(context),
         body: SafeArea(child: _buildGuestProfile(context)),
       );
     }
 
     return Scaffold(
       backgroundColor: AppTheme.background,
-      appBar: _buildAppBar(),
+      appBar: _buildAppBar(context),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
         child: Column(
@@ -111,7 +112,7 @@ class _ProfileViewState extends State<ProfileView> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const ProfileEditView(),
+                        builder: (context) => const SettingsView(),
                       ),
                     );
                   },
@@ -177,23 +178,6 @@ class _ProfileViewState extends State<ProfileView> {
                 ),
               ),
             ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: TextButton(
-                onPressed: () {
-                  _showDeleteAccountConfirmation(context, authViewModel);
-                },
-                child: Text(
-                  "Hesabımı Sil",
-                  style: AppTheme.safePoppins(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.grey,
-                  ),
-                ),
-              ),
-            ),
             const SizedBox(height: 32),
           ],
         ),
@@ -201,7 +185,7 @@ class _ProfileViewState extends State<ProfileView> {
     );
   }
 
-  PreferredSizeWidget _buildAppBar() {
+  PreferredSizeWidget _buildAppBar(BuildContext context) {
     return AppBar(
       title: Text(
         'Hesabım',
@@ -215,6 +199,17 @@ class _ProfileViewState extends State<ProfileView> {
       backgroundColor: AppTheme.primary,
       iconTheme: const IconThemeData(color: AppTheme.background),
       actionsIconTheme: const IconThemeData(color: AppTheme.background),
+      actions: [
+        IconButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const SettingsView()),
+            );
+          },
+          icon: const Icon(Icons.settings_outlined),
+        ),
+      ],
       elevation: 0,
       scrolledUnderElevation: 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
@@ -346,16 +341,26 @@ class _ProfileViewState extends State<ProfileView> {
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppTheme.background,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(
-              Icons.chevron_right_rounded,
-              color: AppTheme.textPrimary,
-              size: 20,
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ProfileEditView(),
+                ),
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.background,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.edit_outlined,
+                color: AppTheme.primary,
+                size: 20,
+              ),
             ),
           ),
         ],
@@ -539,62 +544,6 @@ class _ProfileViewState extends State<ProfileView> {
             },
             child: Text(
               'Çıkış Yap',
-              style: AppTheme.safePoppins(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: AppTheme.error,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showDeleteAccountConfirmation(
-    BuildContext context,
-    AuthViewModel authViewModel,
-  ) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          'Hesabımı Sil',
-          style: AppTheme.safePoppins(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: AppTheme.textPrimary,
-          ),
-        ),
-        content: Text(
-          'Hesabınızı silmek istediğinize emin misiniz? Bu işlem geri alınamaz.',
-          style: AppTheme.safePoppins(
-            fontSize: 15,
-            fontWeight: FontWeight.w400,
-            color: AppTheme.textSecondary,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'İptal',
-              style: AppTheme.safePoppins(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: AppTheme.textSecondary,
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context); // Close dialog
-              authViewModel.deleteAccount();
-            },
-            child: Text(
-              'Hesabımı Sil',
               style: AppTheme.safePoppins(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
