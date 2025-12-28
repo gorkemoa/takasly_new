@@ -91,11 +91,14 @@ class _SearchViewState extends State<SearchView> {
                   ),
                   child: SafeArea(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 10,
+                      ),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          // Top Bar
+                          // Top Bar with Back Button and Title
                           SizedBox(
                             height: 44,
                             width: double.infinity,
@@ -107,10 +110,10 @@ class _SearchViewState extends State<SearchView> {
                                   child: GestureDetector(
                                     onTap: () => Navigator.pop(context),
                                     child: Container(
-                                      padding: const EdgeInsets.all(10),
+                                      padding: const EdgeInsets.all(8),
                                       decoration: BoxDecoration(
                                         color: Colors.white.withOpacity(0.2),
-                                        borderRadius: BorderRadius.circular(14),
+                                        borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: const Icon(
                                         Icons.arrow_back_ios_new_rounded,
@@ -123,31 +126,45 @@ class _SearchViewState extends State<SearchView> {
                                 Text(
                                   'Ürün Ara',
                                   style: AppTheme.safePoppins(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w700,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
                                     color: Colors.white,
+                                    letterSpacing: 0.5,
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                          const SizedBox(height: 20),
-                          // Search Bar Row
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(18),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.05),
-                                        blurRadius: 10,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ],
+                          const SizedBox(height: 24),
+
+                          // Unified Modern Search Bar
+                          Container(
+                            height: 55, // Fixed comfortable height
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 10),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                // Leading Search Icon
+                                const Padding(
+                                  padding: EdgeInsets.only(left: 16, right: 12),
+                                  child: Icon(
+                                    Icons.search_rounded,
+                                    color: AppTheme.primary,
+                                    size: 24,
                                   ),
+                                ),
+
+                                // Search Input Field
+                                Expanded(
                                   child:
                                       ValueListenableBuilder<TextEditingValue>(
                                         valueListenable: _searchController,
@@ -155,35 +172,34 @@ class _SearchViewState extends State<SearchView> {
                                           return TextField(
                                             controller: _searchController,
                                             textInputAction:
-                                                TextInputAction.done,
-                                            onSubmitted: (_) {
+                                                TextInputAction.search,
+                                            onSubmitted: (val) {
                                               FocusScope.of(context).unfocus();
+                                              _performSearch(val);
                                             },
                                             style: AppTheme.safePoppins(
-                                              fontSize: 14,
+                                              fontSize: 15,
                                               fontWeight: FontWeight.w500,
                                               color: AppTheme.textPrimary,
                                             ),
                                             decoration: InputDecoration(
                                               hintText: 'Neye ihtiyacın var?',
                                               hintStyle: AppTheme.safePoppins(
-                                                color: Colors.grey.shade500,
+                                                color: Colors.grey.shade400,
                                                 fontSize: 14,
                                                 fontWeight: FontWeight.w400,
                                               ),
-                                              prefixIcon: const Icon(
-                                                Icons.search_rounded,
-                                                color: AppTheme.primary,
-                                                size: 22,
-                                              ),
+                                              filled: false,
+                                              border: InputBorder.none,
+                                              enabledBorder: InputBorder.none,
+                                              focusedBorder: InputBorder.none,
+                                              errorBorder: InputBorder.none,
+                                              disabledBorder: InputBorder.none,
+                                              isDense: true,
+                                              contentPadding: EdgeInsets.zero,
                                               suffixIcon: value.text.isNotEmpty
-                                                  ? IconButton(
-                                                      icon: const Icon(
-                                                        Icons.cancel_rounded,
-                                                        color: Colors.grey,
-                                                        size: 20,
-                                                      ),
-                                                      onPressed: () {
+                                                  ? GestureDetector(
+                                                      onTap: () {
                                                         _searchController
                                                             .clear();
                                                         context
@@ -192,78 +208,74 @@ class _SearchViewState extends State<SearchView> {
                                                             >()
                                                             .clearSearch();
                                                       },
+                                                      child: Icon(
+                                                        Icons.cancel_rounded,
+                                                        color: Colors
+                                                            .grey
+                                                            .shade300,
+                                                        size: 20,
+                                                      ),
                                                     )
                                                   : null,
-                                              border: InputBorder.none,
-                                              contentPadding:
-                                                  const EdgeInsets.symmetric(
-                                                    vertical: 15,
-                                                  ),
                                             ),
                                           );
                                         },
                                       ),
                                 ),
-                              ),
-                              const SizedBox(width: 8),
-                              GestureDetector(
-                                onTap: _showFilterBottomSheet,
-                                child: Container(
-                                  height: 52,
-                                  width: 52,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(18),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.1),
-                                        blurRadius: 10,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ],
-                                  ),
-                                  child: const Icon(
-                                    Icons.tune_rounded,
-                                    color: AppTheme.primary,
-                                    size: 24,
+
+                                // Vertical Setup Divider
+                                Container(
+                                  height: 24,
+                                  width: 1.5,
+                                  color: Colors.grey.shade100,
+                                  margin: const EdgeInsets.symmetric(
+                                    horizontal: 4,
                                   ),
                                 ),
-                              ),
-                              const SizedBox(width: 8),
-                              GestureDetector(
-                                onTap: () {
-                                  FocusScope.of(context).unfocus();
-                                  _performSearch(_searchController.text);
-                                },
-                                child: Container(
-                                  height: 52,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 20,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(18),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.1),
-                                        blurRadius: 10,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      'Ara',
-                                      style: AppTheme.safePoppins(
-                                        color: AppTheme.primary,
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w600,
+
+                                // Filter Button
+                                Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: _showFilterBottomSheet,
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(10),
+                                      child: Icon(
+                                        Icons.tune_rounded,
+                                        color: AppTheme.textSecondary,
+                                        size: 22,
                                       ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            ],
+
+                                // Search Action Button
+                                Padding(
+                                  padding: const EdgeInsets.all(6.0),
+                                  child: Material(
+                                    color: AppTheme.primary,
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: InkWell(
+                                      onTap: () {
+                                        FocusScope.of(context).unfocus();
+                                        _performSearch(_searchController.text);
+                                      },
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: const SizedBox(
+                                        width: 44,
+                                        height: 44,
+                                        child: Icon(
+                                          Icons.arrow_forward_rounded,
+                                          color: Colors.white,
+                                          size: 20,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
