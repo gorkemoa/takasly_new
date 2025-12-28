@@ -125,6 +125,8 @@ class AuthViewModel extends ChangeNotifier {
       return;
     }
 
+    if (_state == AuthState.busy) return;
+
     _state = AuthState.busy;
     _errorMessage = null;
     notifyListeners();

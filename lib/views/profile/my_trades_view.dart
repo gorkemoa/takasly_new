@@ -53,9 +53,12 @@ class _MyTradesViewContentState extends State<_MyTradesViewContent>
     if (authVM.isAuthCheckComplete) {
       _isInitDone = true;
       if (authVM.user != null) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          context.read<TradeViewModel>().getTrades(authVM.user!.userID);
-        });
+        final tradeVM = context.read<TradeViewModel>();
+        if (tradeVM.trades.isEmpty && !tradeVM.isLoading) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            tradeVM.getTrades(authVM.user!.userID);
+          });
+        }
       }
     }
   }

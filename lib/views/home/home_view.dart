@@ -90,12 +90,12 @@ class _HomeViewState extends State<HomeView> {
     }
   }
 
-  void _refreshCurrentPage() {
+  void _refreshCurrentPage(int index) {
     final authVM = context.read<AuthViewModel>();
     final token = authVM.user?.token;
     final userID = authVM.user?.userID;
 
-    switch (_selectedIndex) {
+    switch (index) {
       case 0: // Home
         context.read<ProductViewModel>().fetchProducts(isRefresh: true);
         context.read<HomeViewModel>().init();
@@ -530,13 +530,10 @@ class _HomeViewState extends State<HomeView> {
       bottomNavigationBar: CustomBottomNavigationBar(
         selectedIndex: _selectedIndex,
         onItemSelected: (index) {
-          if (_selectedIndex == index) {
-            _refreshCurrentPage();
-          } else {
-            setState(() {
-              _selectedIndex = index;
-            });
-          }
+          setState(() {
+            _selectedIndex = index;
+          });
+          _refreshCurrentPage(index);
         },
       ),
     );

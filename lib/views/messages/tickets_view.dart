@@ -26,11 +26,13 @@ class _TicketsViewState extends State<TicketsView> {
 
   void _fetchTickets({bool isRefresh = false}) {
     final authVM = context.read<AuthViewModel>();
+    final ticketVM = context.read<TicketViewModel>();
+
+    // Guard: Don't trigger initial fetch if already loading (started by HomeView)
+    if (!isRefresh && ticketVM.isLoading) return;
+
     if (authVM.user?.token != null) {
-      context.read<TicketViewModel>().fetchTickets(
-        authVM.user!.token,
-        isRefresh: isRefresh,
-      );
+      ticketVM.fetchTickets(authVM.user!.token, isRefresh: isRefresh);
     }
   }
 

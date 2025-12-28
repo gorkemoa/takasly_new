@@ -14,6 +14,7 @@ class TradeViewModel extends ChangeNotifier {
   String? errorMessage;
 
   Future<void> getTrades(int userId) async {
+    if (isLoading) return;
     isLoading = true;
     errorMessage = null;
     notifyListeners();

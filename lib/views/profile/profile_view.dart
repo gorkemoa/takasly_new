@@ -26,7 +26,7 @@ class _ProfileViewState extends State<ProfileView> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
-      if (authViewModel.user != null) {
+      if (authViewModel.user != null && authViewModel.state != AuthState.busy) {
         authViewModel.getUser();
       }
     });
