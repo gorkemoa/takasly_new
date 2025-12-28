@@ -24,7 +24,7 @@ class ProductCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: AppTheme.borderRadius,
-          border: Border.all(color: Colors.grey.withOpacity(0.15)),
+          border: Border.all(color: Colors.black.withOpacity(0.2)),
           boxShadow: AppTheme.cardShadow,
         ),
         child: Column(
