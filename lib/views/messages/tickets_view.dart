@@ -231,14 +231,17 @@ class _TicketsViewState extends State<TicketsView> {
                           ),
                         )
                       : const Icon(Icons.chevron_right, color: Colors.grey),
-                  onTap: () {
+                  onTap: () async {
                     if (ticket.ticketID != null) {
-                      Navigator.push(
+                      await Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => ChatView(ticket: ticket),
                         ),
                       );
+                      if (context.mounted) {
+                        _fetchTickets(isRefresh: true);
+                      }
                     }
                   },
                 );
