@@ -178,8 +178,8 @@ class TicketViewModel extends ChangeNotifier {
     } finally {
       if (!isSilent) {
         isMessageLoading = false;
-        notifyListeners();
       }
+      notifyListeners();
     }
   }
 
