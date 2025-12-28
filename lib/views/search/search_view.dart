@@ -8,6 +8,7 @@ import '../../theme/app_theme.dart';
 import '../widgets/product_card.dart';
 import '../products/product_detail_view.dart';
 import '../../models/search/popular_category_model.dart';
+import 'widgets/search_filter_bottom_sheet.dart';
 
 class SearchView extends StatefulWidget {
   const SearchView({super.key});
@@ -49,347 +50,412 @@ class _SearchViewState extends State<SearchView> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.background,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(160),
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppTheme.primary,
-            borderRadius: const BorderRadius.only(
-              bottomLeft: Radius.circular(30),
-              bottomRight: Radius.circular(30),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: AppTheme.primary.withOpacity(0.3),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(
-                    height: 44,
-                    width: double.infinity,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        // Back Button
-                        Positioned(
-                          left: 0,
-                          child: GestureDetector(
-                            onTap: () => Navigator.pop(context),
-                            child: Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                              child: const Icon(
-                                Icons.arrow_back_ios_new_rounded,
-                                size: 18,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                        Text(
-                          'Ürün Ara',
-                          style: AppTheme.safePoppins(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      // Search Field
-                      Expanded(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(18),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: ValueListenableBuilder<TextEditingValue>(
-                            valueListenable: _searchController,
-                            builder: (context, value, child) {
-                              return TextField(
-                                controller: _searchController,
-                                autofocus: true,
-                                textInputAction: TextInputAction.done,
-                                onSubmitted: (_) {
-                                  FocusScope.of(context).unfocus();
-                                },
-                                style: AppTheme.safePoppins(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: AppTheme.textPrimary,
-                                ),
-                                decoration: InputDecoration(
-                                  hintText: 'Neye ihtiyacın var?',
-                                  hintStyle: AppTheme.safePoppins(
-                                    color: Colors.grey.shade500,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w400,
-                                  ),
-                                  prefixIcon: const Icon(
-                                    Icons.search_rounded,
-                                    color: AppTheme.primary,
-                                    size: 22,
-                                  ),
-                                  suffixIcon: value.text.isNotEmpty
-                                      ? IconButton(
-                                          icon: const Icon(
-                                            Icons.cancel_rounded,
-                                            color: Colors.grey,
-                                            size: 20,
-                                          ),
-                                          onPressed: () {
-                                            _searchController.clear();
-                                            context
-                                                .read<SearchViewModel>()
-                                                .clearSearch();
-                                          },
-                                        )
-                                      : null,
-                                  border: InputBorder.none,
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    vertical: 15,
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      // Search Button
-                      GestureDetector(
-                        onTap: () {
-                          FocusScope.of(context).unfocus();
-                          _performSearch(_searchController.text);
-                        },
-                        child: Container(
-                          height: 52,
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(18),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Center(
-                            child: Text(
-                              'Ara',
-                              style: AppTheme.safePoppins(
-                                color: AppTheme.primary,
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-      body: Consumer<SearchViewModel>(
-        builder: (context, viewModel, child) {
-          if (viewModel.isLoading && viewModel.products.isEmpty) {
-            return const Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
-              ),
-            );
-          }
-
-          if (viewModel.errorMessage != null) {
-            return _buildEmptyState(
-              icon: Icons.error_outline_rounded,
-              title: "Bir Sorun Oluştu",
-              subtitle: viewModel.errorMessage!,
-              color: Colors.redAccent,
-            );
-          }
-
-          if (viewModel.products.isEmpty) {
-            if (_searchController.text.isEmpty) {
-              if (viewModel.popularCategories.isNotEmpty) {
-                return _buildPopularCategories(viewModel.popularCategories);
-              }
-              return _buildEmptyState(
-                icon: Icons.manage_search_rounded,
-                title: "Keşfetmeye Hazır mısın?",
-                subtitle: "Aradığın her şeyi burada bulabilirsin.",
-              );
-            }
-
-            return _buildEmptyState(
-              icon: Icons.search_off_rounded,
-              title: "Sonuç Bulunamadı",
-              subtitle:
-                  "'${_searchController.text}' için uygun sonuç bulamadık.",
-            );
-          }
-
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (viewModel.currentCategoryName != null)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppTheme.primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: AppTheme.primary.withOpacity(0.2),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              "Kategori: ${viewModel.currentCategoryName}",
-                              style: AppTheme.safePoppins(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: AppTheme.primary,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            GestureDetector(
-                              onTap: () {
-                                context.read<SearchViewModel>().clearSearch();
-                                _searchController.clear();
-                              },
-                              child: const Icon(
-                                Icons.close_rounded,
-                                size: 18,
-                                color: AppTheme.primary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
-                child: Text(
-                  "${viewModel.totalItems} Sonuç Bulundu",
-                  style: AppTheme.safePoppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.textPrimary,
-                  ),
-                ),
-              ),
-              Expanded(
-                child: GridView.builder(
-                  controller: _scrollController,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 10,
-                  ),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 0.65, // Adjust for card height
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                  ),
-                  itemCount:
-                      viewModel.products.length +
-                      (viewModel.isLoadMoreRunning ? 1 : 0),
-                  itemBuilder: (context, index) {
-                    if (index == viewModel.products.length) {
-                      return const Center(
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      );
-                    }
-
-                    final product = viewModel.products[index];
-                    return ProductCard(
-                      product: product,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ChangeNotifierProvider(
-                              create: (_) => ProductDetailViewModel(),
-                              child: ProductDetailView(
-                                productId: product.productID!,
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                      onFavoritePressed: () {
-                        // Optional: Implement favorite logic here if needed
-                      },
-                    );
-                  },
-                ),
-              ),
-            ],
-          );
-        },
+  void _showFilterBottomSheet() {
+    final viewModel = context.read<SearchViewModel>();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => ChangeNotifierProvider.value(
+        value: viewModel,
+        child: const SearchFilterBottomSheet(),
       ),
     );
   }
 
-  Widget _buildPopularCategories(List<PopularCategory> categories) {
-    return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-      children: [
-        Text(
-          "Popüler Kategoriler",
-          style: AppTheme.safePoppins(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: AppTheme.textSecondary,
-            letterSpacing: 0.5,
-          ),
-        ),
-        const SizedBox(height: 20),
-        ...categories.map((category) => _buildPopularCategoryItem(category)),
-      ],
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppTheme.background,
+      body: Consumer<SearchViewModel>(
+        builder: (context, viewModel, child) {
+          return CustomScrollView(
+            controller: _scrollController,
+            slivers: [
+              // 1. Header Section
+              SliverToBoxAdapter(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary,
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(30),
+                      bottomRight: Radius.circular(30),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppTheme.primary.withOpacity(0.3),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: SafeArea(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Top Bar
+                          SizedBox(
+                            height: 44,
+                            width: double.infinity,
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                Positioned(
+                                  left: 0,
+                                  child: GestureDetector(
+                                    onTap: () => Navigator.pop(context),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(14),
+                                      ),
+                                      child: const Icon(
+                                        Icons.arrow_back_ios_new_rounded,
+                                        size: 18,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Text(
+                                  'Ürün Ara',
+                                  style: AppTheme.safePoppins(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          // Search Bar Row
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(18),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.05),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child:
+                                      ValueListenableBuilder<TextEditingValue>(
+                                        valueListenable: _searchController,
+                                        builder: (context, value, child) {
+                                          return TextField(
+                                            controller: _searchController,
+                                            textInputAction:
+                                                TextInputAction.done,
+                                            onSubmitted: (_) {
+                                              FocusScope.of(context).unfocus();
+                                            },
+                                            style: AppTheme.safePoppins(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                              color: AppTheme.textPrimary,
+                                            ),
+                                            decoration: InputDecoration(
+                                              hintText: 'Neye ihtiyacın var?',
+                                              hintStyle: AppTheme.safePoppins(
+                                                color: Colors.grey.shade500,
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w400,
+                                              ),
+                                              prefixIcon: const Icon(
+                                                Icons.search_rounded,
+                                                color: AppTheme.primary,
+                                                size: 22,
+                                              ),
+                                              suffixIcon: value.text.isNotEmpty
+                                                  ? IconButton(
+                                                      icon: const Icon(
+                                                        Icons.cancel_rounded,
+                                                        color: Colors.grey,
+                                                        size: 20,
+                                                      ),
+                                                      onPressed: () {
+                                                        _searchController
+                                                            .clear();
+                                                        context
+                                                            .read<
+                                                              SearchViewModel
+                                                            >()
+                                                            .clearSearch();
+                                                      },
+                                                    )
+                                                  : null,
+                                              border: InputBorder.none,
+                                              contentPadding:
+                                                  const EdgeInsets.symmetric(
+                                                    vertical: 15,
+                                                  ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              GestureDetector(
+                                onTap: _showFilterBottomSheet,
+                                child: Container(
+                                  height: 52,
+                                  width: 52,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(18),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.1),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: const Icon(
+                                    Icons.tune_rounded,
+                                    color: AppTheme.primary,
+                                    size: 24,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              GestureDetector(
+                                onTap: () {
+                                  FocusScope.of(context).unfocus();
+                                  _performSearch(_searchController.text);
+                                },
+                                child: Container(
+                                  height: 52,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(18),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.1),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      'Ara',
+                                      style: AppTheme.safePoppins(
+                                        color: AppTheme.primary,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              // 2. Logic & Content
+              if (viewModel.isLoading && viewModel.products.isEmpty)
+                SliverFillRemaining(
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        AppTheme.primary,
+                      ),
+                    ),
+                  ),
+                )
+              else if (viewModel.errorMessage != null)
+                SliverFillRemaining(
+                  child: _buildEmptyState(
+                    icon: Icons.error_outline_rounded,
+                    title: "Bir Sorun Oluştu",
+                    subtitle: viewModel.errorMessage!,
+                    color: Colors.redAccent,
+                  ),
+                )
+              else if (viewModel.products.isEmpty) ...[
+                if (_searchController.text.isEmpty &&
+                    viewModel.popularCategories.isNotEmpty) ...[
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                      child: Text(
+                        "Popüler Kategoriler",
+                        style: AppTheme.safePoppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.textSecondary,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 20,
+                    ),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        return _buildPopularCategoryItem(
+                          viewModel.popularCategories[index],
+                        );
+                      }, childCount: viewModel.popularCategories.length),
+                    ),
+                  ),
+                ] else
+                  SliverFillRemaining(
+                    child: _buildEmptyState(
+                      icon: _searchController.text.isEmpty
+                          ? Icons.manage_search_rounded
+                          : Icons.search_off_rounded,
+                      title: _searchController.text.isEmpty
+                          ? "Keşfetmeye Hazır mısın?"
+                          : "Sonuç Bulunamadı",
+                      subtitle: _searchController.text.isEmpty
+                          ? "Aradığın her şeyi burada bulabilirsin."
+                          : "'${_searchController.text}' için uygun sonuç bulamadık.",
+                    ),
+                  ),
+              ] else ...[
+                SliverToBoxAdapter(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (viewModel.currentCategoryName != null)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.primary.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: AppTheme.primary.withOpacity(0.2),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      "Kategori: ${viewModel.currentCategoryName}",
+                                      style: AppTheme.safePoppins(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppTheme.primary,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    GestureDetector(
+                                      onTap: () {
+                                        context
+                                            .read<SearchViewModel>()
+                                            .clearSearch();
+                                        _searchController.clear();
+                                      },
+                                      child: const Icon(
+                                        Icons.close_rounded,
+                                        size: 18,
+                                        color: AppTheme.primary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+                        child: Text(
+                          "${viewModel.totalItems} Sonuç Bulundu",
+                          style: AppTheme.safePoppins(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.textPrimary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
+                  sliver: SliverGrid(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 0.65,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                        ),
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final product = viewModel.products[index];
+                      return ProductCard(
+                        product: product,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ChangeNotifierProvider(
+                                create: (_) => ProductDetailViewModel(),
+                                child: ProductDetailView(
+                                  productId: product.productID!,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                        onFavoritePressed: () {
+                          if (product.productID != null) {
+                            viewModel.toggleFavorite(product.productID!);
+                          }
+                        },
+                      );
+                    }, childCount: viewModel.products.length),
+                  ),
+                ),
+                if (viewModel.isLoadMoreRunning)
+                  const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.all(20),
+                      child: Center(
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ),
+                  ),
+              ],
+            ],
+          );
+        },
+      ),
     );
   }
 
@@ -450,7 +516,7 @@ class _SearchViewState extends State<SearchView> {
                 ),
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 18),
             Icon(
               Icons.chevron_right_rounded,
               color: Colors.grey.shade400,

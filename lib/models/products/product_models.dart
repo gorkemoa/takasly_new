@@ -170,6 +170,59 @@ class Product {
       isTrade: json['isTrade'],
     );
   }
+  Product copyWith({
+    int? productID,
+    String? productCode,
+    String? productTitle,
+    String? productDesc,
+    String? productImage,
+    String? productCondition,
+    List<Category>? categoryList,
+    int? userID,
+    int? categoryID,
+    int? conditionID,
+    int? cityID,
+    int? districtID,
+    String? cityTitle,
+    String? districtTitle,
+    String? productLat,
+    String? productLong,
+    String? userFullname,
+    String? userFirstname,
+    String? userLastname,
+    String? createdAt,
+    bool? isFavorite,
+    bool? isSponsor,
+    bool? isTrade,
+    bool? isSold,
+  }) {
+    return Product(
+      productID: productID ?? this.productID,
+      productCode: productCode ?? this.productCode,
+      productTitle: productTitle ?? this.productTitle,
+      productDesc: productDesc ?? this.productDesc,
+      productImage: productImage ?? this.productImage,
+      productCondition: productCondition ?? this.productCondition,
+      categoryList: categoryList ?? this.categoryList,
+      userID: userID ?? this.userID,
+      categoryID: categoryID ?? this.categoryID,
+      conditionID: conditionID ?? this.conditionID,
+      cityID: cityID ?? this.cityID,
+      districtID: districtID ?? this.districtID,
+      cityTitle: cityTitle ?? this.cityTitle,
+      districtTitle: districtTitle ?? this.districtTitle,
+      productLat: productLat ?? this.productLat,
+      productLong: productLong ?? this.productLong,
+      userFullname: userFullname ?? this.userFullname,
+      userFirstname: userFirstname ?? this.userFirstname,
+      userLastname: userLastname ?? this.userLastname,
+      createdAt: createdAt ?? this.createdAt,
+      isFavorite: isFavorite ?? this.isFavorite,
+      isSponsor: isSponsor ?? this.isSponsor,
+      isTrade: isTrade ?? this.isTrade,
+    );
+  }
+
   String? get categoryTitle {
     if (categoryList == null || categoryList!.isEmpty) return null;
     if (categoryID != null) {

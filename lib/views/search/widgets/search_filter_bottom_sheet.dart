@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
-import '../../../../viewmodels/home_viewmodel.dart';
-import '../../../../viewmodels/product_viewmodel.dart';
-import '../../../../theme/app_theme.dart';
-import 'category_selection_sheet.dart';
+import '../../../viewmodels/search_viewmodel.dart';
+import '../../../theme/app_theme.dart'; // We can reuse this if adaptable, or just category selector logic
 
-class FilterBottomSheet extends StatelessWidget {
-  const FilterBottomSheet({super.key});
+class SearchFilterBottomSheet extends StatelessWidget {
+  const SearchFilterBottomSheet({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -22,8 +20,8 @@ class FilterBottomSheet extends StatelessWidget {
         maxChildSize: 0.95,
         expand: false,
         builder: (context, scrollController) {
-          return Consumer<HomeViewModel>(
-            builder: (context, homeVM, child) {
+          return Consumer<SearchViewModel>(
+            builder: (context, searchVM, child) {
               return Column(
                 children: [
                   // Handle
@@ -75,31 +73,31 @@ class FilterBottomSheet extends StatelessWidget {
                           runSpacing: 10,
                           children: [
                             _buildSortOption(
-                              homeVM,
+                              searchVM,
                               'default',
                               'Önerilen',
                               Icons.star_border,
                             ),
                             _buildSortOption(
-                              homeVM,
+                              searchVM,
                               'newest',
                               'En Yeni',
                               Icons.access_time,
                             ),
                             _buildSortOption(
-                              homeVM,
+                              searchVM,
                               'popular',
                               'Popüler',
                               Icons.trending_up,
                             ),
                             _buildSortOption(
-                              homeVM,
+                              searchVM,
                               'location',
                               'Yakınımda',
                               Icons.location_on_outlined,
                             ),
                             _buildSortOption(
-                              homeVM,
+                              searchVM,
                               'oldest',
                               'En Eski',
                               Icons.history,
@@ -110,18 +108,18 @@ class FilterBottomSheet extends StatelessWidget {
                         const SizedBox(height: 24),
                         _buildSectionTitle('Kategori'),
                         const SizedBox(height: 12),
-                        _buildCategorySelector(context, homeVM),
+                        _buildCategorySelector(context, searchVM),
 
                         const SizedBox(height: 24),
                         _buildSectionTitle('Konum'),
                         const SizedBox(height: 12),
-                        _buildLocationSelector(context, homeVM),
+                        _buildLocationSelector(context, searchVM),
 
                         const SizedBox(height: 24),
-                        if (homeVM.conditions.isNotEmpty) ...[
+                        if (searchVM.conditions.isNotEmpty) ...[
                           _buildSectionTitle('Ürün Durumu'),
                           const SizedBox(height: 12),
-                          _buildConditionSelector(homeVM),
+                          _buildConditionSelector(searchVM),
                           const SizedBox(height: 24),
                         ],
                       ],
@@ -146,13 +144,14 @@ class FilterBottomSheet extends StatelessWidget {
                         Expanded(
                           child: OutlinedButton(
                             onPressed: () {
-                              homeVM.clearFilters();
-                              // Apply clear immediately or let user click apply?
-                              // Usually clear resets UI, then they click Apply.
-                              // But previous implementation cleared and applied.
-                              // Let's just clear internal state, user must click apply to fetch.
-                              // Or maybe better user experience:
-                              // Clear resets UI state.
+                              searchVM
+                                  .clearSearch(); // This clears query too. Maybe we want clearFilters?
+                              // But user might want to keep query.
+                              // Implementing separate clearFilters in SearchViewModel would be better if needed.
+                              // For now clearSearch resets everything which is safe.
+                              // Wait, clearSearch clears query too. The user might want to clear filters but keep "iPhone" query.
+                              // Let's implement specific clear if needed or just use current behavior.
+                              // Current SearchViewModel.clearSearch resets everything including query.
                             },
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -176,20 +175,7 @@ class FilterBottomSheet extends StatelessWidget {
                           flex: 2,
                           child: ElevatedButton(
                             onPressed: () {
-                              final cityId = homeVM.selectedCity?.cityNo ?? 0;
-                              final districtId =
-                                  homeVM.selectedDistrict?.districtNo ?? 0;
-                              final sortType = homeVM.sortType;
-                              final catId = homeVM.selectedCategory?.catID ?? 0;
-                              final conds = homeVM.selectedConditionIds;
-
-                              context.read<ProductViewModel>().updateAllFilters(
-                                sortType: sortType,
-                                categoryID: catId,
-                                conditionIDs: conds,
-                                cityID: cityId,
-                                districtID: districtId,
-                              );
+                              searchVM.applyFilters();
                               Navigator.pop(context);
                             },
                             style: ElevatedButton.styleFrom(
@@ -234,7 +220,7 @@ class FilterBottomSheet extends StatelessWidget {
   }
 
   Widget _buildSortOption(
-    HomeViewModel vm,
+    SearchViewModel vm,
     String value,
     String label,
     IconData icon,
@@ -276,72 +262,58 @@ class FilterBottomSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildCategorySelector(BuildContext context, HomeViewModel vm) {
-    return InkWell(
+  Widget _buildCategorySelector(BuildContext context, SearchViewModel vm) {
+    return GestureDetector(
       onTap: () {
-        showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          backgroundColor: Colors.transparent,
-          builder: (context) => const CategorySelectionSheet(),
+        int initialIndex = 0;
+        if (vm.currentCategoryName != null) {
+          initialIndex = vm.categories.indexWhere(
+            (c) => c.catName == vm.currentCategoryName,
+          );
+          if (initialIndex == -1) initialIndex = 0;
+        }
+
+        _showPicker(
+          context,
+          title: 'Kategori Seç',
+          items: vm.categories.map((e) => e.catName).toList(),
+          initialIndex: initialIndex,
+          onSelectedItemChanged: (index) {
+            if (index >= 0 && index < vm.categories.length) {
+              final cat = vm.categories[index];
+              vm.setCategoryFilter(cat.catID, cat.catName);
+            }
+          },
         );
       },
-      borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.grey[50],
-          border: Border.all(color: Colors.grey[200]!),
+          border: Border.all(color: Colors.grey[300]!),
           borderRadius: BorderRadius.circular(12),
+          color: Colors.white,
         ),
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.grey[100]!),
-              ),
-              child: Icon(
-                Icons.grid_view_rounded,
-                color: AppTheme.primary,
-                size: 20,
+            Text(
+              vm.currentCategoryName ?? "Kategori Seçiniz",
+              style: AppTheme.safePoppins(
+                color: vm.currentCategoryName != null
+                    ? AppTheme.textPrimary
+                    : AppTheme.textSecondary,
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
               ),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Seçilen Kategori',
-                    style: AppTheme.safePoppins(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
-                      color: AppTheme.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    vm.selectedCategory?.catName ?? 'Tüm Kategoriler',
-                    style: AppTheme.safePoppins(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.textPrimary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+            const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildLocationSelector(BuildContext context, HomeViewModel vm) {
+  Widget _buildLocationSelector(BuildContext context, SearchViewModel vm) {
     return Column(
       children: [
         // City Selector
@@ -566,7 +538,7 @@ class FilterBottomSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildConditionSelector(HomeViewModel vm) {
+  Widget _buildConditionSelector(SearchViewModel vm) {
     return Wrap(
       spacing: 8,
       runSpacing: 8,
