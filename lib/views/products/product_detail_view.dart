@@ -11,7 +11,10 @@ import '../../viewmodels/product_detail_viewmodel.dart';
 import '../../models/product_detail_model.dart';
 import '../../viewmodels/profile_viewmodel.dart';
 import '../../viewmodels/auth_viewmodel.dart';
+import '../../viewmodels/ticket_viewmodel.dart';
 import '../profile/user_profile_view.dart';
+import '../messages/chat_view.dart';
+import '../../models/tickets/ticket_model.dart';
 
 class ProductDetailView extends StatefulWidget {
   final int productId;

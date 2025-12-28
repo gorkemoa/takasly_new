@@ -65,4 +65,24 @@ class TicketService {
       return false;
     }
   }
+
+  Future<Map<String, dynamic>> createTicket(
+    String userToken,
+    int targetProductID,
+    int offeredProductID,
+    String message,
+  ) async {
+    try {
+      final response = await _apiService
+          .post('service/user/account/tickets/create', {
+            'userToken': userToken,
+            'targetProductID': targetProductID,
+            'offeredProductID': offeredProductID,
+            'message': message,
+          });
+      return response;
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

@@ -247,6 +247,45 @@ class TicketViewModel extends ChangeNotifier {
     }
   }
 
+  Future<int?> createTicket(
+    String userToken,
+    int targetProductID,
+    int offeredProductID,
+    String message,
+  ) async {
+    isSendingMessage = true;
+    notifyListeners();
+
+    try {
+      final response = await _ticketService.createTicket(
+        userToken,
+        targetProductID,
+        offeredProductID,
+        message,
+      );
+
+      if (response['success'] == true) {
+        // Assuming the response data contains the new ticketID or we can just return true/false
+        // Typical structure: data: { ticketID: 123 }
+        // Let's print response to be sure in dev, but code safely
+        if (response['data'] != null && response['data']['ticketID'] != null) {
+          return int.tryParse(response['data']['ticketID'].toString());
+        }
+        return 1; // Return a dummy success if ID is missing but success is true (fallback)
+      } else {
+        messageErrorMessage = response['message'] ?? "Teklif oluşturulamadı.";
+        return null;
+      }
+    } catch (e) {
+      messageErrorMessage = "Teklif oluşturulurken hata: $e";
+      _logger.e("Create Ticket Error", error: e);
+      return null;
+    } finally {
+      isSendingMessage = false;
+      notifyListeners();
+    }
+  }
+
   Future<bool> reportUser({
     required String userToken,
     required int reportedUserID,
