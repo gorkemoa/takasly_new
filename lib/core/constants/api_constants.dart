@@ -40,7 +40,7 @@ class ApiConstants {
   static const String cities = 'service/general/general/cities/all';
   static const String districts =
       'service/general/general/districts/'; // + {cityId}
-  static const String conditions = 'service/general/general/conditions';
+  static const String conditions = 'service/general/general/productConditions';
 
   // Contact Endpoints
   static const String contactSubjects = 'service/general/contact/subjects';

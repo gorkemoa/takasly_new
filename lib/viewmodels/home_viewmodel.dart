@@ -129,36 +129,13 @@ class HomeViewModel extends ChangeNotifier {
         final district =
             place.subAdministrativeArea; // e.g., "Yenimahalle" or "Çankaya"
 
-        _logger.i('Detected location: City=$city, District=$district');
+        _logger.i(
+          'Detected location (For Logs Only): City=$city, District=$district',
+        );
 
-        if (city != null) {
-          // Find matching city in our list
-          final matchedCity = _cities.firstWhere(
-            (c) => c.cityName?.toLowerCase() == city.toLowerCase(),
-            orElse: () => City(), // Return empty if not found
-          );
-
-          if (matchedCity.cityNo != null) {
-            _selectedCity = matchedCity;
-
-            // Now fetch districts for this city
-            await fetchDistricts(matchedCity.cityNo!);
-
-            if (district != null) {
-              // Find matching district
-              // Note: Administrative areas might vary slightly in naming, simple case insensitive match
-              final matchedDistrict = _districts.firstWhere(
-                (d) => d.districtName?.toLowerCase() == district.toLowerCase(),
-                orElse: () => District(),
-              );
-
-              if (matchedDistrict.districtNo != null) {
-                _selectedDistrict = matchedDistrict;
-              }
-            }
-          }
-        }
-        notifyListeners();
+        // Fix: Do NOT auto-populate filter fields.
+        // The user wants these empty by default so they don't interfere with other filters.
+        // The nearest listings are handled by ProductViewModel using coordinates, not these UI fields.
       }
     } catch (e) {
       _logger.e('Error auto-detecting location: $e');

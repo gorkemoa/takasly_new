@@ -258,6 +258,27 @@ class _AddProductViewBodyState extends State<_AddProductViewBody> {
             }).toList(),
             onChanged: (val) => viewModel.setSelectedCategory(val),
           ),
+          // Dynamic Subcategories
+          for (int i = 0; i < viewModel.categoryLevels.length; i++) ...[
+            const SizedBox(height: 20),
+            DropdownButtonFormField<Category>(
+              // Ensure we don't access out of bounds if selectedSubCategories didn't sync yet (unlikely but safe)
+              value: (i < viewModel.selectedSubCategories.length)
+                  ? viewModel.selectedSubCategories[i]
+                  : null,
+              decoration: InputDecoration(
+                labelText: 'Alt Kategori',
+                prefixIcon: Icon(
+                  Icons.subdirectory_arrow_right,
+                  color: AppTheme.primary.withOpacity(0.7),
+                ),
+              ),
+              items: viewModel.categoryLevels[i].map((c) {
+                return DropdownMenuItem(value: c, child: Text(c.catName ?? ''));
+              }).toList(),
+              onChanged: (val) => viewModel.onSubCategoryChanged(i, val),
+            ),
+          ],
           const SizedBox(height: 20),
           DropdownButtonFormField<Condition>(
             value: viewModel.selectedCondition,
@@ -320,13 +341,6 @@ class _AddProductViewBodyState extends State<_AddProductViewBody> {
           const SizedBox(height: 20),
           DropdownButtonFormField<District>(
             value: viewModel.selectedDistrict,
-            decoration: InputDecoration(
-              labelText: 'İlçe',
-              prefixIcon: Icon(
-                Icons.map,
-                color: AppTheme.primary.withOpacity(0.7),
-              ),
-            ),
             items: viewModel.districts.map((d) {
               return DropdownMenuItem(
                 value: d,
@@ -334,6 +348,23 @@ class _AddProductViewBodyState extends State<_AddProductViewBody> {
               );
             }).toList(),
             onChanged: (val) => viewModel.setSelectedDistrict(val),
+            decoration: InputDecoration(
+              labelText: 'İlçe',
+              prefixIcon: Icon(
+                Icons.map,
+                color: AppTheme.primary.withOpacity(0.7),
+              ),
+              suffixIcon: viewModel.isDistrictsLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: Padding(
+                        padding: EdgeInsets.all(10.0),
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    )
+                  : null,
+            ),
             onTap: viewModel.selectedCity == null
                 ? () => ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Önce il seçiniz')),
@@ -344,7 +375,9 @@ class _AddProductViewBodyState extends State<_AddProductViewBody> {
           _sectionTitle('Tam Konum', 'Harita üzerinde daha görünür olun'),
           const SizedBox(height: 16),
           InkWell(
-            onTap: viewModel.fetchCurrentLocation,
+            onTap: viewModel.isLocationLoading
+                ? null
+                : viewModel.fetchCurrentLocation,
             borderRadius: BorderRadius.circular(16),
             child: Container(
               padding: const EdgeInsets.all(20),
@@ -407,7 +440,13 @@ class _AddProductViewBodyState extends State<_AddProductViewBody> {
                       ],
                     ),
                   ),
-                  if (viewModel.productLat != null)
+                  if (viewModel.isLocationLoading)
+                    const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  else if (viewModel.productLat != null)
                     const Icon(Icons.check_circle, color: AppTheme.primary),
                 ],
               ),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:logger/logger.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 
 import '../services/product_service.dart';
 import '../services/general_service.dart';
@@ -46,12 +47,16 @@ class AddProductViewModel extends ChangeNotifier {
 
   // Models
   List<Category> categories = [];
+  // Multi-level Subcategories
+  List<List<Category>> categoryLevels = [];
+  List<Category?> selectedSubCategories = [];
+
   List<Condition> conditions = [];
   List<City> cities = [];
   List<District> districts = [];
 
   // Selections
-  Category? selectedCategory;
+  Category? selectedCategory; // Main category
   Condition? selectedCondition;
   City? selectedCity;
   District? selectedDistrict;
@@ -65,8 +70,9 @@ class AddProductViewModel extends ChangeNotifier {
   double? productLat;
   double? productLong;
 
-  // State
   bool isLoading = false;
+  bool isDistrictsLoading = false;
+  bool isLocationLoading = false;
   String? errorMessage;
 
   // Init
@@ -94,6 +100,7 @@ class AddProductViewModel extends ChangeNotifier {
       final response = await _generalService
           .getCategories(); // Gets all top level
       if (response['success'] == true && response['data'] != null) {
+        if (response['data']['categories'] == null) return;
         final List list = response['data']['categories'];
         categories = list.map((e) => Category.fromJson(e)).toList();
       }
@@ -102,9 +109,41 @@ class AddProductViewModel extends ChangeNotifier {
     }
   }
 
+  Future<void> _fetchSubCategories(int parentId, int levelIndex) async {
+    try {
+      final response = await _generalService.getCategories(parentId);
+      if (response['success'] == true && response['data'] != null) {
+        if (response['data']['categories'] == null) return;
+        final List list = response['data']['categories'];
+        final newOptions = list.map((e) => Category.fromJson(e)).toList();
+
+        if (newOptions.isNotEmpty) {
+          // If we are updating an existing level (rare case) or adding a new one
+          if (levelIndex < categoryLevels.length) {
+            categoryLevels[levelIndex] = newOptions;
+            selectedSubCategories[levelIndex] = null;
+          } else {
+            // Add new level
+            categoryLevels.add(newOptions);
+            selectedSubCategories.add(null);
+          }
+          notifyListeners();
+        }
+      }
+    } catch (e) {
+      _logger.e("Error fetching sub-categories level $levelIndex: $e");
+    }
+  }
+
   Future<void> _fetchConditions() async {
     try {
-      conditions = await _generalService.getConditions();
+      final result = await _generalService.getConditions();
+      if (result.isNotEmpty) {
+        conditions = result;
+        notifyListeners();
+      } else {
+        _logger.w("fetched conditions is empty");
+      }
     } catch (e) {
       _logger.e("Error fetching conditions: $e");
     }
@@ -112,7 +151,13 @@ class AddProductViewModel extends ChangeNotifier {
 
   Future<void> _fetchCities() async {
     try {
-      cities = await _generalService.getCities();
+      final result = await _generalService.getCities();
+      if (result.isNotEmpty) {
+        cities = result;
+        notifyListeners();
+      } else {
+        _logger.w("fetched cities is empty");
+      }
     } catch (e) {
       _logger.e("Error fetching cities: $e");
     }
@@ -121,7 +166,40 @@ class AddProductViewModel extends ChangeNotifier {
   // Setters
   void setSelectedCategory(Category? category) {
     selectedCategory = category;
+
+    // Reset all sub levels
+    categoryLevels.clear();
+    selectedSubCategories.clear();
+
     notifyListeners();
+
+    if (category?.catID != null) {
+      // Try to fetch level 0 of subcategories (which is actually level 1 in hierarchy)
+      _fetchSubCategories(category!.catID!, 0);
+    }
+  }
+
+  void onSubCategoryChanged(int levelIndex, Category? category) {
+    // Update selection at this level
+    if (levelIndex < selectedSubCategories.length) {
+      selectedSubCategories[levelIndex] = category;
+    }
+
+    // Remove any deeper levels because the path changed
+    if (levelIndex + 1 < categoryLevels.length) {
+      categoryLevels.removeRange(levelIndex + 1, categoryLevels.length);
+      selectedSubCategories.removeRange(
+        levelIndex + 1,
+        selectedSubCategories.length,
+      );
+    }
+
+    notifyListeners();
+
+    // Fetch next level if a valid category was selected
+    if (category?.catID != null) {
+      _fetchSubCategories(category!.catID!, levelIndex + 1);
+    }
   }
 
   void setSelectedCondition(Condition? condition) {
@@ -147,13 +225,13 @@ class AddProductViewModel extends ChangeNotifier {
 
     if (city != null && city.cityNo != null) {
       try {
-        isLoading = true; // Local load for districts
+        isDistrictsLoading = true; // Local load for districts
         notifyListeners();
         districts = await _generalService.getDistricts(city.cityNo!);
       } catch (e) {
         _logger.e("Error fetching districts: $e");
       } finally {
-        isLoading = false;
+        isDistrictsLoading = false;
         notifyListeners();
       }
     }
@@ -209,17 +287,82 @@ class AddProductViewModel extends ChangeNotifier {
         return;
       }
 
-      isLoading = true;
+      if (permission == LocationPermission.deniedForever) {
+        errorMessage = "Konum izni kalıcı olarak reddedildi.";
+        notifyListeners();
+        return;
+      }
+
+      isLocationLoading = true;
       notifyListeners();
 
       Position position = await Geolocator.getCurrentPosition();
       productLat = position.latitude;
       productLong = position.longitude;
+
+      // Reverse Geocoding
+      try {
+        List<Placemark> placemarks = await placemarkFromCoordinates(
+          position.latitude,
+          position.longitude,
+        );
+
+        if (placemarks.isNotEmpty) {
+          final place = placemarks.first;
+          final detectedCityName = place.administrativeArea; // e.g., "Ankara"
+          final detectedDistrictName =
+              place.subAdministrativeArea; // e.g. "Cankaya"
+
+          if (detectedCityName != null) {
+            // Find matching city
+            // Normalize strings for better matching (simple approach: uppercase/lowercase check)
+            // Ideally use a normalization helper for Turkish chars if needed
+            final matchedCity = cities.firstWhere(
+              (c) =>
+                  c.cityName?.toLowerCase() == detectedCityName.toLowerCase(),
+              orElse: () => City(), // Return empty if not found
+            );
+
+            if (matchedCity.cityNo != null) {
+              selectedCity = matchedCity;
+
+              // Now fetch districts for this city
+              isDistrictsLoading = true;
+              notifyListeners();
+
+              final districtsResult = await _generalService.getDistricts(
+                matchedCity.cityNo!,
+              );
+              districts = districtsResult;
+
+              isDistrictsLoading = false;
+
+              // Find matching district
+              if (detectedDistrictName != null) {
+                final matchedDistrict = districts.firstWhere(
+                  (d) =>
+                      d.districtName?.toLowerCase() ==
+                      detectedDistrictName.toLowerCase(),
+                  orElse: () => District(),
+                );
+
+                if (matchedDistrict.districtNo != null) {
+                  selectedDistrict = matchedDistrict;
+                }
+              }
+            }
+          }
+        }
+      } catch (e) {
+        _logger.e("Reverse geocoding error: $e");
+        // We don't block the flow if address matching fails,
+        // the user still has the coordinates set.
+      }
     } catch (e) {
       _logger.e("Location error: $e");
       errorMessage = "Konum alınamadı.";
     } finally {
-      isLoading = false;
+      isLocationLoading = false;
       notifyListeners();
     }
   }
@@ -237,7 +380,8 @@ class AddProductViewModel extends ChangeNotifier {
         userToken: userToken,
         productTitle: titleController.text.trim(),
         productDesc: descController.text.trim(),
-        categoryID: selectedCategory!.catID!,
+        // Get the deepest selected category
+        categoryID: _getLastSelectedCategoryId(),
         conditionID: selectedCondition!.id!,
         tradeFor: tradeForController.text.trim(),
         productImages: selectedImages,
@@ -277,6 +421,15 @@ class AddProductViewModel extends ChangeNotifier {
       errorMessage = "Lütfen kategori seçiniz.";
       return false;
     }
+
+    // Validate that if a level exists, an option is selected
+    for (int i = 0; i < categoryLevels.length; i++) {
+      if (selectedSubCategories[i] == null) {
+        errorMessage = "Lütfen alt kategoriyi seçiniz.";
+        return false;
+      }
+    }
+
     if (selectedCondition == null) {
       errorMessage = "Lütfen durum seçiniz.";
       return false;
@@ -294,6 +447,18 @@ class AddProductViewModel extends ChangeNotifier {
       return false;
     }
     return true;
+  }
+
+  int _getLastSelectedCategoryId() {
+    if (selectedSubCategories.isNotEmpty) {
+      // Iterate backwards to find the last non-null selection
+      for (int i = selectedSubCategories.length - 1; i >= 0; i--) {
+        if (selectedSubCategories[i] != null) {
+          return selectedSubCategories[i]!.catID!;
+        }
+      }
+    }
+    return selectedCategory!.catID!;
   }
 
   @override
