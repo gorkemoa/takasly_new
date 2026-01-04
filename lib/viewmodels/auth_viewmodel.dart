@@ -87,6 +87,7 @@ class AuthViewModel extends ChangeNotifier {
 
     if (token != null && userId != null) {
       _user = LoginResponseModel(userID: userId, token: token);
+      FirebaseMessagingService.subscribeToUserTopic(userId.toString());
       _logger.i("Restored session for user: $userId");
       notifyListeners();
       // Optionally refresh user profile
@@ -113,6 +114,7 @@ class AuthViewModel extends ChangeNotifier {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('userToken', _user!.token);
         await prefs.setInt('userID', _user!.userID);
+        FirebaseMessagingService.subscribeToUserTopic(_user!.userID.toString());
       }
 
       _state = AuthState.success;
@@ -266,6 +268,9 @@ class AuthViewModel extends ChangeNotifier {
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString('userToken', _user!.token);
           await prefs.setInt('userID', _user!.userID);
+          FirebaseMessagingService.subscribeToUserTopic(
+            _user!.userID.toString(),
+          );
 
           _logger.i(
             "Verification successful (Register). User logged in: ${_user?.userID}",
@@ -522,6 +527,7 @@ class AuthViewModel extends ChangeNotifier {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('userToken', _user!.token);
         await prefs.setInt('userID', _user!.userID);
+        FirebaseMessagingService.subscribeToUserTopic(_user!.userID.toString());
 
         _state = AuthState.success;
         _logger.i(
@@ -556,6 +562,11 @@ class AuthViewModel extends ChangeNotifier {
   }
 
   Future<void> logout({bool autoRedirect = false}) async {
+    if (_user?.userID != null) {
+      FirebaseMessagingService.unsubscribeFromUserTopic(
+        _user!.userID.toString(),
+      );
+    }
     _user = null;
     _userProfile = null;
 

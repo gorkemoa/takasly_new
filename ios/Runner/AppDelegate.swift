@@ -10,29 +10,25 @@ import FirebaseMessaging
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
     FirebaseApp.configure()
+    GeneratedPluginRegistrant.register(with: self)
     
-    // Remote notification için kaydol
+    // Remote bildirimler için delegate set edilmesi (Firebase Messaging için önemli)
     if #available(iOS 10.0, *) {
-      UNUserNotificationCenter.current().delegate = self
-      let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound]
-      UNUserNotificationCenter.current().requestAuthorization(
-        options: authOptions,
-        completionHandler: { _, _ in }
-      )
-    } else {
-      let settings: UIUserNotificationSettings =
-        UIUserNotificationSettings(types: [.alert, .badge, .sound], categories: nil)
-      application.registerUserNotificationSettings(settings)
+      UNUserNotificationCenter.current().delegate = self as? UNUserNotificationCenterDelegate
     }
     
-    application.registerForRemoteNotifications()
-    
-    GeneratedPluginRegistrant.register(with: self)
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
   
+  // APNS token'ın Firebase'e bildirilmesi ve diğer pluginlere (super) iletilmesi
   override func application(_ application: UIApplication,
                             didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
     Messaging.messaging().apnsToken = deviceToken
+    super.application(application, didRegisterForRemoteNotificationsWithDeviceToken: deviceToken)
+  }
+  
+  // Hata durumunda super çağrısı
+  override func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+    super.application(application, didFailToRegisterForRemoteNotificationsWithError: error)
   }
 }

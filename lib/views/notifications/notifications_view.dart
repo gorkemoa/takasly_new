@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../viewmodels/notification_viewmodel.dart';
 import '../../viewmodels/auth_viewmodel.dart';
+import '../../services/navigation_service.dart';
+import '../../models/notification/notification_model.dart';
 
 class NotificationsView extends StatefulWidget {
   const NotificationsView({super.key});
@@ -25,24 +27,22 @@ class _NotificationsViewState extends State<NotificationsView> {
     });
   }
 
-  Future<void> _handleNotificationTap(int id, String typeId, String url) async {
+  Future<void> _handleNotificationTap(NotificationModel notification) async {
     final authVM = context.read<AuthViewModel>();
     final notVM = context.read<NotificationViewModel>();
     final token = authVM.user?.token;
 
     if (token != null) {
       // Mark as read without awaiting to proceed quickly
-      notVM.markAsRead(token, id);
+      notVM.markAsRead(token, notification.id);
     }
 
-    if (typeId == "-1" && url.isNotEmpty) {
-      final uri = Uri.parse(url);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri);
-      } else {
-        debugPrint('Could not launch $url');
-      }
-    }
+    NavigationService().handleDeepLink(
+      type: notification.type,
+      typeId: int.tryParse(notification.typeId) ?? 0,
+      url: notification.url,
+      title: notification.title,
+    );
   }
 
   void _showActions(BuildContext context) {
@@ -205,11 +205,7 @@ class _NotificationsViewState extends State<NotificationsView> {
                       ),
                       child: CupertinoButton(
                         padding: EdgeInsets.zero,
-                        onPressed: () => _handleNotificationTap(
-                          notification.id,
-                          notification.typeId,
-                          notification.url,
-                        ),
+                        onPressed: () => _handleNotificationTap(notification),
                         child: Padding(
                           padding: const EdgeInsets.all(16.0),
                           child: Column(

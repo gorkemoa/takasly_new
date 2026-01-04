@@ -54,7 +54,9 @@ class NavigationService {
           MaterialPageRoute(
             builder: (context) => ChangeNotifierProvider(
               create: (_) => TicketViewModel(),
-              child: ChatView(ticket: Ticket(ticketID: typeId)),
+              child: ChatView(
+                ticket: Ticket(ticketID: typeId, otherFullname: title),
+              ),
             ),
           ),
         );

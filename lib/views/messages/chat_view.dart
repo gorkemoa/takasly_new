@@ -252,16 +252,27 @@ class _ChatViewState extends State<ChatView> {
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
-        title: InkWell(
-          onTap: () => _navigateToProfile(widget.ticket.otherUserID),
-          child: Text(
-            widget.ticket.otherFullname ?? "Sohbet",
-            style: AppTheme.safePoppins(
-              fontWeight: FontWeight.w700,
-              fontSize: 18,
-              color: AppTheme.surface,
-            ),
-          ),
+        title: Consumer<TicketViewModel>(
+          builder: (context, viewModel, child) {
+            final name =
+                viewModel.currentTicketDetail?.otherFullname ??
+                widget.ticket.otherFullname ??
+                "Sohbet";
+            return InkWell(
+              onTap: () => _navigateToProfile(
+                viewModel.currentTicketDetail?.otherUserID ??
+                    widget.ticket.otherUserID,
+              ),
+              child: Text(
+                name,
+                style: AppTheme.safePoppins(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 18,
+                  color: AppTheme.surface,
+                ),
+              ),
+            );
+          },
         ),
         centerTitle: true,
         backgroundColor: AppTheme.primary,
