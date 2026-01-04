@@ -392,13 +392,13 @@ class _SelectedCategoryPath extends StatelessWidget {
           Row(
             children: [
               Icon(
-                Icons.layers_outlined,
+                Icons.check_circle_rounded,
                 size: 14,
-                color: AppTheme.primary.withOpacity(0.7),
+                color: AppTheme.primary,
               ),
               const SizedBox(width: 8),
               const Text(
-                'SEÇİLEN KATEGORİ PLANI',
+                'SEÇİLEN KATEGORİ',
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w900,
@@ -409,49 +409,51 @@ class _SelectedCategoryPath extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            child: Row(
-              children: path.asMap().entries.map((entry) {
-                final isLast = entry.key == path.length - 1;
-                return Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isLast ? AppTheme.primary : Colors.grey[100],
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        entry.value,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: isLast
-                              ? FontWeight.w800
-                              : FontWeight.w600,
-                          color: isLast ? Colors.white : Colors.black87,
-                        ),
-                      ),
-                    ),
-                    if (!isLast)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: Icon(
-                          Icons.arrow_forward_ios_rounded,
-                          size: 12,
-                          color: Colors.grey[300],
-                        ),
-                      ),
-                  ],
-                );
-              }).toList(),
-            ),
+          Wrap(
+            spacing: 8,
+            runSpacing: 10,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              for (int i = 0; i < path.length; i++) ...[
+                _PathChip(label: path[i], isLast: i == path.length - 1),
+                if (i < path.length - 1)
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    size: 16,
+                    color: Colors.grey[300],
+                  ),
+              ],
+            ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _PathChip extends StatelessWidget {
+  final String label;
+  final bool isLast;
+  const _PathChip({required this.label, required this.isLast});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: isLast ? AppTheme.primary.withOpacity(0.08) : Colors.grey[50],
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isLast ? AppTheme.primary.withOpacity(0.2) : Colors.grey[200]!,
+        ),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: isLast ? FontWeight.w800 : FontWeight.w600,
+          color: isLast ? AppTheme.primary : Colors.black54,
+        ),
       ),
     );
   }
@@ -510,7 +512,7 @@ class _CategoryFullSelector<T> extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      hasValue ? itemLabel(value as T) : '$label Seçiniz',
+                      hasValue ? itemLabel(value as T) : 'Seçiniz',
                       style: TextStyle(
                         fontSize: 15,
                         color: hasValue ? Colors.black87 : Colors.grey[400],
@@ -1355,7 +1357,9 @@ class _CustomTextField extends StatelessWidget {
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(
+                  width: 14,
+                ), // Increased from 14 for better alignment
                 Expanded(
                   child: TextField(
                     controller: controller,
@@ -1371,7 +1375,10 @@ class _CustomTextField extends StatelessWidget {
                         fontWeight: FontWeight.normal,
                       ),
                       border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                      contentPadding: const EdgeInsets.symmetric(
+                        vertical: 14,
+                        horizontal: 14,
+                      ),
                     ),
                   ),
                 ),
