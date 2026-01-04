@@ -626,8 +626,10 @@ class AuthViewModel extends ChangeNotifier {
       _errorMessage = e.toString();
       _logger.e("Update User Account failed: $e");
     } finally {
-      // If we are still in error state, notify, else success is handled by getUser or just complete
-      if (_state == AuthState.error) notifyListeners();
+      if (_state == AuthState.busy) {
+        _state = AuthState.success;
+      }
+      notifyListeners();
     }
   }
 
