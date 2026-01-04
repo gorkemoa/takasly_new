@@ -95,42 +95,47 @@ class _AddProductViewBody extends HookWidget {
                 ],
               ),
             )
-          : Stack(
-              children: [
-                SafeArea(
-                  child: Column(
-                    children: [
-                      _ModernAppBar(currentStep: currentStep.value),
-                      _ProgressIndicator(currentStep: currentStep.value),
-                      Expanded(
-                        child: PageView(
-                          controller: pageController,
-                          physics: const NeverScrollableScrollPhysics(),
-                          onPageChanged: (index) => currentStep.value = index,
-                          children: [
-                            _Step1Content(viewModel: viewModel),
-                            _Step2Content(viewModel: viewModel),
-                            _Step3Content(viewModel: viewModel),
-                            _Step4Content(viewModel: viewModel),
-                          ],
+          : GestureDetector(
+              onTap: () => FocusScope.of(context).unfocus(),
+              behavior: HitTestBehavior.opaque,
+              child: Stack(
+                children: [
+                  SafeArea(
+                    child: Column(
+                      children: [
+                        _ModernAppBar(currentStep: currentStep.value),
+                        _ProgressIndicator(currentStep: currentStep.value),
+                        Expanded(
+                          child: PageView(
+                            controller: pageController,
+                            physics: const NeverScrollableScrollPhysics(),
+                            onPageChanged: (index) => currentStep.value = index,
+                            children: [
+                              _Step1Content(viewModel: viewModel),
+                              _Step2Content(viewModel: viewModel),
+                              _Step3Content(viewModel: viewModel),
+                              _Step4Content(viewModel: viewModel),
+                            ],
+                          ),
                         ),
-                      ),
-                      _BottomActionBar(
-                        currentStep: currentStep.value,
-                        onBack: previousStep,
-                        onForward: () async {
-                          if (currentStep.value < 3) {
-                            nextStep();
-                          } else {
-                            await _handleSubmission(context, viewModel);
-                          }
-                        },
-                        isLastStep: currentStep.value == 3,
-                      ),
-                    ],
+                        _BottomActionBar(
+                          currentStep: currentStep.value,
+                          onBack: previousStep,
+                          onForward: () async {
+                            FocusScope.of(context).unfocus();
+                            if (currentStep.value < 3) {
+                              nextStep();
+                            } else {
+                              await _handleSubmission(context, viewModel);
+                            }
+                          },
+                          isLastStep: currentStep.value == 3,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
     );
   }
@@ -256,6 +261,7 @@ class _Step1Content extends StatelessWidget {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -270,6 +276,8 @@ class _Step1Content extends StatelessWidget {
             controller: viewModel.titleController,
             label: 'İlan Başlığı',
             hint: ' Apple iPhone 14 Pro Max (256 GB)',
+            textInputAction: TextInputAction.next,
+            onSubmitted: (_) => _openCategoryPicker(context, viewModel),
           ),
           const SizedBox(height: 24),
           _CategoryFullSelector<Category>(
@@ -282,6 +290,7 @@ class _Step1Content extends StatelessWidget {
           ),
           if (viewModel.selectedCategory != null)
             _SelectedCategoryPath(viewModel: viewModel),
+          const SizedBox(height: 100), // Extra space for keyboard/bottom bar
         ],
       ),
     );
@@ -701,6 +710,7 @@ class _Step2Content extends StatelessWidget {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -724,7 +734,9 @@ class _Step2Content extends StatelessWidget {
             label: 'Takas Etmek İstediğim Ürünler',
             hint: 'Örn: MacBook Air M2, PlaySation 5 veya dengi...',
             maxLines: 3,
+            textInputAction: TextInputAction.done,
           ),
+          const SizedBox(height: 100),
         ],
       ),
     );
@@ -796,6 +808,7 @@ class _Step3Content extends StatelessWidget {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -814,7 +827,9 @@ class _Step3Content extends StatelessWidget {
             hint:
                 'Ürünün kullanım geçmişi, teknik özellikleri ve varsa kusurları hakkında bilgi veriniz...',
             maxLines: 5,
+            textInputAction: TextInputAction.newline,
           ),
+          const SizedBox(height: 100),
         ],
       ),
     );
@@ -829,6 +844,7 @@ class _Step4Content extends StatelessWidget {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -868,7 +884,7 @@ class _Step4Content extends StatelessWidget {
           _ContactPreferenceCard(viewModel: viewModel),
           const SizedBox(height: 24),
           _SafetyReminder(),
-          const SizedBox(height: 40),
+          const SizedBox(height: 100),
         ],
       ),
     );
@@ -1307,12 +1323,18 @@ class _CustomTextField extends StatelessWidget {
   final String label;
   final String hint;
   final int maxLines;
+  final TextInputAction? textInputAction;
+  final void Function(String)? onSubmitted;
+  final TextInputType? keyboardType;
 
   const _CustomTextField({
     required this.controller,
     required this.label,
     required this.hint,
     this.maxLines = 1,
+    this.textInputAction,
+    this.onSubmitted,
+    this.keyboardType,
   });
 
   @override
@@ -1364,6 +1386,9 @@ class _CustomTextField extends StatelessWidget {
                   child: TextField(
                     controller: controller,
                     maxLines: maxLines,
+                    textInputAction: textInputAction,
+                    onSubmitted: onSubmitted,
+                    keyboardType: keyboardType,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
