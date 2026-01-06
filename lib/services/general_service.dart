@@ -115,4 +115,30 @@ class GeneralService {
       rethrow;
     }
   }
+
+  Future<List<DeliveryType>> getDeliveryTypes() async {
+    try {
+      final response = await _apiService.get(ApiConstants.deliveryTypes);
+      if (response['success'] == true && response['data'] != null) {
+        final List list = response['data']['deliveryTypes'];
+        return list.map((e) => DeliveryType.fromJson(e)).toList();
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  Future<List<TradeStatus>> getTradeStatuses() async {
+    try {
+      final response = await _apiService.get(ApiConstants.tradeStatuses);
+      if (response['success'] == true && response['data'] != null) {
+        final List list = response['data']['statuses'];
+        return list.map((e) => TradeStatus.fromJson(e)).toList();
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
 }

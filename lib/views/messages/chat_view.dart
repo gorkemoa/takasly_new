@@ -12,6 +12,8 @@ import '../../viewmodels/profile_viewmodel.dart';
 import '../../viewmodels/product_viewmodel.dart';
 import '../../viewmodels/home_viewmodel.dart';
 import '../home/home_view.dart';
+import '../../models/trade_model.dart';
+import '../profile/trade_detail_view.dart';
 
 class ChatView extends StatefulWidget {
   final Ticket ticket;
@@ -338,21 +340,24 @@ class _ChatViewState extends State<ChatView> {
               final detail = viewModel.currentTicketDetail;
 
               // 1. Determine Target Product Info
+              final targetId =
+                  detail?.targetProduct?.productID ?? widget.ticket.productID;
               final targetTitle =
                   detail?.targetProduct?.productTitle ??
-                  widget.ticket.productTitle;
+                  widget.ticket.productTitle ??
+                  (targetId != null ? "İlan..." : "Bilinmeyen İlan");
               final targetImage =
                   detail?.targetProduct?.productImage ??
                   widget.ticket.productImage;
-              final targetId =
-                  detail?.targetProduct?.productID ?? widget.ticket.productID;
 
               // 2. Determine Offered Product Info
               final offeredTitle = detail?.offeredProduct?.productTitle;
               final offeredImage = detail?.offeredProduct?.productImage;
               final offeredId = detail?.offeredProduct?.productID;
 
-              if (targetTitle == null) return const SizedBox.shrink();
+              if (targetId == null) {
+                return const SizedBox.shrink();
+              }
 
               // --- CASE A: TRADE CONTEXT (Both products exist) ---
               if (offeredTitle != null) {
@@ -362,108 +367,175 @@ class _ChatViewState extends State<ChatView> {
                     border: Border(
                       bottom: BorderSide(color: Colors.grey.shade200),
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.02),
-                        offset: const Offset(0, 2),
-                        blurRadius: 4,
-                      ),
-                    ],
                   ),
-                  child: Row(
+                  child: Column(
                     children: [
-                      // Target Product Section
-                      Expanded(
-                        child: InkWell(
-                          onTap: () => _navigateToProduct(targetId),
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: InkWell(
+                              onTap: () => _navigateToProduct(targetId),
+                              child: Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  16,
+                                  12,
+                                  8,
+                                  12,
+                                ),
+                                child: Row(
+                                  children: [
+                                    _buildProductThumb(targetImage),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            targetTitle,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: AppTheme.safePoppins(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w600,
+                                              color: AppTheme.textPrimary,
+                                            ),
+                                          ),
+                                          Text(
+                                            "İstenen Ürün",
+                                            style: AppTheme.safePoppins(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.normal,
+                                              color: AppTheme.textSecondary,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            child: Icon(
+                              Icons.swap_horiz_rounded,
+                              color: AppTheme.primary.withOpacity(0.8),
+                              size: 20,
+                            ),
+                          ),
+                          Expanded(
+                            child: InkWell(
+                              onTap: () => _navigateToProduct(offeredId),
+                              child: Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  8,
+                                  12,
+                                  16,
+                                  12,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.end,
+                                        children: [
+                                          Text(
+                                            offeredTitle,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: AppTheme.safePoppins(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w600,
+                                              color: AppTheme.textPrimary,
+                                            ),
+                                          ),
+                                          Text(
+                                            "Teklif Edilen",
+                                            style: AppTheme.safePoppins(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.normal,
+                                              color: AppTheme.textSecondary,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    _buildProductThumb(offeredImage),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (viewModel.tradeCheckResult?['showButtons'] == false)
+                        Padding(
+                          padding: const EdgeInsets.only(
+                            bottom: 12,
+                            left: 16,
+                            right: 16,
+                          ),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.shade50,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.orange.shade100),
+                            ),
                             child: Row(
                               children: [
-                                _buildProductThumb(targetImage),
+                                Icon(
+                                  Icons.info_outline,
+                                  size: 16,
+                                  color: Colors.orange.shade800,
+                                ),
                                 const SizedBox(width: 8),
                                 Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        targetTitle,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: AppTheme.safePoppins(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w600,
-                                          color: AppTheme.textPrimary,
-                                        ),
-                                      ),
-                                      Text(
-                                        "İstenen Ürün",
-                                        style: AppTheme.safePoppins(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.normal,
-                                          color: AppTheme.textSecondary,
-                                        ),
-                                      ),
-                                    ],
+                                  child: Text(
+                                    viewModel.tradeCheckResult?['message'] ??
+                                        "İşlem beklemede",
+                                    style: AppTheme.safePoppins(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.orange.shade900,
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                        ),
-                      ),
-
-                      // Swap Icon
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: Icon(
-                          Icons.swap_horiz_rounded,
-                          color: AppTheme.primary.withOpacity(0.8),
-                          size: 20,
-                        ),
-                      ),
-
-                      // Offered Product Section
-                      Expanded(
-                        child: InkWell(
-                          onTap: () => _navigateToProduct(offeredId),
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(8, 12, 16, 12),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.end,
-                                    children: [
-                                      Text(
-                                        offeredTitle,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: AppTheme.safePoppins(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w600,
-                                          color: AppTheme.textPrimary,
-                                        ),
-                                      ),
-                                      Text(
-                                        "Teklif Edilen",
-                                        style: AppTheme.safePoppins(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.normal,
-                                          color: AppTheme.textSecondary,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                _buildProductThumb(offeredImage),
-                              ],
+                        )
+                      else
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: ElevatedButton.icon(
+                            onPressed: () => _startTradeFlow(
+                              targetId,
+                              senderProductId: offeredId,
+                            ),
+                            icon: const Icon(Icons.swap_horiz, size: 18),
+                            label: const Text("Takas Detaylarını Belirle"),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.primary,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 8,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              elevation: 0,
                             ),
                           ),
                         ),
-                      ),
                     ],
                   ),
                 );
@@ -480,8 +552,15 @@ class _ChatViewState extends State<ChatView> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     border: Border(
-                      bottom: BorderSide(color: Colors.grey.shade200),
+                      bottom: BorderSide(color: Colors.grey.shade100),
                     ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.03),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
                   child: Row(
                     children: [
@@ -512,6 +591,29 @@ class _ChatViewState extends State<ChatView> {
                           ],
                         ),
                       ),
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        onPressed: () => _startTradeFlow(targetId),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          textStyle: AppTheme.safePoppins(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: const Text("Takas Başlat"),
+                      ),
+                      const SizedBox(width: 8),
                       Icon(Icons.chevron_right, color: Colors.grey.shade400),
                     ],
                   ),
@@ -705,6 +807,258 @@ class _ChatViewState extends State<ChatView> {
           ),
           _buildMessageInput(),
         ],
+      ),
+    );
+  }
+
+  void _startTradeFlow(int receiverProductId, {int? senderProductId}) async {
+    final authVM = context.read<AuthViewModel>();
+    final ticketVM = context.read<TicketViewModel>();
+    if (authVM.user == null) return;
+
+    // Fetch delivery types and products
+    await Future.wait([
+      ticketVM.fetchDeliveryTypes(),
+      if (senderProductId == null)
+        ticketVM.fetchMyProducts(authVM.user!.userID, authVM.user!.token),
+    ]);
+
+    if (!mounted) return;
+
+    if (senderProductId != null) {
+      // If we already know which product we are offering, go straight to details
+      _showDeliveryDetailsDialog(senderProductId, receiverProductId);
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _buildProductSelectionSheet(receiverProductId),
+    );
+  }
+
+  Widget _buildProductSelectionSheet(int receiverProductId) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.7,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Takas Edilecek Ürünü Seç",
+                style: AppTheme.safePoppins(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.close),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: Consumer<TicketViewModel>(
+              builder: (context, viewModel, child) {
+                if (viewModel.isMyProductsLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (viewModel.myProducts.isEmpty) {
+                  return Center(
+                    child: Text(
+                      "Henüz bir ürünün yok.",
+                      style: AppTheme.safePoppins(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                  );
+                }
+                return ListView.builder(
+                  itemCount: viewModel.myProducts.length,
+                  itemBuilder: (context, index) {
+                    final product = viewModel.myProducts[index];
+                    return ListTile(
+                      onTap: () {
+                        Navigator.pop(context);
+                        _showDeliveryDetailsDialog(
+                          product.productID!,
+                          receiverProductId,
+                        );
+                      },
+                      leading: Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          image: DecorationImage(
+                            image: NetworkImage(product.productImage ?? ""),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                      title: Text(
+                        product.productTitle ?? "",
+                        style: AppTheme.safePoppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.textPrimary,
+                        ),
+                      ),
+                      subtitle: Text(
+                        product.productCondition ?? "",
+                        style: AppTheme.safePoppins(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w400,
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                      trailing: const Icon(Icons.chevron_right),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeliveryDetailsDialog(int senderProductId, int receiverProductId) {
+    final TextEditingController locationController = TextEditingController();
+    int deliveryTypeID = 1;
+    final ticketVM = context.read<TicketViewModel>();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, ss) {
+          return AlertDialog(
+            title: const Text("Teslimat Detayları"),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DropdownButtonFormField<int>(
+                    value: deliveryTypeID,
+                    decoration: const InputDecoration(
+                      labelText: "Teslimat Türü",
+                    ),
+                    items: ticketVM.deliveryTypes.map((type) {
+                      return DropdownMenuItem(
+                        value: type.deliveryID,
+                        child: Text(type.deliveryTitle ?? ""),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      if (value != null) ss(() => deliveryTypeID = value);
+                    },
+                  ),
+                  if (deliveryTypeID == 1) ...[
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: locationController,
+                      decoration: const InputDecoration(
+                        labelText: "Buluşma Yeri",
+                        hintText: "Örn: İstanbul / Kadıköy",
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text("İptal"),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  if (deliveryTypeID == 1 && locationController.text.isEmpty) {
+                    ScaffoldMessenger.of(ctx).showSnackBar(
+                      const SnackBar(
+                        content: Text("Lütfen buluşma yeri yazın."),
+                      ),
+                    );
+                    return;
+                  }
+
+                  final authVM = context.read<AuthViewModel>();
+                  final ticketVM = context.read<TicketViewModel>();
+
+                  final request = StartTradeRequestModel(
+                    userToken: authVM.user!.token,
+                    senderProductID: senderProductId,
+                    receiverProductID: receiverProductId,
+                    deliveryTypeID: deliveryTypeID,
+                    meetingLocation: deliveryTypeID == 1
+                        ? locationController.text
+                        : null,
+                  );
+
+                  Navigator.pop(ctx); // Close dialog
+
+                  try {
+                    final response = await ticketVM.startTrade(request);
+                    if (mounted) {
+                      final message =
+                          response['message'] ??
+                          response['data']?['message'] ??
+                          "Takas teklifi başarıyla gönderildi.";
+                      final int? offerId = response['data']?['offerID'];
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(message),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+
+                      if (offerId != null) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                TradeDetailView(offerId: offerId),
+                          ),
+                        );
+                      }
+
+                      // Refresh ticket detail to update context banner
+                      ticketVM.fetchTicketDetail(
+                        widget.ticket.ticketID!,
+                        authVM.user!.token,
+                      );
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text("Hata: $e"),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  }
+                },
+                child: const Text("Teklifi Gönder"),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

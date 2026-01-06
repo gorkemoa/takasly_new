@@ -185,4 +185,80 @@ class ProductService {
       rethrow;
     }
   }
+
+  Future<Map<String, dynamic>> startTrade(
+    StartTradeRequestModel request,
+  ) async {
+    try {
+      final response = await _apiService.post(
+        ApiConstants.startTrade,
+        request.toJson(),
+      );
+      return response;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<String?> confirmTrade(ConfirmTradeRequestModel request) async {
+    try {
+      final response = await _apiService.post(
+        ApiConstants.confirmTrade,
+        request.toJson(),
+      );
+      return response['message'] ?? response['data']?['message'];
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<String?> completeTrade(String userToken, int offerID) async {
+    try {
+      final response = await _apiService.post(ApiConstants.tradeComplete, {
+        "userToken": userToken,
+        "offerID": offerID,
+      });
+      return response['message'] ?? response['data']?['message'];
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> checkTradeStatus({
+    required String userToken,
+    required int senderProductID,
+    required int receiverProductID,
+  }) async {
+    try {
+      final response = await _apiService.post(ApiConstants.checkTradeStatus, {
+        "userToken": userToken,
+        "senderProductID": senderProductID,
+        "receiverProductID": receiverProductID,
+      });
+      return response;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<String?> addTradeReview({
+    required String userToken,
+    required int offerID,
+    required int rating,
+    String? comment,
+  }) async {
+    try {
+      final response = await _apiService.post(ApiConstants.tradeReview, {
+        "userToken": userToken,
+        "offerID": offerID,
+        "rating": rating,
+        "comment": comment ?? "",
+      });
+      return response['message'] ??
+          response['data']?['message'] ??
+          "Değerlendirme gönderildi.";
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

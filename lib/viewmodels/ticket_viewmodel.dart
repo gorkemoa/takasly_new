@@ -7,11 +7,18 @@ import '../services/product_service.dart';
 import '../services/account_service.dart';
 import '../models/user/report_user_model.dart';
 import '../models/account/blocked_user_model.dart';
+import '../models/trade_model.dart';
+import '../models/profile/profile_detail_model.dart';
+import '../services/auth_service.dart';
+import '../services/general_service.dart';
+import '../models/general_models.dart';
 
 class TicketViewModel extends ChangeNotifier {
   final TicketService _ticketService = TicketService();
   final ProductService _productService = ProductService();
   final AccountService _accountService = AccountService();
+  final AuthService _authService = AuthService();
+  final GeneralService _generalService = GeneralService();
   final Logger _logger = Logger();
 
   List<Ticket> tickets = [];
@@ -33,6 +40,9 @@ class TicketViewModel extends ChangeNotifier {
   TicketDetailData? currentTicketDetail;
   bool isDetailLoading = false;
   String? detailErrorMessage;
+
+  // Trade Status Result (for banner logic)
+  Map<String, dynamic>? tradeCheckResult;
 
   Future<void> fetchTickets(String userToken, {bool isRefresh = false}) async {
     if (isLoading) return;
@@ -195,6 +205,18 @@ class TicketViewModel extends ChangeNotifier {
       );
       if (response.success == true && response.data != null) {
         currentTicketDetail = response.data;
+
+        // Automatically check trade status for the banner buttons visibility
+        if (currentTicketDetail?.targetProduct?.productID != null &&
+            currentTicketDetail?.offeredProduct?.productID != null) {
+          await checkTradeStatus(
+            userToken,
+            currentTicketDetail!.offeredProduct!.productID!,
+            currentTicketDetail!.targetProduct!.productID!,
+          );
+        } else if (currentTicketDetail?.targetProduct?.productID != null) {
+          // If no offered product yet, we might still want to check (some APIs return showButtons true here)
+        }
       } else {
         detailErrorMessage = response.message ?? "Detay yüklenemedi";
       }
@@ -204,6 +226,24 @@ class TicketViewModel extends ChangeNotifier {
     } finally {
       isDetailLoading = false;
       notifyListeners();
+    }
+  }
+
+  Future<void> checkTradeStatus(
+    String token,
+    int senderProductId,
+    int receiverProductId,
+  ) async {
+    try {
+      final response = await _productService.checkTradeStatus(
+        userToken: token,
+        senderProductID: senderProductId,
+        receiverProductID: receiverProductId,
+      );
+      tradeCheckResult = response['data'];
+      notifyListeners();
+    } catch (e) {
+      _logger.e("Check Trade Status Error", error: e);
     }
   }
 
@@ -277,7 +317,17 @@ class TicketViewModel extends ChangeNotifier {
         return null;
       }
     } catch (e) {
-      messageErrorMessage = "Teklif oluşturulurken hata: $e";
+      String errorStr = e.toString();
+      if (errorStr.contains('mysqli_sql_exception') ||
+          errorStr.contains('Duplicate entry')) {
+        messageErrorMessage =
+            "Bu ürün için zaten bir mesajlaşma başlatılmış. Lütfen mesajlarınızı kontrol edin.";
+      } else if (errorStr.contains('JSON değil')) {
+        messageErrorMessage =
+            "Sunucuda bir hata oluştu (Geçersiz Yanıt). Lütfen daha sonra tekrar deneyin.";
+      } else {
+        messageErrorMessage = "Teklif oluşturulurken hata: $e";
+      }
       _logger.e("Create Ticket Error", error: e);
       return null;
     } finally {
@@ -327,6 +377,53 @@ class TicketViewModel extends ChangeNotifier {
     } catch (e) {
       _logger.e("Block User Hata", error: e);
       return false;
+    }
+  }
+
+  // --- Start Trade Feature ---
+  List<ProfileProduct> myProducts = [];
+  bool isMyProductsLoading = false;
+
+  Future<void> fetchMyProducts(int userId, String userToken) async {
+    isMyProductsLoading = true;
+    notifyListeners();
+    try {
+      final profile = await _authService.getProfileDetail(userId, userToken);
+      myProducts = profile.products ?? [];
+    } catch (e) {
+      _logger.e("Fetch My Products Error", error: e);
+    } finally {
+      isMyProductsLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<Map<String, dynamic>> startTrade(
+    StartTradeRequestModel request,
+  ) async {
+    try {
+      final response = await _productService.startTrade(request);
+      return response;
+    } catch (e) {
+      _logger.e("Start Trade Error", error: e);
+      rethrow;
+    }
+  }
+
+  List<DeliveryType> deliveryTypes = [];
+  bool isDeliveryTypesLoading = false;
+
+  Future<void> fetchDeliveryTypes() async {
+    if (deliveryTypes.isNotEmpty) return; // Cache
+    isDeliveryTypesLoading = true;
+    notifyListeners();
+    try {
+      deliveryTypes = await _generalService.getDeliveryTypes();
+    } catch (e) {
+      _logger.e("Fetch Delivery Types Error", error: e);
+    } finally {
+      isDeliveryTypesLoading = false;
+      notifyListeners();
     }
   }
 }

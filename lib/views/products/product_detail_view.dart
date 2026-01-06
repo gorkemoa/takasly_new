@@ -887,7 +887,7 @@ class _ProductDetailViewState extends State<ProductDetailView> {
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: () => _makePhoneCall(product.userPhone!),
-                      icon: const Icon(Icons.phone),
+                      icon: const Icon(Icons.phone, size: 18),
                       label: const Text("Ara"),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppTheme.primary,
@@ -899,16 +899,21 @@ class _ProductDetailViewState extends State<ProductDetailView> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         padding: const EdgeInsets.symmetric(vertical: 14),
+                        textStyle: AppTheme.safePoppins(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.primary,
+                        ),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 8),
                 ],
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: () => _showOfferBottomSheet(context, product),
-                    icon: const Icon(Icons.message),
-                    label: const Text("Mesaj Gönder"),
+                    icon: const Icon(Icons.message, size: 18),
+                    label: const Text("Mesaj"),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.primary,
                       foregroundColor: Colors.white,
@@ -917,6 +922,11 @@ class _ProductDetailViewState extends State<ProductDetailView> {
                       ),
                       elevation: 0,
                       padding: const EdgeInsets.symmetric(vertical: 14),
+                      textStyle: AppTheme.safePoppins(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),

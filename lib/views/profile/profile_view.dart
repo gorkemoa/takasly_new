@@ -12,6 +12,7 @@ import 'profile_edit_view.dart';
 import '../settings/change_password_view.dart';
 import '../settings/settings_view.dart';
 import '../settings/contact_view.dart';
+import 'profile_reviews_view.dart';
 
 import '../widgets/ads/banner_ad_widget.dart';
 
@@ -114,6 +115,20 @@ class _ProfileViewState extends State<ProfileView> {
                   },
                 ),
                 _buildDivider(),
+                _buildMenuItem(
+                  context,
+                  icon: Icons.star_border_rounded,
+                  title: "Değerlendirmeler",
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ProfileReviewsView(),
+                      ),
+                    );
+                  },
+                ),
+                _buildDivider(),
               ],
             ),
             const SizedBox(height: 24),
@@ -210,7 +225,6 @@ class _ProfileViewState extends State<ProfileView> {
                 ),
               ),
             ),
-            const SizedBox(height: 100),
           ],
         ),
       ),
@@ -338,27 +352,37 @@ class _ProfileViewState extends State<ProfileView> {
                   ),
                 ),
                 const SizedBox(height: 6),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.star_rounded,
-                      size: 18,
-                      color: Colors.amber.shade600,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      (profile != null &&
-                              profile.totalReviews != null &&
-                              profile.totalReviews! > 0)
-                          ? "${profile.averageRating} Puan (${profile.totalReviews} Değerlendirme)"
-                          : "Yeni Kullanıcı",
-                      style: AppTheme.safePoppins(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: AppTheme.textSecondary,
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ProfileReviewsView(),
                       ),
-                    ),
-                  ],
+                    );
+                  },
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.star_rounded,
+                        size: 18,
+                        color: Colors.amber.shade600,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        (profile != null &&
+                                profile.totalReviews != null &&
+                                profile.totalReviews! > 0)
+                            ? "${profile.averageRating} Puan (${profile.totalReviews} Değerlendirme)"
+                            : "Yeni Kullanıcı",
+                        style: AppTheme.safePoppins(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),

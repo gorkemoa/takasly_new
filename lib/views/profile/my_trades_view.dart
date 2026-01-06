@@ -38,6 +38,13 @@ class _MyTradesViewContentState extends State<_MyTradesViewContent>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authVM = context.read<AuthViewModel>();
+      if (authVM.user != null) {
+        context.read<TradeViewModel>().getTrades(authVM.user!.userID);
+        context.read<TradeViewModel>().fetchTradeStatuses();
+      }
+    });
   }
 
   @override
@@ -54,22 +61,61 @@ class _MyTradesViewContentState extends State<_MyTradesViewContent>
     final authVM = context.watch<AuthViewModel>();
     if (authVM.isAuthCheckComplete) {
       _isInitDone = true;
-      if (authVM.user != null) {
-        final tradeVM = context.read<TradeViewModel>();
-        if (tradeVM.trades.isEmpty && !tradeVM.isLoading) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            tradeVM.getTrades(authVM.user!.userID);
-          });
-        }
-      }
+      // The logic to fetch trades and statuses is now in initState.
+      // This block can remain for other potential future initializations
+      // that depend on auth completion, but the trade fetching part is moved.
     }
   }
 
   bool _isOngoing(Trade trade) {
-    final status = (trade.senderStatusTitle ?? '').toLowerCase();
-    return !status.contains('tamam') &&
-        !status.contains('red') &&
-        !status.contains('iptal');
+    final tradeVM = context.read<TradeViewModel>();
+    final statuses = tradeVM.tradeStatuses;
+
+    // Dinamik ID bulma helper fonksiyonu
+    int? getStatusId(String title) {
+      if (statuses.isEmpty) return null;
+      try {
+        return statuses
+            .firstWhere(
+              (s) => (s.statusTitle?.toLowerCase() ?? '').contains(title),
+            )
+            .statusID;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    final int completedId = getStatusId('tamam') ?? 4;
+    final int cancelledId = getStatusId('iptal') ?? 6;
+    final int rejectedId = getStatusId('red') ?? 7;
+
+    final authVM = context.read<AuthViewModel>();
+    final userId = authVM.user?.userID;
+
+    final bool isMeSender =
+        trade.senderUserID == userId || trade.isSender == true;
+    final int? myStatusId = isMeSender
+        ? trade.senderStatusID
+        : trade.receiverStatusID;
+
+    // 1. Durum kontrolleri
+    // Eğer benim tarafım tamamlanmış ise history'e at
+    if (myStatusId == completedId) return false;
+
+    // Eğer herhangi bir taraf iptal etmiş veya genel bir red varsa history'e at
+    if (trade.senderStatusID == cancelledId ||
+        trade.senderStatusID == rejectedId ||
+        trade.receiverStatusID == cancelledId ||
+        trade.receiverStatusID == rejectedId ||
+        trade.isTradeRejected == true) {
+      return false;
+    }
+
+    // Unused variable fix if needed, but the logic above seems sufficient
+    // Since history/ongoing choice is based on myStatusId
+
+    // 2. Takas başlamışsa veya onay bekliyorsa ongoing'dir
+    return true;
   }
 
   @override
@@ -165,17 +211,46 @@ class _MyTradesViewContentState extends State<_MyTradesViewContent>
 
   Widget _buildTradeList(List<Trade> trades, String emptyMessage) {
     if (trades.isEmpty) {
-      return _buildEmptyState(emptyMessage);
+      return RefreshIndicator(
+        color: AppTheme.primary,
+        onRefresh: () async {
+          final authVM = context.read<AuthViewModel>();
+          final tradeVM = context.read<TradeViewModel>();
+          if (authVM.user != null) {
+            await tradeVM.getTrades(authVM.user!.userID);
+            await tradeVM.fetchTradeStatuses();
+          }
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: SizedBox(
+            height: MediaQuery.of(context).size.height * 0.7,
+            child: _buildEmptyState(emptyMessage),
+          ),
+        ),
+      );
     }
 
-    return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 160),
-      itemCount: trades.length,
-      separatorBuilder: (context, index) => const SizedBox(height: 16),
-      itemBuilder: (context, index) {
-        final trade = trades[index];
-        return _TradeItemCard(trade: trade);
+    return RefreshIndicator(
+      color: AppTheme.primary,
+      onRefresh: () async {
+        final authVM = context.read<AuthViewModel>();
+        final tradeVM = context.read<TradeViewModel>();
+        if (authVM.user != null) {
+          await tradeVM.getTrades(authVM.user!.userID);
+          await tradeVM.fetchTradeStatuses();
+        }
       },
+      child: ListView.separated(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 160),
+        itemCount: trades.length,
+        separatorBuilder: (context, index) => const SizedBox(height: 16),
+        itemBuilder: (context, index) {
+          final trade = trades[index];
+          return _TradeItemCard(trade: trade);
+        },
+      ),
     );
   }
 
@@ -355,8 +430,554 @@ class _TradeItemCard extends StatelessWidget {
                 ),
               ],
             ),
+            _buildActionButtons(context),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildActionButtons(BuildContext context) {
+    final authVM = context.read<AuthViewModel>();
+    final tradeVM = context.read<TradeViewModel>();
+    final userId = authVM.user?.userID;
+
+    // 1. Status Mesajı ve Helper
+    final statuses = tradeVM.tradeStatuses;
+    int? getStatusId(String title) {
+      if (statuses.isEmpty) return null;
+      try {
+        return statuses
+            .firstWhere(
+              (s) => (s.statusTitle?.toLowerCase() ?? '').contains(title),
+            )
+            .statusID;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    Widget? statusMessageWidget;
+    if (trade.statusMessage != null && trade.statusMessage!.isNotEmpty) {
+      statusMessageWidget = Padding(
+        padding: const EdgeInsets.only(top: 12),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.orange.shade50,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.orange.shade100),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.info_outline, size: 16, color: Colors.orange.shade800),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  trade.statusMessage!,
+                  style: AppTheme.safePoppins(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.orange.shade800,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // 2. Backend'den gelen kesin buton gizleme kontrolü
+    if (trade.showButtons == false) {
+      return statusMessageWidget ?? const SizedBox.shrink();
+    }
+
+    // 2. Kullanıcı Rolü Belirleme
+    final bool isMeSender =
+        trade.senderUserID == userId || trade.isSender == true;
+    final bool isMeReceiver =
+        trade.receiverUserID == userId || trade.isReceiver == true;
+    final int? myStatusId = isMeSender
+        ? trade.senderStatusID
+        : trade.receiverStatusID;
+
+    final bool isPending =
+        !trade.isTradeStart! &&
+        !trade.isTradeConfirm! &&
+        trade.isReceiverConfirm != true &&
+        trade.isTradeRejected != true;
+
+    // Eğer teklif bana gelmişse ve HENÜZ BAŞLAMAMIŞSA -> Onayla/Reddet göster
+    if (isMeReceiver && isPending) {
+      return Column(
+        children: [
+          if (statusMessageWidget != null) statusMessageWidget,
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: tradeVM.isLoading
+                      ? null
+                      : () => _showRejectDialog(
+                          context,
+                          tradeVM,
+                          authVM.user!.token,
+                        ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTheme.error,
+                    side: const BorderSide(color: AppTheme.error),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: tradeVM.isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppTheme.error,
+                          ),
+                        )
+                      : Text(
+                          'Reddet',
+                          style: AppTheme.safePoppins(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.error,
+                          ),
+                        ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: tradeVM.isLoading
+                      ? null
+                      : () => _handleConfirm(
+                          context,
+                          tradeVM,
+                          authVM.user!.token,
+                          1,
+                        ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF10B981),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: tradeVM.isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(
+                          'Onayla',
+                          style: AppTheme.safePoppins(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+    }
+
+    // Eğer takas onaylanmışsa ve devam ediyorsa -> Takası Tamamla göster
+    // Dinamik ID bulma
+    final int completedId = getStatusId('tamam') ?? 4;
+    final int cancelledId = getStatusId('iptal') ?? 6;
+    final int rejectedId = getStatusId('red') ?? 7;
+    final int approvedId =
+        getStatusId('onay') ?? 2; // Takas Başlatıldı/Onaylandı
+
+    final bool canComplete =
+        myStatusId != completedId &&
+        trade.senderStatusID != cancelledId &&
+        trade.receiverStatusID != cancelledId &&
+        trade.senderStatusID != rejectedId &&
+        trade.receiverStatusID != rejectedId &&
+        trade.isTradeRejected != true &&
+        (trade.isTradeConfirm == true ||
+            trade.isTradeStart == true ||
+            (trade.isSenderConfirm == true &&
+                trade.isReceiverConfirm == true) ||
+            (trade.senderStatusID == approvedId ||
+                trade.receiverStatusID == approvedId));
+
+    if (canComplete && trade.isTradeRejected != true) {
+      return Column(
+        children: [
+          if (statusMessageWidget != null) statusMessageWidget,
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: tradeVM.isLoading
+                  ? null
+                  : () => _handleComplete(context, tradeVM, authVM.user!.token),
+              icon: tradeVM.isLoading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.check_circle_outline, size: 20),
+              label: const Text("Takası Tamamla"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    // 4. Değerlendirme Butonu (Tamamlanmış Takaslar için)
+    final bool needsReview =
+        (isMeSender && trade.isSenderReview != true) ||
+        (isMeReceiver && trade.isReceiverReview != true);
+
+    if (myStatusId == completedId && needsReview) {
+      return Column(
+        children: [
+          if (statusMessageWidget != null) statusMessageWidget,
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () =>
+                  _showReviewDialog(context, tradeVM, authVM.user!.token),
+              icon: const Icon(Icons.star_outline, size: 20),
+              label: const Text("Takas Deneyimini Değerlendir"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.amber.shade700,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return statusMessageWidget ?? const SizedBox.shrink();
+  }
+
+  void _showReviewDialog(
+    BuildContext context,
+    TradeViewModel tradeVM,
+    String token,
+  ) {
+    int selectedRating = 5;
+    final commentController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: const Text("Takası Değerlendir"),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  "Takas deneyiminizi 1 ile 5 arasında puanlayın.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(5, (index) {
+                    return IconButton(
+                      onPressed: () =>
+                          setState(() => selectedRating = index + 1),
+                      icon: Icon(
+                        index < selectedRating ? Icons.star : Icons.star_border,
+                        color: Colors.amber,
+                        size: 36,
+                      ),
+                    );
+                  }),
+                ),
+                const SizedBox(height: 20),
+                TextField(
+                  controller: commentController,
+                  maxLines: 3,
+                  decoration: InputDecoration(
+                    hintText: "Yorumunuz (Opsiyonel)",
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey.shade50,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text("İptal"),
+            ),
+            ElevatedButton(
+              onPressed: tradeVM.isLoading
+                  ? null
+                  : () async {
+                      try {
+                        final message = await tradeVM.addTradeReview(
+                          userToken: token,
+                          offerID: trade.offerID!,
+                          rating: selectedRating,
+                          comment: commentController.text,
+                        );
+
+                        if (context.mounted) {
+                          Navigator.pop(ctx);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                message ?? "Değerlendirme gönderildi",
+                              ),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                          final authVM = context.read<AuthViewModel>();
+                          tradeVM.getTrades(authVM.user!.userID);
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text("Hata: $e"),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: tradeVM.isLoading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text("Gönder", style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _handleComplete(
+    BuildContext context,
+    TradeViewModel tradeVM,
+    String token,
+  ) async {
+    tradeVM.clearError();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Takası Tamamla"),
+        content: const Text(
+          "Ürünlerin karşılıklı teslim alındığını ve takasın başarıyla sonuçlandığını onaylıyor musunuz?",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text("İptal"),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primary),
+            child: const Text("Tamamla", style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        final message = await tradeVM.completeTrade(token, trade.offerID!);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(message ?? "Takas tamamlandı"),
+              backgroundColor: Colors.green,
+            ),
+          );
+          final authVM = context.read<AuthViewModel>();
+          tradeVM.getTrades(authVM.user!.userID);
+        }
+      } catch (e) {
+        if (context.mounted) {
+          final errorStr = e.toString();
+          // Check for 417 or specific message
+          if (errorStr.contains('417') ||
+              errorStr.toLowerCase().contains('zaten işlenmiş') ||
+              errorStr.toLowerCase().contains('already processed')) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  "Bu işlem zaten gerçekleştirilmiş. Liste güncelleniyor.",
+                ),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text("Hata: $e"), backgroundColor: Colors.red),
+            );
+          }
+          final authVM = context.read<AuthViewModel>();
+          tradeVM.getTrades(authVM.user!.userID);
+          tradeVM.fetchTradeStatuses();
+        }
+      }
+    }
+  }
+
+  void _handleConfirm(
+    BuildContext context,
+    TradeViewModel tradeVM,
+    String token,
+    int isConfirm, {
+    String? reason,
+  }) async {
+    tradeVM.clearError();
+    try {
+      final request = ConfirmTradeRequestModel(
+        userToken: token,
+        offerID: trade.offerID!,
+        isConfirm: isConfirm,
+        cancelDesc: reason,
+      );
+
+      final message = await tradeVM.confirmTrade(request);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message ?? "İşlem başarılı"),
+            backgroundColor: isConfirm == 1 ? Colors.green : Colors.orange,
+          ),
+        );
+        // Listeyi yenile
+        final authVM = context.read<AuthViewModel>();
+        tradeVM.getTrades(authVM.user!.userID);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        final errorStr = e.toString();
+        // Check for 417 or specific message
+        if (errorStr.contains('417') ||
+            errorStr.toLowerCase().contains('zaten işlenmiş') ||
+            errorStr.toLowerCase().contains('already processed')) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                "Bu takas teklifi zaten onaylanmış veya işlenmiş. Liste güncelleniyor.",
+              ),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Hata: $e"), backgroundColor: Colors.red),
+          );
+        }
+        final authVM = context.read<AuthViewModel>();
+        tradeVM.getTrades(authVM.user!.userID);
+        tradeVM.fetchTradeStatuses();
+      }
+    }
+  }
+
+  void _showRejectDialog(
+    BuildContext context,
+    TradeViewModel tradeVM,
+    String token,
+  ) {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Teklifi Reddet"),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            hintText: "Reddetme sebebinizi yazın (Zorunlu)",
+            border: OutlineInputBorder(),
+          ),
+          maxLines: 3,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("İptal"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (controller.text.trim().isEmpty) {
+                ScaffoldMessenger.of(ctx).showSnackBar(
+                  const SnackBar(content: Text("Lütfen sebep belirtin")),
+                );
+                return;
+              }
+              Navigator.pop(ctx);
+              _handleConfirm(
+                context,
+                tradeVM,
+                token,
+                0,
+                reason: controller.text.trim(),
+              );
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
+            child: const Text("Reddet", style: TextStyle(color: Colors.white)),
+          ),
+        ],
       ),
     );
   }

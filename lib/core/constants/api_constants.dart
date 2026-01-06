@@ -71,4 +71,12 @@ class ApiConstants {
   static const String blockedUsers =
       'service/user/account/'; // + {id}/blockedUsers
   static const String userUnBlocked = 'service/user/account/userUnBlocked';
+  static const String startTrade = 'service/user/product/startTrade';
+  static const String deliveryTypes = 'service/general/general/deliveryTypes';
+  static const String confirmTrade = 'service/user/product/confirmTrade';
+  static const String tradeStatuses = 'service/general/general/tradeStatuses';
+  static const String tradeComplete = 'service/user/product/tradeComplete';
+  static const String checkTradeStatus =
+      'service/user/product/checkTradeStatus';
+  static const String tradeReview = 'service/user/product/tradeReview';
 }

@@ -107,11 +107,22 @@ class ApiService {
       throw Exception('Empty response');
     }
 
-    final body = jsonDecode(response.body);
+    dynamic body;
+    try {
+      body = jsonDecode(response.body);
+    } catch (e) {
+      _logger.e('JSON Ayrıştırma Hatası: ${response.body}');
+      throw Exception(
+        'Sunucudan geçersiz bir yanıt geldi (JSON değil). Durum: ${response.statusCode}',
+      );
+    }
 
     // Helper to extract error message
     String? getErrorMessage() {
-      return body['error_message'] ?? body['message'];
+      if (body is Map) {
+        return body['error_message'] ?? body['message'];
+      }
+      return null;
     }
 
     if (response.statusCode >= 200 && response.statusCode < 300) {

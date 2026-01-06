@@ -47,3 +47,31 @@ class ContactSubject {
     );
   }
 }
+
+class DeliveryType {
+  int? deliveryID;
+  String? deliveryTitle;
+
+  DeliveryType({this.deliveryID, this.deliveryTitle});
+
+  factory DeliveryType.fromJson(Map<String, dynamic> json) {
+    return DeliveryType(
+      deliveryID: json['deliveryID'],
+      deliveryTitle: json['deliveryTitle'],
+    );
+  }
+}
+
+class TradeStatus {
+  int? statusID;
+  String? statusTitle;
+
+  TradeStatus({this.statusID, this.statusTitle});
+
+  factory TradeStatus.fromJson(Map<String, dynamic> json) {
+    return TradeStatus(
+      statusID: json['statusID'],
+      statusTitle: json['statusTitle'],
+    );
+  }
+}

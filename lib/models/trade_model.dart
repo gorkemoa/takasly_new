@@ -51,6 +51,10 @@ class Trade {
   bool? isSenderReview;
   bool? isReceiverReview;
   bool? isTradeRejected;
+  bool? showButtons;
+  String? statusMessage;
+  bool? isSender;
+  bool? isReceiver;
   Product? myProduct;
   Product? theirProduct;
 
@@ -75,11 +79,26 @@ class Trade {
     this.isSenderReview,
     this.isReceiverReview,
     this.isTradeRejected,
+    this.showButtons,
+    this.statusMessage,
+    this.isSender,
+    this.isReceiver,
     this.myProduct,
     this.theirProduct,
   });
 
   factory Trade.fromJson(Map<String, dynamic> json) {
+    bool? toBool(dynamic value) {
+      if (value == null) return null;
+      if (value is bool) return value;
+      if (value is int) return value == 1;
+      if (value is String) {
+        final lower = value.toLowerCase();
+        return lower == 'true' || lower == '1';
+      }
+      return null;
+    }
+
     return Trade(
       offerID: json['offerID'],
       senderUserID: json['senderUserID'],
@@ -94,13 +113,17 @@ class Trade {
       receiverCancelDesc: json['receiverCancelDesc'],
       createdAt: json['createdAt'],
       completedAt: json['completedAt'],
-      isSenderConfirm: json['isSenderConfirm'],
-      isReceiverConfirm: json['isReceiverConfirm'],
-      isTradeConfirm: json['isTradeConfirm'],
-      isTradeStart: json['isTradeStart'],
-      isSenderReview: json['isSenderReview'],
-      isReceiverReview: json['isReceiverReview'],
-      isTradeRejected: json['isTradeRejected'],
+      isSenderConfirm: toBool(json['isSenderConfirm']),
+      isReceiverConfirm: toBool(json['isReceiverConfirm']),
+      isTradeConfirm: toBool(json['isTradeConfirm']),
+      isTradeStart: toBool(json['isTradeStart']),
+      isSenderReview: toBool(json['isSenderReview']),
+      isReceiverReview: toBool(json['isReceiverReview']),
+      isTradeRejected: toBool(json['isTradeRejected']),
+      showButtons: toBool(json['showButtons']),
+      statusMessage: json['statusMessage'] ?? json['message'],
+      isSender: toBool(json['isSender']),
+      isReceiver: toBool(json['isReceiver']),
       myProduct: json['myProduct'] != null
           ? Product.fromJson(json['myProduct'])
           : null,
@@ -108,5 +131,54 @@ class Trade {
           ? Product.fromJson(json['theirProduct'])
           : null,
     );
+  }
+}
+
+class StartTradeRequestModel {
+  final String userToken;
+  final int senderProductID;
+  final int receiverProductID;
+  final int deliveryTypeID;
+  final String? meetingLocation;
+
+  StartTradeRequestModel({
+    required this.userToken,
+    required this.senderProductID,
+    required this.receiverProductID,
+    required this.deliveryTypeID,
+    this.meetingLocation,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      "userToken": userToken,
+      "senderProductID": senderProductID,
+      "receiverProductID": receiverProductID,
+      "deliveryTypeID": deliveryTypeID,
+      "meetingLocation": meetingLocation,
+    };
+  }
+}
+
+class ConfirmTradeRequestModel {
+  final String userToken;
+  final int offerID;
+  final int isConfirm; // 1 for confirm, 0 for reject
+  final String? cancelDesc;
+
+  ConfirmTradeRequestModel({
+    required this.userToken,
+    required this.offerID,
+    required this.isConfirm,
+    this.cancelDesc,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      "userToken": userToken,
+      "offerID": offerID,
+      "isConfirm": isConfirm,
+      "cancelDesc": cancelDesc ?? "",
+    };
   }
 }

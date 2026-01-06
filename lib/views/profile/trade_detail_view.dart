@@ -4,6 +4,7 @@ import '../../viewmodels/trade_viewmodel.dart';
 import '../../viewmodels/auth_viewmodel.dart';
 import '../../theme/app_theme.dart';
 import '../../models/trade_detail_model.dart';
+import '../../models/trade_model.dart';
 
 class TradeDetailView extends StatelessWidget {
   final int offerId;
@@ -144,6 +145,7 @@ class _TradeDetailViewContentState extends State<_TradeDetailViewContent>
                   opacity: _fadeAnimation,
                   child: _buildInformationCard(detail),
                 ),
+                _buildActionButtons(context, detail),
                 const SizedBox(height: 32),
               ],
             ),
@@ -491,6 +493,353 @@ class _TradeDetailViewContentState extends State<_TradeDetailViewContent>
           fontWeight: FontWeight.w700,
           color: color,
         ),
+      ),
+    );
+  }
+
+  Widget _buildActionButtons(BuildContext context, TradeDetailData detail) {
+    final authVM = context.read<AuthViewModel>();
+    final tradeVM = context.read<TradeViewModel>();
+    final userId = authVM.user?.userID;
+
+    // 1. Backend'den gelen kesin buton gösterme kontrolü
+    if (tradeVM.tradeCheckResult?['showButtons'] == false) {
+      final String? statusMsg = tradeVM.tradeCheckResult?['message'];
+      if (statusMsg != null && statusMsg.isNotEmpty) {
+        return Padding(
+          padding: const EdgeInsets.only(top: 24),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.orange.shade50,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.orange.shade100),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline, color: Colors.orange.shade800),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    statusMsg,
+                    style: AppTheme.safePoppins(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.orange.shade900,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+      return const SizedBox.shrink();
+    }
+
+    final bool isReceiver = detail.receiverUserID == userId;
+    final bool isPending =
+        detail.isReceiverConfirm != true && detail.isTradeRejected != true;
+
+    // Eğer teklif bana gelmişse ve henüz onaylamamışsam -> Onayla/Reddet
+    if (isReceiver && isPending) {
+      return Column(
+        children: [
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: tradeVM.isLoading
+                      ? null
+                      : () => _showRejectDialog(
+                          context,
+                          tradeVM,
+                          authVM.user!.token,
+                          detail,
+                        ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTheme.error,
+                    side: const BorderSide(color: AppTheme.error),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: tradeVM.isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppTheme.error,
+                          ),
+                        )
+                      : Text(
+                          'Reddet',
+                          style: AppTheme.safePoppins(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.error,
+                          ),
+                        ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: tradeVM.isLoading
+                      ? null
+                      : () => _handleConfirm(
+                          context,
+                          tradeVM,
+                          authVM.user!.token,
+                          detail,
+                          1,
+                        ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF10B981),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: tradeVM.isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(
+                          'Onayla',
+                          style: AppTheme.safePoppins(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+    }
+
+    // Eğer takas onaylanmışsa ve devam ediyorsa -> Takası Tamamla göster
+    final bool canComplete =
+        detail.isTradeConfirm == true ||
+        detail.isTradeStart == true ||
+        (detail.isSenderConfirm == true && detail.isReceiverConfirm == true) ||
+        (detail.senderStatusID == 2 || detail.receiverStatusID == 2);
+
+    if (canComplete && detail.isTradeRejected != true) {
+      return Column(
+        children: [
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: tradeVM.isLoading
+                  ? null
+                  : () => _handleComplete(
+                      context,
+                      tradeVM,
+                      authVM.user!.token,
+                      detail,
+                    ),
+              icon: tradeVM.isLoading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.check_circle_outline, size: 22),
+              label: const Text("Takası Tamamla"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return const SizedBox.shrink();
+  }
+
+  void _handleComplete(
+    BuildContext context,
+    TradeViewModel tradeVM,
+    String token,
+    TradeDetailData detail,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Takası Tamamla"),
+        content: const Text(
+          "Ürünlerin karşılıklı teslim alındığını ve takasın başarıyla sonuçlandığını onaylıyor musunuz?",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text("İptal"),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primary),
+            child: const Text("Tamamla", style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        final message = await tradeVM.completeTrade(token, detail.offerID!);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(message ?? "Takas tamamlandı"),
+              backgroundColor: Colors.green,
+            ),
+          );
+          tradeVM.getTradeDetail(detail.offerID!, token);
+        }
+      } catch (e) {
+        if (context.mounted) {
+          final errorStr = e.toString();
+          if (errorStr.contains('zaten işlenmiş')) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  "Bu işlem zaten gerçekleştirilmiş. Sayfa güncelleniyor.",
+                ),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text("Hata: $e"), backgroundColor: Colors.red),
+            );
+          }
+          tradeVM.getTradeDetail(detail.offerID!, token);
+        }
+      }
+    }
+  }
+
+  void _handleConfirm(
+    BuildContext context,
+    TradeViewModel tradeVM,
+    String token,
+    TradeDetailData detail,
+    int isConfirm, {
+    String? reason,
+  }) async {
+    try {
+      final request = ConfirmTradeRequestModel(
+        userToken: token,
+        offerID: detail.offerID!,
+        isConfirm: isConfirm,
+        cancelDesc: reason,
+      );
+
+      final message = await tradeVM.confirmTrade(request);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message ?? "İşlem başarılı"),
+            backgroundColor: isConfirm == 1 ? Colors.green : Colors.orange,
+          ),
+        );
+        // Yenile
+        tradeVM.getTradeDetail(detail.offerID!, token);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        final errorStr = e.toString();
+        if (errorStr.contains('zaten işlenmiş')) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                "Bu takas teklifi zaten onaylanmış veya işlenmiş. Sayfa güncelleniyor.",
+              ),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Hata: $e"), backgroundColor: Colors.red),
+          );
+        }
+        tradeVM.getTradeDetail(detail.offerID!, token);
+      }
+    }
+  }
+
+  void _showRejectDialog(
+    BuildContext context,
+    TradeViewModel tradeVM,
+    String token,
+    TradeDetailData detail,
+  ) {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Teklifi Reddet"),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            hintText: "Reddetme sebebinizi yazın (Zorunlu)",
+            border: OutlineInputBorder(),
+          ),
+          maxLines: 3,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("İptal"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (controller.text.trim().isEmpty) {
+                ScaffoldMessenger.of(ctx).showSnackBar(
+                  const SnackBar(content: Text("Lütfen sebep belirtin")),
+                );
+                return;
+              }
+              Navigator.pop(ctx);
+              _handleConfirm(
+                context,
+                tradeVM,
+                token,
+                detail,
+                0,
+                reason: controller.text.trim(),
+              );
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
+            child: const Text("Reddet", style: TextStyle(color: Colors.white)),
+          ),
+        ],
       ),
     );
   }
