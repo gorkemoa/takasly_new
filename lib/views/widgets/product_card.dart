@@ -69,17 +69,39 @@ class ProductCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                // Management Actions (Top Left)
-                if (onEdit != null || onDelete != null)
+                // Edit Action (Top Left)
+                if (onEdit != null)
                   Positioned(
                     top: 8,
                     left: 8,
+                    child: GestureDetector(
+                      onTap: onEdit,
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.edit_rounded,
+                          size: 18,
+                          color: AppTheme.primary,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                // Engagement & Delete Actions (Top Right)
+                if (onFavoritePressed != null || onDelete != null)
+                  Positioned(
+                    top: 8,
+                    right: 8,
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        if (onEdit != null)
+                        if (onFavoritePressed != null)
                           GestureDetector(
-                            onTap: onEdit,
+                            onTap: onFavoritePressed,
                             child: Container(
                               padding: const EdgeInsets.all(6),
                               decoration: const BoxDecoration(
@@ -87,17 +109,22 @@ class ProductCard extends StatelessWidget {
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(
-                                Icons.edit_rounded,
+                                isFavorite
+                                    ? Icons.favorite
+                                    : Icons.favorite_border,
                                 size: 18,
-                                color: AppTheme.primary,
+                                color: isFavorite
+                                    ? AppTheme.error
+                                    : Colors.grey[400],
                               ),
                             ),
                           ),
-                        if (onDelete != null)
+                        if (onDelete != null) ...[
+                          if (onFavoritePressed != null)
+                            const SizedBox(width: 8),
                           GestureDetector(
                             onTap: onDelete,
                             child: Container(
-                              margin: const EdgeInsets.only(left: 8),
                               padding: const EdgeInsets.all(6),
                               decoration: const BoxDecoration(
                                 color: Colors.white,
@@ -110,29 +137,8 @@ class ProductCard extends StatelessWidget {
                               ),
                             ),
                           ),
+                        ],
                       ],
-                    ),
-                  ),
-
-                // Engagement Actions (Top Right)
-                if (onFavoritePressed != null)
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: GestureDetector(
-                      onTap: onFavoritePressed,
-                      child: Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          isFavorite ? Icons.favorite : Icons.favorite_border,
-                          size: 18,
-                          color: isFavorite ? AppTheme.error : Colors.grey[400],
-                        ),
-                      ),
                     ),
                   ),
               ],
