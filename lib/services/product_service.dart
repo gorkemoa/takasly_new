@@ -172,4 +172,17 @@ class ProductService {
       rethrow;
     }
   }
+
+  Future<String?> sponsorProduct(String userToken, int productId) async {
+    try {
+      final payload = {"userToken": userToken, "productID": productId};
+      final response = await _apiService.post(
+        ApiConstants.sponsorEdit,
+        payload,
+      );
+      return response['message'] as String?;
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

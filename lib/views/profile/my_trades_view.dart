@@ -95,6 +95,30 @@ class _MyTradesViewContentState extends State<_MyTradesViewContent>
                 onPressed: () => Navigator.pop(context),
               )
             : null,
+        actions: [
+          TextButton(
+            onPressed: () {
+              // Navigate to MyAds or specific sponsor view if needed
+              // For now, let's assume it goes to MyAds to select an ad
+              Navigator.pushNamed(context, '/my-ads');
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.amber,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text(
+                'İlanını hızlıca elden çıkar',
+                style: TextStyle(
+                  color: Colors.black87,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ),
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(60),
           child: Container(

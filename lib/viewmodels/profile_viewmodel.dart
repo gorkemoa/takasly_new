@@ -119,4 +119,25 @@ class ProfileViewModel extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<String?> sponsorProduct({
+    required String userToken,
+    required int productId,
+  }) async {
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final message = await _productService.sponsorProduct(
+        userToken,
+        productId,
+      );
+      return message;
+    } catch (e) {
+      _logger.e("Product sponsor error: $e");
+      return e.toString();
+    } finally {
+      notifyListeners();
+    }
+  }
 }

@@ -8,6 +8,7 @@ class ProductCard extends StatelessWidget {
   final VoidCallback? onFavoritePressed;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
+  final VoidCallback? onSponsor;
 
   const ProductCard({
     super.key,
@@ -16,6 +17,7 @@ class ProductCard extends StatelessWidget {
     this.onFavoritePressed,
     this.onEdit,
     this.onDelete,
+    this.onSponsor,
   });
 
   @override
@@ -69,25 +71,49 @@ class ProductCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                // Edit Action (Top Left)
-                if (onEdit != null)
+                // Management Actions (Top Left)
+                if (onEdit != null || onSponsor != null)
                   Positioned(
                     top: 8,
                     left: 8,
-                    child: GestureDetector(
-                      onTap: onEdit,
-                      child: Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.edit_rounded,
-                          size: 18,
-                          color: AppTheme.primary,
-                        ),
-                      ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (onEdit != null)
+                          GestureDetector(
+                            onTap: onEdit,
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.edit_rounded,
+                                size: 18,
+                                color: AppTheme.primary,
+                              ),
+                            ),
+                          ),
+                        if (onSponsor != null) ...[
+                          if (onEdit != null) const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: onSponsor,
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.bolt_rounded,
+                                size: 18,
+                                color: Colors.amber,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ),
 
@@ -139,6 +165,56 @@ class ProductCard extends StatelessWidget {
                           ),
                         ],
                       ],
+                    ),
+                  ),
+
+                // Sponsor Action (Bottom Center)
+                if (onSponsor != null)
+                  Positioned(
+                    bottom: 8,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: GestureDetector(
+                        onTap: onSponsor,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppTheme.primary,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppTheme.primary.withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.bolt_rounded,
+                                size: 14,
+                                color: Colors.amber,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'ÜCRETSİZ ÖNE ÇIKAR',
+                                style: AppTheme.safePoppins(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                  letterSpacing: 0.2,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
                   ),
               ],

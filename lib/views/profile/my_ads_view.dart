@@ -165,8 +165,117 @@ class _MyAdsViewState extends State<MyAdsView> {
             }
           },
           onDelete: () => _showDeleteConfirmation(context, viewModel, product),
+          onSponsor: () => _showSponsorDialog(context, viewModel, product),
         );
       },
+    );
+  }
+
+  Future<void> _showSponsorDialog(
+    BuildContext context,
+    ProfileViewModel viewModel,
+    prod.Product product,
+  ) async {
+    final authVM = Provider.of<AuthViewModel>(context, listen: false);
+    final userToken = authVM.user?.token;
+
+    if (userToken == null || product.productID == null) return;
+
+    final bool? proceed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: Colors.white,
+        title: Row(
+          children: [
+            const Icon(Icons.bolt_rounded, color: Colors.amber, size: 28),
+            const SizedBox(width: 12),
+            const Text(
+              'İlanını Öne Çıkar!',
+              style: TextStyle(fontWeight: FontWeight.w900),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Ürününüzün daha fazla kişi tarafından görülmesini ister misiniz?',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            const SizedBox(height: 16),
+            _buildFeatureRow(
+              Icons.timer_outlined,
+              '1 saat boyunca en üstte görünür.',
+            ),
+            _buildFeatureRow(
+              Icons.trending_up_rounded,
+              'Takas şansını 5 kat artırır.',
+            ),
+            _buildFeatureRow(
+              Icons.videocam_outlined,
+              'Sadece kısa bir video izleyerek!',
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text(
+              'Daha Sonra',
+              style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w600),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            ),
+            child: const Text(
+              'Video İzle ve Öne Çıkar',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (proceed == true) {
+      // Mock video delay or actual call
+      // In a real app, AdMob call would be here.
+      final message = await viewModel.sponsorProduct(
+        userToken: userToken,
+        productId: product.productID!,
+      );
+
+      if (message != null && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            backgroundColor: Colors.amber[700],
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  Widget _buildFeatureRow(IconData icon, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: AppTheme.primary),
+          const SizedBox(width: 10),
+          Expanded(child: Text(text, style: const TextStyle(fontSize: 14))),
+        ],
+      ),
     );
   }
 

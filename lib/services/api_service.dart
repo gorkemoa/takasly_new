@@ -126,10 +126,10 @@ class ApiService {
       _logger.w('Erişim Reddedildi (403). Oturum sonlandırılıyor.');
       onForbidden?.call();
       throw Exception('Oturum süresi doldu veya yetkisiz erişim.');
-    } else if (response.statusCode == 417) {
-      // İş mantığı hatası
-      final errorMsg = getErrorMessage() ?? 'Bir hata oluştu';
-      _logger.w('İş Mantığı Hatası (417): $errorMsg');
+    } else if (response.statusCode == 400 || response.statusCode == 417) {
+      // İş mantığı / Valide hatası
+      final errorMsg = getErrorMessage() ?? 'İstek hatası oluştu';
+      _logger.w('İş Mantığı Hatası (${response.statusCode}): $errorMsg');
       throw BusinessException(errorMsg);
     } else if (response.statusCode == 410) {
       // Listenin sonu / Kaynak artık yok
@@ -142,7 +142,7 @@ class ApiService {
     } else {
       final errorMsg = getErrorMessage() ?? response.reasonPhrase;
       _logger.e('HTTP Hatası ${response.statusCode}: $errorMsg');
-      throw Exception('HTTP Error ${response.statusCode}: $errorMsg');
+      throw Exception(errorMsg);
     }
   }
 

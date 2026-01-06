@@ -189,6 +189,8 @@ class _ProductDetailViewState extends State<ProductDetailView> {
                   _buildUserInfoCard(product),
                   const SizedBox(height: 16),
 
+                  _buildPromoteSection(product),
+
                   _buildDescription(product),
 
                   const SizedBox(height: 56),
@@ -562,6 +564,122 @@ class _ProductDetailViewState extends State<ProductDetailView> {
         ],
       ),
     );
+  }
+
+  Widget _buildPromoteSection(ProductDetail product) {
+    final authVM = context.read<AuthViewModel>();
+    final isOwner = product.userID == authVM.user?.userID;
+
+    if (!isOwner) return const SizedBox.shrink();
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppTheme.primary, AppTheme.primary.withOpacity(0.8)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.primary.withOpacity(0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.bolt_rounded,
+                  color: Colors.amber,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'İlanını Öne Çıkar!',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    Text(
+                      '1 saat boyunca zirvede kal.',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => _handlePromote(product),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: AppTheme.primary,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+              child: const Text(
+                'Video İzle ve Ücretsiz Öne Çıkar',
+                style: TextStyle(fontWeight: FontWeight.w800),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _handlePromote(ProductDetail product) async {
+    final authVM = context.read<AuthViewModel>();
+    final profileVM = context.read<ProfileViewModel>();
+    final userToken = authVM.user?.token;
+
+    if (userToken == null || product.productID == null) return;
+
+    // Call same logic as MyAdsView
+    final message = await profileVM.sponsorProduct(
+      userToken: userToken,
+      productId: product.productID!,
+    );
+
+    if (message != null && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.amber[700],
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   Widget _buildDescription(ProductDetail product) {
