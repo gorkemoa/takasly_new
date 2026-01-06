@@ -15,6 +15,7 @@ class AddProductRequestModel {
   final double productLat;
   final double productLong;
   final int isShowContact; // 1 or 0
+  final List<String>? existingImageUrlList;
 
   AddProductRequestModel({
     required this.userToken,
@@ -29,10 +30,11 @@ class AddProductRequestModel {
     required this.productLat,
     required this.productLong,
     this.isShowContact = 1,
+    this.existingImageUrlList,
   });
 
   Map<String, String> toFields() {
-    return {
+    final fields = {
       'userToken': userToken,
       'productTitle': productTitle,
       'productDesc': productDesc,
@@ -45,6 +47,16 @@ class AddProductRequestModel {
       'productLong': productLong.toString(),
       'isShowContact': isShowContact.toString(),
     };
+
+    if (existingImageUrlList != null && existingImageUrlList!.isNotEmpty) {
+      for (int i = 0; i < existingImageUrlList!.length; i++) {
+        // Send existing URLs as productImages[index] to avoid Map key collision
+        // and allow backend to receive it as an array.
+        fields['productImages[$i]'] = existingImageUrlList![i];
+      }
+    }
+
+    return fields;
   }
 
   Future<List<http.MultipartFile>> toFiles() async {
@@ -53,7 +65,7 @@ class AddProductRequestModel {
       var stream = http.ByteStream(image.openRead().cast());
       var length = await image.length();
       var multipartFile = http.MultipartFile(
-        'productImages',
+        'productImages[]',
         stream,
         length,
         filename: basename(image.path),

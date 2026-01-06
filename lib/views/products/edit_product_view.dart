@@ -1,8 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import '../../theme/app_theme.dart';
 import '../../viewmodels/edit_product_viewmodel.dart';
 import '../../models/products/product_models.dart';
@@ -192,48 +192,62 @@ class _EditProductViewBody extends HookWidget {
                   ),
                   const SizedBox(height: 24),
 
-                  // Images
+                  // Images Section
                   const Text(
-                    "Mevcut Görseller",
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    "İlan Görselleri",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 8),
-                  if (viewModel.existingImages.isNotEmpty)
-                    SizedBox(
-                      height: 100,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: viewModel.existingImages.length,
-                        itemBuilder: (ctx, i) => Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: Image.network(
-                            viewModel.existingImages[i],
-                            width: 100,
-                            fit: BoxFit.cover,
-                          ),
+                  const SizedBox(height: 12),
+
+                  // Horizontal scroll list for all images (existing + new)
+                  SizedBox(
+                    height: 120,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      children: [
+                        // Existing images from server
+                        ...viewModel.existingImages.asMap().entries.map((
+                          entry,
+                        ) {
+                          int idx = entry.key;
+                          String url = entry.value;
+                          return _ImageCard(
+                            image: NetworkImage(url),
+                            onDelete: () => viewModel.removeExistingImage(idx),
+                          );
+                        }),
+                        // New local images
+                        ...viewModel.newImages.asMap().entries.map((entry) {
+                          int idx = entry.key;
+                          File file = entry.value;
+                          return _ImageCard(
+                            image: FileImage(file),
+                            onDelete: () => viewModel.removeNewImage(idx),
+                          );
+                        }),
+                        // Add Button
+                        _AddImageButton(
+                          onTap: () =>
+                              _showImageSourcePicker(context, viewModel),
                         ),
-                      ),
+                      ],
                     ),
-                  const SizedBox(height: 16),
-                  ElevatedButton.icon(
-                    onPressed: viewModel.pickImages,
-                    icon: const Icon(Icons.add_photo_alternate),
-                    label: const Text("Yeni Görsel Ekle"),
                   ),
-                  if (viewModel.newImages.isNotEmpty)
-                    Wrap(
-                      spacing: 8,
-                      children: viewModel.newImages
-                          .map(
-                            (f) => Image.file(
-                              f,
-                              width: 80,
-                              height: 80,
-                              fit: BoxFit.cover,
-                            ),
-                          )
-                          .toList(),
+
+                  const SizedBox(height: 24),
+                  SwitchListTile(
+                    title: const Text(
+                      'İletişim Bilgilerini Göster',
+                      style: TextStyle(fontWeight: FontWeight.bold),
                     ),
+                    subtitle: const Text(
+                      'Teklif verenlerin size ulaşması için telefon numaranız gösterilsin mi?',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                    value: viewModel.isShowContact,
+                    onChanged: (val) => viewModel.setShowContact(val),
+                    activeColor: AppTheme.primary,
+                  ),
 
                   const SizedBox(height: 32),
                   ElevatedButton(
@@ -286,5 +300,108 @@ class _EditProductViewBody extends HookWidget {
     } else {
       // Handle login if needed
     }
+  }
+
+  void _showImageSourcePicker(
+    BuildContext context,
+    EditProductViewModel viewModel,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Kameradan Çek'),
+              onTap: () {
+                Navigator.pop(ctx);
+                viewModel.pickFromCamera();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Galeriden Seç'),
+              onTap: () {
+                Navigator.pop(ctx);
+                viewModel.pickImages();
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ImageCard extends StatelessWidget {
+  final ImageProvider image;
+  final VoidCallback onDelete;
+
+  const _ImageCard({required this.image, required this.onDelete});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 100,
+      margin: const EdgeInsets.only(right: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        image: DecorationImage(image: image, fit: BoxFit.cover),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            right: 4,
+            top: 4,
+            child: GestureDetector(
+              onTap: onDelete,
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: const BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.close, size: 16, color: Colors.white),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AddImageButton extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _AddImageButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 100,
+        decoration: BoxDecoration(
+          color: Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Colors.grey.shade300,
+            style: BorderStyle.solid,
+          ),
+        ),
+        child: const Icon(Icons.add_a_photo, color: Colors.grey, size: 32),
+      ),
+    );
   }
 }

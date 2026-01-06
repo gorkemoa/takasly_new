@@ -139,6 +139,7 @@ class ProductService {
 
   Future<void> editProduct(
     AddProductRequestModel request,
+    int userId,
     int productId,
   ) async {
     try {
@@ -147,7 +148,7 @@ class ProductService {
       final files = await request.toFiles();
 
       await _apiService.postMultipart(
-        '${ApiConstants.editProduct}$productId/editProduct',
+        '${ApiConstants.editProduct}$userId/editProduct',
         fields: fields,
         files: files,
       );

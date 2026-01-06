@@ -112,6 +112,7 @@ class Product {
   bool? isFavorite;
   bool? isSponsor;
   bool? isTrade;
+  bool? isShowContact;
 
   Product({
     this.productID,
@@ -137,6 +138,7 @@ class Product {
     this.isFavorite,
     this.isSponsor,
     this.isTrade,
+    this.isShowContact,
   });
 
   factory Product.fromJson(Map<String, dynamic> json) {
@@ -168,6 +170,8 @@ class Product {
       isFavorite: json['isFavorite'],
       isSponsor: json['isSponsor'],
       isTrade: json['isTrade'],
+      isShowContact:
+          json['isShowContact'] == true || json['isShowContact'] == 1,
     );
   }
   Product copyWith({
@@ -195,6 +199,7 @@ class Product {
     bool? isSponsor,
     bool? isTrade,
     bool? isSold,
+    bool? isShowContact,
   }) {
     return Product(
       productID: productID ?? this.productID,
@@ -220,6 +225,7 @@ class Product {
       isFavorite: isFavorite ?? this.isFavorite,
       isSponsor: isSponsor ?? this.isSponsor,
       isTrade: isTrade ?? this.isTrade,
+      isShowContact: isShowContact ?? this.isShowContact,
     );
   }
 

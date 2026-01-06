@@ -78,11 +78,25 @@ class EditProductViewModel extends ChangeNotifier {
     isLoading = true;
     notifyListeners();
     try {
+      // 1. Fetch lookup data
       await Future.wait([
         _fetchCategories(),
         _fetchConditions(),
         _fetchCities(),
       ]);
+
+      // 2. Fetch full product details to get tradeFor and gallery
+      try {
+        final detail = await _productService.getProductDetail(productId);
+        if (detail.success == true && detail.data?.product != null) {
+          final p = detail.data!.product!;
+          // Merge details into initialProduct or just use p if we want
+          // For now, let's update fields from p
+          _updateFromDetail(p);
+        }
+      } catch (e) {
+        _logger.w("Product detail fetch failed, using initial data: $e");
+      }
 
       await _initializeFields();
     } catch (e) {
@@ -94,11 +108,36 @@ class EditProductViewModel extends ChangeNotifier {
     }
   }
 
+  void _updateFromDetail(dynamic p) {
+    // p is ProductDetail
+    titleController.text = p.productTitle ?? '';
+    descController.text = p.productDesc ?? '';
+    tradeForController.text = p.tradeFor ?? '';
+    isShowContact = p.isShowContact ?? true;
+
+    if (p.productImage != null && p.productImage!.isNotEmpty) {
+      if (!existingImages.contains(p.productImage!)) {
+        existingImages.add(p.productImage!);
+      }
+    }
+
+    if (p.productGallery != null) {
+      for (var img in p.productGallery!) {
+        if (!existingImages.contains(img)) {
+          existingImages.add(img);
+        }
+      }
+    }
+  }
+
   Future<void> _initializeFields() async {
-    titleController.text = initialProduct.productTitle ?? '';
-    descController.text = initialProduct.productDesc ?? '';
-    // Trade For is likely same as original if not provided
-    // tradeForController.text = ...;
+    // If not already set by _updateFromDetail
+    if (titleController.text.isEmpty) {
+      titleController.text = initialProduct.productTitle ?? '';
+    }
+    if (descController.text.isEmpty) {
+      descController.text = initialProduct.productDesc ?? '';
+    }
 
     // Hydrate Categories
     if (initialProduct.categoryList != null &&
@@ -113,7 +152,6 @@ class EditProductViewModel extends ChangeNotifier {
           );
           selectedCategory = rootCat;
         } catch (_) {
-          // Fallback if not found in list (shouldn't happen if synced)
           selectedCategory = path[0];
         }
       }
@@ -123,12 +161,9 @@ class EditProductViewModel extends ChangeNotifier {
         final parent = path[i];
         final child = path[i + 1];
 
-        // Fetch children of parent
-        // Level index: i (0 for children of root, 1 for children of level 0, etc.)
         if (parent.catID != null) {
           await _fetchSubCategories(parent.catID!, i);
 
-          // Now set the selection for this level
           if (i < categoryLevels.length) {
             final levelOptions = categoryLevels[i];
             try {
@@ -159,7 +194,6 @@ class EditProductViewModel extends ChangeNotifier {
   void _hydrateOtherFields() {
     // Images
     if (initialProduct.productImage != null) {
-      // Avoid duplicates if initialized multiple times (though init is once)
       if (!existingImages.contains(initialProduct.productImage!)) {
         existingImages.add(initialProduct.productImage!);
       }
@@ -199,6 +233,40 @@ class EditProductViewModel extends ChangeNotifier {
     }
 
     notifyListeners();
+  }
+
+  void removeExistingImage(int index) {
+    if (index >= 0 && index < existingImages.length) {
+      existingImages.removeAt(index);
+      notifyListeners();
+    }
+  }
+
+  void removeNewImage(int index) {
+    if (index >= 0 && index < newImages.length) {
+      newImages.removeAt(index);
+      notifyListeners();
+    }
+  }
+
+  Future<bool> pickFromCamera() async {
+    try {
+      final XFile? photo = await _picker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 70,
+      );
+      if (photo != null) {
+        newImages.add(File(photo.path));
+        notifyListeners();
+        return true;
+      }
+      return false;
+    } catch (e) {
+      _logger.e("Error picking from camera: $e");
+      errorMessage = "Fotoğraf çekilirken hata oluştu.";
+      notifyListeners();
+      return false;
+    }
   }
 
   // Fetchers
@@ -344,13 +412,6 @@ class EditProductViewModel extends ChangeNotifier {
     }
   }
 
-  void removeNewImage(int index) {
-    if (index >= 0 && index < newImages.length) {
-      newImages.removeAt(index);
-      notifyListeners();
-    }
-  }
-
   // Location
   Future<void> fetchCurrentLocation() async {
     // ... Copy location logic from AddProductViewModel
@@ -412,7 +473,9 @@ class EditProductViewModel extends ChangeNotifier {
         categoryID: _getLastSelectedCategoryId(),
         conditionID: selectedCondition!.id!,
         tradeFor: tradeForController.text.trim(),
-        productImages: newImages, // Only NEW images
+        productImages: newImages,
+        existingImageUrlList:
+            existingImages, // Send existing URLs back to KEEP them
         productCity: selectedCity!.cityNo!.toString(),
         productDistrict: selectedDistrict!.districtNo!.toString(),
         productLat: productLat ?? 0.0,
@@ -421,7 +484,7 @@ class EditProductViewModel extends ChangeNotifier {
       );
 
       // Call EDIT
-      await _productService.editProduct(request, productId);
+      await _productService.editProduct(request, userId, productId);
       return true;
     } catch (e) {
       if (e is BusinessException) {
