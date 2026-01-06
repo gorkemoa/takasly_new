@@ -22,6 +22,8 @@ import 'theme/app_theme.dart';
 import 'services/firebase_messaging_service.dart';
 import 'services/navigation_service.dart';
 
+import 'services/ad_service.dart';
+
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
@@ -33,6 +35,9 @@ void main() async {
 
   // Initialize Firebase Messaging Service
   await FirebaseMessagingService.initialize();
+
+  // Initialize AdService
+  await AdService().init();
 
   runApp(const MyApp());
 }

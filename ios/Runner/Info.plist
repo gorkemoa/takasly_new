@@ -70,6 +70,15 @@
 	<string>Size daha iyi bir deneyim sunmak için izin verin.</string>
 	<key>PermissionGroupNotification</key>
 	<string>Bildirim göndermek için izin verin.</string>
+	<key>GADApplicationIdentifier</key>
+	<string>ca-app-pub-3600325889588673~5340558560</string>
+	<key>SKAdNetworkItems</key>
+	<array>
+		<dict>
+			<key>SKAdNetworkIdentifier</key>
+			<string>cstr6suwn9.skadnetwork</string>
+		</dict>
+	</array>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

@@ -14,6 +14,7 @@ import '../../viewmodels/auth_viewmodel.dart';
 import '../../viewmodels/ticket_viewmodel.dart';
 import '../profile/user_profile_view.dart';
 import 'widgets/offer_bottom_sheet.dart';
+import '../widgets/ads/banner_ad_widget.dart';
 
 class ProductDetailView extends StatefulWidget {
   final int productId;
@@ -665,21 +666,32 @@ class _ProductDetailViewState extends State<ProductDetailView> {
 
     if (userToken == null || product.productID == null) return;
 
-    // Call same logic as MyAdsView
-    final message = await profileVM.sponsorProduct(
+    await profileVM.showRewardedAdAndSponsor(
       userToken: userToken,
       productId: product.productID!,
+      onSuccess: (message) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(message),
+              backgroundColor: Colors.amber[700],
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      },
+      onFailure: (error) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(error),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      },
     );
-
-    if (message != null && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: Colors.amber[700],
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
   }
 
   Widget _buildDescription(ProductDetail product) {
@@ -858,52 +870,61 @@ class _ProductDetailViewState extends State<ProductDetailView> {
         product.userPhone != null &&
         product.userPhone!.isNotEmpty;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: AppTheme.cardShadow,
-      ),
-      child: SafeArea(
-        child: Row(
-          children: [
-            if (showCallButton) ...[
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () => _makePhoneCall(product.userPhone!),
-                  icon: const Icon(Icons.phone),
-                  label: const Text("Ara"),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppTheme.primary,
-                    side: const BorderSide(color: AppTheme.primary, width: 1.5),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const BannerAdWidget(),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: AppTheme.cardShadow,
+          ),
+          child: SafeArea(
+            child: Row(
+              children: [
+                if (showCallButton) ...[
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _makePhoneCall(product.userPhone!),
+                      icon: const Icon(Icons.phone),
+                      label: const Text("Ara"),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppTheme.primary,
+                        side: const BorderSide(
+                          color: AppTheme.primary,
+                          width: 1.5,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
                     ),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  const SizedBox(width: 16),
+                ],
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => _showOfferBottomSheet(context, product),
+                    icon: const Icon(Icons.message),
+                    label: const Text("Mesaj Gönder"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 16),
-            ],
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: () => _showOfferBottomSheet(context, product),
-                icon: const Icon(Icons.message),
-                label: const Text("Mesaj Gönder"),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
-              ),
+              ],
             ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 

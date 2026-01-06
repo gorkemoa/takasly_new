@@ -24,6 +24,7 @@ import '../profile/my_trades_view.dart';
 import '../messages/tickets_view.dart';
 
 import 'package:permission_handler/permission_handler.dart';
+import '../widgets/ads/banner_ad_widget.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -511,7 +512,7 @@ class _HomeViewState extends State<HomeView> {
                                 ),
                               ),
 
-                              // Product Grid
+                              // Product List with Interspersed Banners
                               if (productViewModel.isLoading &&
                                   productViewModel.products.isEmpty)
                                 const SliverFillRemaining(
@@ -529,49 +530,134 @@ class _HomeViewState extends State<HomeView> {
                               else
                                 SliverPadding(
                                   padding: const EdgeInsets.all(16),
-                                  sliver: SliverGrid(
-                                    gridDelegate:
-                                        const SliverGridDelegateWithFixedCrossAxisCount(
-                                          crossAxisCount: 2,
-                                          childAspectRatio:
-                                              0.65, // Adjust for card height
-                                          crossAxisSpacing: 16,
-                                          mainAxisSpacing: 16,
-                                        ),
+                                  sliver: SliverList(
                                     delegate: SliverChildBuilderDelegate(
                                       (context, index) {
-                                        if (index >=
-                                            productViewModel.products.length)
+                                        const int kCycleSize =
+                                            3; // Row, Row, Banner
+
+                                        // Check if it's a Banner Slot
+                                        if ((index + 1) % kCycleSize == 0) {
+                                          return const Padding(
+                                            padding: EdgeInsets.only(
+                                              bottom: 16,
+                                            ),
+                                            child: BannerAdWidget(),
+                                          );
+                                        }
+
+                                        // Calculate Product Row
+                                        // How many banners before this index?
+                                        final int bannersBefore =
+                                            (index + 1) ~/ kCycleSize;
+                                        // How many product rows (items in list that are not banners)
+                                        final int productRowsBefore =
+                                            index - bannersBefore;
+                                        // First product index for this row
+                                        final int startProductIndex =
+                                            productRowsBefore * 2;
+
+                                        if (startProductIndex >=
+                                            productViewModel.products.length) {
                                           return null;
-                                        final product =
-                                            productViewModel.products[index];
-                                        return ProductCard(
-                                          product: product,
-                                          onTap: () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    ChangeNotifierProvider(
-                                                      create: (_) =>
-                                                          ProductDetailViewModel(),
-                                                      child: ProductDetailView(
-                                                        productId:
-                                                            product.productID!,
-                                                      ),
-                                                    ),
+                                        }
+
+                                        final firstProduct = productViewModel
+                                            .products[startProductIndex];
+                                        final secondProduct =
+                                            (startProductIndex + 1 <
+                                                productViewModel
+                                                    .products
+                                                    .length)
+                                            ? productViewModel
+                                                  .products[startProductIndex +
+                                                  1]
+                                            : null;
+
+                                        return Padding(
+                                          padding: const EdgeInsets.only(
+                                            bottom: 16,
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Expanded(
+                                                child: AspectRatio(
+                                                  aspectRatio: 0.65,
+                                                  child: ProductCard(
+                                                    product: firstProduct,
+                                                    onTap: () {
+                                                      Navigator.push(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                          builder: (context) =>
+                                                              ChangeNotifierProvider(
+                                                                create: (_) =>
+                                                                    ProductDetailViewModel(),
+                                                                child: ProductDetailView(
+                                                                  productId:
+                                                                      firstProduct
+                                                                          .productID!,
+                                                                ),
+                                                              ),
+                                                        ),
+                                                      );
+                                                    },
+                                                    onFavoritePressed: () {
+                                                      productViewModel
+                                                          .toggleFavorite(
+                                                            firstProduct,
+                                                          );
+                                                    },
+                                                  ),
+                                                ),
                                               ),
-                                            );
-                                          },
-                                          onFavoritePressed: () {
-                                            productViewModel.toggleFavorite(
-                                              product,
-                                            );
-                                          },
+                                              const SizedBox(width: 16),
+                                              Expanded(
+                                                child: secondProduct != null
+                                                    ? AspectRatio(
+                                                        aspectRatio: 0.65,
+                                                        child: ProductCard(
+                                                          product:
+                                                              secondProduct,
+                                                          onTap: () {
+                                                            Navigator.push(
+                                                              context,
+                                                              MaterialPageRoute(
+                                                                builder: (context) => ChangeNotifierProvider(
+                                                                  create: (_) =>
+                                                                      ProductDetailViewModel(),
+                                                                  child: ProductDetailView(
+                                                                    productId:
+                                                                        secondProduct
+                                                                            .productID!,
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                            );
+                                                          },
+                                                          onFavoritePressed: () {
+                                                            productViewModel
+                                                                .toggleFavorite(
+                                                                  secondProduct,
+                                                                );
+                                                          },
+                                                        ),
+                                                      )
+                                                    : const SizedBox(), // Empty holder
+                                              ),
+                                            ],
+                                          ),
                                         );
                                       },
-                                      childCount:
-                                          productViewModel.products.length,
+                                      // Count rough estimate: (Products / 2) + Banners
+                                      childCount: (() {
+                                        final productCount =
+                                            productViewModel.products.length;
+                                        final rowCount = (productCount / 2)
+                                            .ceil();
+                                        final bannerCount = rowCount ~/ 2;
+                                        return rowCount + bannerCount;
+                                      })(),
                                     ),
                                   ),
                                 ),
@@ -596,7 +682,7 @@ class _HomeViewState extends State<HomeView> {
                       },
                     ),
             ),
-      // Bottom Navigation Bar (Visual only for now matching design)
+      // Bottom Navigation Bar
       bottomNavigationBar: CustomBottomNavigationBar(
         selectedIndex: _selectedIndex,
         onItemSelected: (index) {

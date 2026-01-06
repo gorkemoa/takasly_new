@@ -4,6 +4,7 @@ import '../models/profile/profile_detail_model.dart';
 import '../services/auth_service.dart';
 import '../services/product_service.dart';
 import '../services/account_service.dart';
+import '../services/ad_service.dart';
 import '../models/user/report_user_model.dart';
 import '../models/account/blocked_user_model.dart';
 
@@ -13,6 +14,7 @@ class ProfileViewModel extends ChangeNotifier {
   final AuthService _authService = AuthService();
   final ProductService _productService = ProductService();
   final AccountService _accountService = AccountService();
+  final AdService _adService = AdService();
   final Logger _logger = Logger();
 
   ProfileState _state = ProfileState.idle;
@@ -43,7 +45,6 @@ class ProfileViewModel extends ChangeNotifier {
     }
   }
 
-  // Helper to check if the loaded profile belongs to the current user
   bool isCurrentUser(int? currentUserId) {
     if (currentUserId == null || _profileDetail == null) return false;
     return _profileDetail!.userID == currentUserId;
@@ -104,7 +105,6 @@ class ProfileViewModel extends ChangeNotifier {
 
     try {
       await _productService.deleteProduct(userToken, userId, productId);
-      // Remove from local list if successful to avoid full refetch
       if (_profileDetail?.products != null) {
         _profileDetail!.products!.removeWhere((p) => p.productID == productId);
       }
@@ -139,5 +139,35 @@ class ProfileViewModel extends ChangeNotifier {
     } finally {
       notifyListeners();
     }
+  }
+
+  Future<void> showRewardedAdAndSponsor({
+    required String userToken,
+    required int productId,
+    required Function(String message) onSuccess,
+    required Function(String error) onFailure,
+  }) async {
+    _adService.loadRewardedAd(
+      onAdLoaded: () {},
+      onAdShown: (ad) {
+        ad.show(
+          onUserEarnedReward: (ad, reward) async {
+            final message = await sponsorProduct(
+              userToken: userToken,
+              productId: productId,
+            );
+            if (message != null) {
+              onSuccess(message);
+            } else {
+              onFailure("Sponsorluk işlemi başarısız oldu.");
+            }
+          },
+        );
+      },
+      onUserEarnedReward: () {},
+      onAdFailedToLoad: (error) {
+        onFailure("Reklam yüklenemedi: ${error.message}");
+      },
+    );
   }
 }

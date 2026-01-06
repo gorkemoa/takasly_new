@@ -8,6 +8,7 @@ import '../products/edit_product_view.dart';
 import '../../models/profile/profile_detail_model.dart';
 import '../widgets/product_card.dart';
 import '../../models/products/product_models.dart' as prod;
+import '../widgets/ads/banner_ad_widget.dart';
 
 class MyAdsView extends StatefulWidget {
   const MyAdsView({super.key});
@@ -81,6 +82,7 @@ class _MyAdsViewState extends State<MyAdsView> {
                   ),
                 )
               : _buildProductsGrid(profile.products!, viewModel),
+          bottomNavigationBar: const BannerAdWidget(),
         );
       },
     );
@@ -247,22 +249,32 @@ class _MyAdsViewState extends State<MyAdsView> {
     );
 
     if (proceed == true) {
-      // Mock video delay or actual call
-      // In a real app, AdMob call would be here.
-      final message = await viewModel.sponsorProduct(
+      await viewModel.showRewardedAdAndSponsor(
         userToken: userToken,
         productId: product.productID!,
+        onSuccess: (message) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(message),
+                backgroundColor: Colors.amber[700],
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          }
+        },
+        onFailure: (error) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(error),
+                backgroundColor: Colors.red,
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          }
+        },
       );
-
-      if (message != null && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(message),
-            backgroundColor: Colors.amber[700],
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
     }
   }
 
