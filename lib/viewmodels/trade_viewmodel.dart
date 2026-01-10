@@ -16,6 +16,19 @@ class TradeViewModel extends ChangeNotifier {
   bool isLoading = false;
   String? errorMessage;
   Map<String, dynamic>? tradeCheckResult;
+  final Set<int> _processingOfferIDs = {};
+  Set<int> get processingOfferIDs => _processingOfferIDs;
+
+  bool isProcessing(int offerID) => _processingOfferIDs.contains(offerID);
+
+  void _setProcessing(int offerID, bool processing) {
+    if (processing) {
+      _processingOfferIDs.add(offerID);
+    } else {
+      _processingOfferIDs.remove(offerID);
+    }
+    notifyListeners();
+  }
 
   void clearError() {
     if (errorMessage != null) {
@@ -24,11 +37,13 @@ class TradeViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> getTrades(int userId) async {
+  Future<void> getTrades(int userId, {bool silent = false}) async {
     if (isLoading) return;
-    isLoading = true;
-    errorMessage = null; // Clears error state on new fetch
-    notifyListeners();
+    if (!silent) {
+      isLoading = true;
+      errorMessage = null; // Clears error state on new fetch
+      notifyListeners();
+    }
 
     try {
       trades = await _productService.getUserTrades(userId);
@@ -75,20 +90,15 @@ class TradeViewModel extends ChangeNotifier {
   }
 
   Future<String?> confirmTrade(ConfirmTradeRequestModel request) async {
-    isLoading = true;
+    _setProcessing(request.offerID, true);
     errorMessage = null;
-    notifyListeners();
 
     try {
       final message = await _productService.confirmTrade(request);
       _logger.i('Trade ${request.offerID} confirmation: $message');
       return message;
-    } catch (e) {
-      _logger.e('Error confirming trade', error: e);
-      rethrow;
     } finally {
-      isLoading = false;
-      notifyListeners();
+      _setProcessing(request.offerID, false);
     }
   }
 
@@ -110,9 +120,8 @@ class TradeViewModel extends ChangeNotifier {
   }
 
   Future<String?> completeTrade(String token, int offerID) async {
-    isLoading = true;
+    _setProcessing(offerID, true);
     errorMessage = null;
-    notifyListeners();
 
     try {
       final message = await _productService.completeTrade(token, offerID);
@@ -122,8 +131,7 @@ class TradeViewModel extends ChangeNotifier {
       _logger.e('Error completing trade', error: e);
       rethrow;
     } finally {
-      isLoading = false;
-      notifyListeners();
+      _setProcessing(offerID, false);
     }
   }
 
@@ -151,9 +159,8 @@ class TradeViewModel extends ChangeNotifier {
     required int rating,
     String? comment,
   }) async {
-    isLoading = true;
+    _setProcessing(offerID, true);
     errorMessage = null;
-    notifyListeners();
 
     try {
       final message = await _productService.addTradeReview(
@@ -168,8 +175,7 @@ class TradeViewModel extends ChangeNotifier {
       _logger.e('Error sending trade review', error: e);
       rethrow;
     } finally {
-      isLoading = false;
-      notifyListeners();
+      _setProcessing(offerID, false);
     }
   }
 }

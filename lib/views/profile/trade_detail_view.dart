@@ -5,6 +5,7 @@ import '../../viewmodels/auth_viewmodel.dart';
 import '../../theme/app_theme.dart';
 import '../../models/trade_detail_model.dart';
 import '../../models/trade_model.dart';
+import 'user_profile_view.dart';
 
 class TradeDetailView extends StatelessWidget {
   final int offerId;
@@ -335,39 +336,58 @@ class _TradeDetailViewContentState extends State<_TradeDetailViewContent>
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 8),
-              Row(
-                children: [
-                  CircleAvatar(
-                    radius: 10,
-                    backgroundImage:
-                        (user.profilePhoto != null &&
-                            user.profilePhoto!.isNotEmpty)
-                        ? NetworkImage(user.profilePhoto!)
-                        : null,
-                    backgroundColor: AppTheme.primary.withOpacity(0.1),
-                    child:
-                        (user.profilePhoto == null ||
-                            user.profilePhoto!.isEmpty)
-                        ? Text(
-                            user.userName?.substring(0, 1).toUpperCase() ?? "?",
-                            style: const TextStyle(fontSize: 8),
-                          )
-                        : null,
-                  ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      user.userName ?? "Bilinmeyen Kullanıcı",
-                      style: AppTheme.safePoppins(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: AppTheme.textSecondary,
+              GestureDetector(
+                onTap: () {
+                  if (user.userID != null) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            UserProfileView(userId: user.userID!),
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    );
+                  }
+                },
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 10,
+                      backgroundImage:
+                          (user.profilePhoto != null &&
+                              user.profilePhoto!.isNotEmpty)
+                          ? NetworkImage(user.profilePhoto!)
+                          : null,
+                      backgroundColor: AppTheme.primary.withOpacity(0.1),
+                      child:
+                          (user.profilePhoto == null ||
+                              user.profilePhoto!.isEmpty)
+                          ? Text(
+                              user.userName?.substring(0, 1).toUpperCase() ??
+                                  "?",
+                              style: const TextStyle(fontSize: 8),
+                            )
+                          : null,
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        user.userName ?? "Bilinmeyen Kullanıcı",
+                        style: AppTheme.safePoppins(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: AppTheme.textSecondary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const Icon(
+                      Icons.arrow_forward_ios,
+                      size: 10,
+                      color: AppTheme.textSecondary,
+                    ),
+                  ],
+                ),
               ),
             ],
           ),

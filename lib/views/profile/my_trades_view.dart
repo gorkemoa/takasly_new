@@ -173,7 +173,7 @@ class _MyTradesViewContentState extends State<_MyTradesViewContent>
       ),
       body: Consumer<TradeViewModel>(
         builder: (context, viewModel, child) {
-          if (viewModel.isLoading) {
+          if (viewModel.isLoading && viewModel.trades.isEmpty) {
             return const Center(
               child: CircularProgressIndicator(
                 color: AppTheme.primary,
@@ -519,7 +519,7 @@ class _TradeItemCard extends StatelessWidget {
             children: [
               Expanded(
                 child: OutlinedButton(
-                  onPressed: tradeVM.isLoading
+                  onPressed: tradeVM.isProcessing(trade.offerID!)
                       ? null
                       : () => _showRejectDialog(
                           context,
@@ -534,7 +534,7 @@ class _TradeItemCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: tradeVM.isLoading
+                  child: tradeVM.isProcessing(trade.offerID!)
                       ? const SizedBox(
                           height: 20,
                           width: 20,
@@ -556,7 +556,7 @@ class _TradeItemCard extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton(
-                  onPressed: tradeVM.isLoading
+                  onPressed: tradeVM.isProcessing(trade.offerID!)
                       ? null
                       : () => _handleConfirm(
                           context,
@@ -573,7 +573,7 @@ class _TradeItemCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: tradeVM.isLoading
+                  child: tradeVM.isProcessing(trade.offerID!)
                       ? const SizedBox(
                           height: 20,
                           width: 20,
@@ -628,10 +628,10 @@ class _TradeItemCard extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: tradeVM.isLoading
+              onPressed: tradeVM.isProcessing(trade.offerID!)
                   ? null
                   : () => _handleComplete(context, tradeVM, authVM.user!.token),
-              icon: tradeVM.isLoading
+              icon: tradeVM.isProcessing(trade.offerID!)
                   ? const SizedBox(
                       height: 20,
                       width: 20,
@@ -774,7 +774,7 @@ class _TradeItemCard extends StatelessWidget {
                             ),
                           );
                           final authVM = context.read<AuthViewModel>();
-                          tradeVM.getTrades(authVM.user!.userID);
+                          tradeVM.getTrades(authVM.user!.userID, silent: true);
                         }
                       } catch (e) {
                         if (context.mounted) {
@@ -848,7 +848,7 @@ class _TradeItemCard extends StatelessWidget {
             ),
           );
           final authVM = context.read<AuthViewModel>();
-          tradeVM.getTrades(authVM.user!.userID);
+          tradeVM.getTrades(authVM.user!.userID, silent: true);
         }
       } catch (e) {
         if (context.mounted) {
@@ -871,7 +871,7 @@ class _TradeItemCard extends StatelessWidget {
             );
           }
           final authVM = context.read<AuthViewModel>();
-          tradeVM.getTrades(authVM.user!.userID);
+          tradeVM.getTrades(authVM.user!.userID, silent: true);
           tradeVM.fetchTradeStatuses();
         }
       }
@@ -905,7 +905,7 @@ class _TradeItemCard extends StatelessWidget {
         );
         // Listeyi yenile
         final authVM = context.read<AuthViewModel>();
-        tradeVM.getTrades(authVM.user!.userID);
+        tradeVM.getTrades(authVM.user!.userID, silent: true);
       }
     } catch (e) {
       if (context.mounted) {
@@ -928,7 +928,7 @@ class _TradeItemCard extends StatelessWidget {
           );
         }
         final authVM = context.read<AuthViewModel>();
-        tradeVM.getTrades(authVM.user!.userID);
+        tradeVM.getTrades(authVM.user!.userID, silent: true);
         tradeVM.fetchTradeStatuses();
       }
     }
