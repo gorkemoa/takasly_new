@@ -207,6 +207,7 @@ class ProductViewModel extends ChangeNotifier {
     _currentFilter.conditionIDs = [];
     _currentFilter.sortType = 'location';
     _currentFilter.categoryID = 0;
+    _currentFilter.searchText = "";
     _logger.i('All filters cleared via clearAllFilters()');
     fetchProducts(isRefresh: true);
   }
