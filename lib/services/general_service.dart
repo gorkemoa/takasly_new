@@ -7,16 +7,27 @@ import '../models/search/popular_category_model.dart';
 class GeneralService {
   final ApiService _apiService = ApiService();
 
+  // Static Caches
+  static final Map<int, Map<String, dynamic>> _categoriesCache = {};
+  static List<City>? _citiesCache;
+  static List<Condition>? _conditionsCache;
+  static List<PopularCategory>? _popularCategoriesCache;
+  static List<DeliveryType>? _deliveryTypesCache;
+  static List<TradeStatus>? _tradeStatusesCache;
+
   Future<List<PopularCategory>> getPopularCategories() async {
+    if (_popularCategoriesCache != null) return _popularCategoriesCache!;
     try {
       final response = await _apiService.get(ApiConstants.popularCategories);
       if (response['success'] == true && response['data'] != null) {
         final List list = response['data']['categories'];
-        return list.map((e) => PopularCategory.fromJson(e)).toList();
+        _popularCategoriesCache = list
+            .map((e) => PopularCategory.fromJson(e))
+            .toList();
+        return _popularCategoriesCache!;
       }
       return [];
     } catch (e) {
-      // Return empty list on failure to avoid blocking UI
       return [];
     }
   }
@@ -31,13 +42,16 @@ class GeneralService {
   }
 
   Future<Map<String, dynamic>> getCategories([int parentId = 0]) async {
+    if (_categoriesCache.containsKey(parentId)) {
+      return _categoriesCache[parentId]!;
+    }
     try {
-      // Using 0 as default parentId as per requirement "id asla statik gidemez"
-      // but 0 is the root category ID typically.
-      // We allow passing it in now.
       final response = await _apiService.get(
         '${ApiConstants.categories}$parentId',
       );
+      if (response['success'] == true) {
+        _categoriesCache[parentId] = response;
+      }
       return response;
     } catch (e) {
       rethrow;
@@ -45,11 +59,13 @@ class GeneralService {
   }
 
   Future<List<City>> getCities() async {
+    if (_citiesCache != null) return _citiesCache!;
     try {
       final response = await _apiService.get(ApiConstants.cities);
       if (response['success'] == true && response['data'] != null) {
         final List list = response['data']['cities'];
-        return list.map((e) => City.fromJson(e)).toList();
+        _citiesCache = list.map((e) => City.fromJson(e)).toList();
+        return _citiesCache!;
       }
       return [];
     } catch (e) {
@@ -58,6 +74,8 @@ class GeneralService {
   }
 
   Future<List<District>> getDistricts(int cityId) async {
+    // Districts change per city, maybe don't cache all cities districts yet
+    // but could cache current city's districts.
     try {
       final response = await _apiService.get(
         '${ApiConstants.districts}$cityId',
@@ -73,15 +91,16 @@ class GeneralService {
   }
 
   Future<List<Condition>> getConditions() async {
+    if (_conditionsCache != null) return _conditionsCache!;
     try {
       final response = await _apiService.get(ApiConstants.conditions);
       if (response['success'] == true && response['data'] != null) {
         final List list = response['data']['conditions'];
-        return list.map((e) => Condition.fromJson(e)).toList();
+        _conditionsCache = list.map((e) => Condition.fromJson(e)).toList();
+        return _conditionsCache!;
       }
       return [];
     } catch (e) {
-      // Return empty list instead of rethrowing to not break entire filter UI if just this fails
       return [];
     }
   }
@@ -117,11 +136,15 @@ class GeneralService {
   }
 
   Future<List<DeliveryType>> getDeliveryTypes() async {
+    if (_deliveryTypesCache != null) return _deliveryTypesCache!;
     try {
       final response = await _apiService.get(ApiConstants.deliveryTypes);
       if (response['success'] == true && response['data'] != null) {
         final List list = response['data']['deliveryTypes'];
-        return list.map((e) => DeliveryType.fromJson(e)).toList();
+        _deliveryTypesCache = list
+            .map((e) => DeliveryType.fromJson(e))
+            .toList();
+        return _deliveryTypesCache!;
       }
       return [];
     } catch (e) {
@@ -130,11 +153,13 @@ class GeneralService {
   }
 
   Future<List<TradeStatus>> getTradeStatuses() async {
+    if (_tradeStatusesCache != null) return _tradeStatusesCache!;
     try {
       final response = await _apiService.get(ApiConstants.tradeStatuses);
       if (response['success'] == true && response['data'] != null) {
         final List list = response['data']['statuses'];
-        return list.map((e) => TradeStatus.fromJson(e)).toList();
+        _tradeStatusesCache = list.map((e) => TradeStatus.fromJson(e)).toList();
+        return _tradeStatusesCache!;
       }
       return [];
     } catch (e) {

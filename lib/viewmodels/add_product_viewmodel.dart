@@ -80,11 +80,20 @@ class AddProductViewModel extends ChangeNotifier {
     isLoading = true;
     notifyListeners();
     try {
-      await Future.wait([
-        _fetchCategories(),
-        _fetchConditions(),
-        _fetchCities(),
-      ]);
+      // Start all fetches in parallel
+      final catFuture = _fetchCategories();
+      final condFuture = _fetchConditions();
+      final cityFuture = _fetchCities();
+
+      // Only wait for Categories to show the first step
+      await catFuture;
+
+      isLoading = false;
+      notifyListeners();
+
+      // The other futures continue in the background.
+      // They call notifyListeners() themselves when finished.
+      await Future.wait([condFuture, cityFuture]);
     } catch (e) {
       errorMessage = "Başlangıç verileri yüklenemedi: $e";
       _logger.e(errorMessage);
@@ -103,6 +112,7 @@ class AddProductViewModel extends ChangeNotifier {
         if (response['data']['categories'] == null) return;
         final List list = response['data']['categories'];
         categories = list.map((e) => Category.fromJson(e)).toList();
+        notifyListeners();
       }
     } catch (e) {
       _logger.e("Error fetching categories: $e");
