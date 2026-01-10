@@ -13,6 +13,7 @@ import '../settings/change_password_view.dart';
 import '../settings/settings_view.dart';
 import '../settings/contact_view.dart';
 import 'profile_reviews_view.dart';
+import '../notifications/notifications_view.dart';
 
 import '../widgets/ads/banner_ad_widget.dart';
 
@@ -111,7 +112,12 @@ class _ProfileViewState extends State<ProfileView> {
                   icon: Icons.notifications_none_rounded,
                   title: "Bildirimler",
                   onTap: () {
-                    // Navigate to Notifications
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const NotificationsView(),
+                      ),
+                    );
                   },
                 ),
                 _buildDivider(),
