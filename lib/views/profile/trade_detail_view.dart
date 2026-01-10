@@ -139,6 +139,8 @@ class _TradeDetailViewContentState extends State<_TradeDetailViewContent>
                   opacity: _fadeAnimation,
                   child: _buildStatusBanner(detail),
                 ),
+                if (detail.isTradeRejected == true)
+                  _buildRejectionReasonCard(detail),
                 const SizedBox(height: 16),
                 _buildSwapCard(detail),
                 const SizedBox(height: 16),
@@ -178,10 +180,15 @@ class _TradeDetailViewContentState extends State<_TradeDetailViewContent>
                   color: AppTheme.textSecondary,
                 ),
               ),
-              _buildStatusBadge(detail.senderStatusTitle ?? "Beklemede"),
+              _buildStatusBadge(
+                detail.isTradeRejected == true
+                    ? "Reddedildi"
+                    : (detail.senderStatusTitle ?? "Beklemede"),
+              ),
             ],
           ),
-          if (detail.receiverStatusTitle != null) ...[
+          if (detail.receiverStatusTitle != null ||
+              detail.isTradeRejected == true) ...[
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 12),
               child: Divider(height: 1, color: Color(0xFFF1F5F9)),
@@ -197,7 +204,12 @@ class _TradeDetailViewContentState extends State<_TradeDetailViewContent>
                     color: AppTheme.textSecondary,
                   ),
                 ),
-                _buildStatusBadge(detail.receiverStatusTitle!, isMe: false),
+                _buildStatusBadge(
+                  detail.isTradeRejected == true
+                      ? "Reddedildi"
+                      : (detail.receiverStatusTitle ?? "Beklemede"),
+                  isMe: false,
+                ),
               ],
             ),
           ],
@@ -439,6 +451,60 @@ class _TradeDetailViewContentState extends State<_TradeDetailViewContent>
               detail.completedAt?.split(' ').first,
             ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildRejectionReasonCard(TradeDetailData detail) {
+    String? reason = detail.receiverCancelDesc;
+    if (reason == null || reason.isEmpty) {
+      reason = detail.senderCancelDesc;
+    }
+
+    if (reason == null || reason.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppTheme.error.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppTheme.error.withOpacity(0.1)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(
+                  Icons.cancel_outlined,
+                  color: AppTheme.error,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  "Takas Reddedildi",
+                  style: AppTheme.safePoppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.error,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              "Red Sebebi: $reason",
+              style: AppTheme.safePoppins(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: AppTheme.textPrimary,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

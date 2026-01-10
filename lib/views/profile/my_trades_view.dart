@@ -366,7 +366,11 @@ class _TradeItemCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildStatusBadge(trade.senderStatusTitle ?? 'Beklemede'),
+                _buildStatusBadge(
+                  trade.isTradeRejected == true
+                      ? 'Reddedildi'
+                      : (trade.senderStatusTitle ?? 'Beklemede'),
+                ),
                 Text(
                   trade.createdAt?.split(' ').first ?? '',
                   style: AppTheme.safePoppins(
@@ -430,6 +434,38 @@ class _TradeItemCard extends StatelessWidget {
                 ),
               ],
             ),
+            if (trade.isTradeRejected == true) ...[
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppTheme.error.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppTheme.error.withOpacity(0.1)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.info_outline,
+                      size: 14,
+                      color: AppTheme.error,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        "Red Sebebi: ${trade.receiverCancelDesc ?? trade.senderCancelDesc ?? 'Belirtilmedi'}",
+                        style: AppTheme.safePoppins(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: AppTheme.error,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
             _buildActionButtons(context),
           ],
         ),
