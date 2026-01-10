@@ -10,6 +10,8 @@ import '../products/product_detail_view.dart';
 import '../../models/search/popular_category_model.dart';
 import 'widgets/search_filter_bottom_sheet.dart';
 import '../widgets/ads/banner_ad_widget.dart';
+import '../auth/login_view.dart';
+import '../../viewmodels/auth_viewmodel.dart';
 
 class SearchView extends StatefulWidget {
   const SearchView({super.key});
@@ -479,6 +481,18 @@ class _SearchViewState extends State<SearchView> {
                                       );
                                     },
                                     onFavoritePressed: () {
+                                      final authVM = context
+                                          .read<AuthViewModel>();
+                                      if (authVM.user == null) {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                const LoginView(),
+                                          ),
+                                        );
+                                        return;
+                                      }
                                       if (firstProduct.productID != null) {
                                         viewModel.toggleFavorite(
                                           firstProduct.productID!,
@@ -512,6 +526,18 @@ class _SearchViewState extends State<SearchView> {
                                             );
                                           },
                                           onFavoritePressed: () {
+                                            final authVM = context
+                                                .read<AuthViewModel>();
+                                            if (authVM.user == null) {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      const LoginView(),
+                                                ),
+                                              );
+                                              return;
+                                            }
                                             if (secondProduct.productID !=
                                                 null) {
                                               viewModel.toggleFavorite(

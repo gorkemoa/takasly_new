@@ -318,7 +318,10 @@ class SearchViewModel extends ChangeNotifier {
         effectiveSortType = null;
       }
 
+      final token = await _getUserToken();
+
       final requestModel = ProductRequestModel(
+        userToken: token,
         page: currentPage,
         searchText: _currentQuery,
         categoryID: _currentCategoryId,

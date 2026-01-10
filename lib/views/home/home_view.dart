@@ -22,6 +22,7 @@ import '../events/events_view.dart';
 import '../profile/profile_view.dart';
 import '../profile/my_trades_view.dart';
 import '../messages/tickets_view.dart';
+import '../auth/login_view.dart';
 
 import 'package:permission_handler/permission_handler.dart';
 import '../widgets/ads/banner_ad_widget.dart';
@@ -578,6 +579,18 @@ class _HomeViewState extends State<HomeView> {
                                                 );
                                               },
                                               onFavoritePressed: () {
+                                                final authVM = context
+                                                    .read<AuthViewModel>();
+                                                if (authVM.user == null) {
+                                                  Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (context) =>
+                                                          const LoginView(),
+                                                    ),
+                                                  );
+                                                  return;
+                                                }
                                                 productViewModel.toggleFavorite(
                                                   firstProduct,
                                                 );
@@ -610,6 +623,20 @@ class _HomeViewState extends State<HomeView> {
                                                       );
                                                     },
                                                     onFavoritePressed: () {
+                                                      final authVM = context
+                                                          .read<
+                                                            AuthViewModel
+                                                          >();
+                                                      if (authVM.user == null) {
+                                                        Navigator.push(
+                                                          context,
+                                                          MaterialPageRoute(
+                                                            builder: (context) =>
+                                                                const LoginView(),
+                                                          ),
+                                                        );
+                                                        return;
+                                                      }
                                                       productViewModel
                                                           .toggleFavorite(
                                                             secondProduct,
