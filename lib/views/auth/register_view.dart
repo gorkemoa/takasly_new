@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../theme/app_theme.dart';
+import 'package:flutter_html/flutter_html.dart';
 import '../../viewmodels/auth_viewmodel.dart';
+import '../home/home_view.dart';
 import 'code_verification_view.dart';
 
 class RegisterView extends StatefulWidget {
@@ -22,6 +24,7 @@ class _RegisterViewState extends State<RegisterView> {
 
   bool _policyAccepted = true;
   bool _kvkkAccepted = true;
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -124,7 +127,19 @@ class _RegisterViewState extends State<RegisterView> {
                   label: 'Şifre',
                   hint: '••••••••',
                   icon: Icons.lock_outline,
-                  obscureText: true,
+                  obscureText: _obscurePassword,
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
+                    },
+                  ),
                 ),
 
                 const SizedBox(height: 24),
@@ -134,11 +149,14 @@ class _RegisterViewState extends State<RegisterView> {
                   value: _policyAccepted,
                   onChanged: (v) => setState(() => _policyAccepted = v!),
                   text: 'Kullanıcı sözleşmesini okudum ve kabul ediyorum.',
+                  onTapText: () => _showContractDialog(4, 'Üyelik Sözleşmesi'),
                 ),
                 _buildCheckbox(
                   value: _kvkkAccepted,
                   onChanged: (v) => setState(() => _kvkkAccepted = v!),
                   text: 'KVKK aydınlatma metnini okudum ve kabul ediyorum.',
+                  onTapText: () =>
+                      _showContractDialog(3, 'KVKK Aydınlatma Metni'),
                 ),
 
                 const SizedBox(height: 24),
@@ -231,12 +249,166 @@ class _RegisterViewState extends State<RegisterView> {
                           ),
                   ),
                 ),
+
+                const SizedBox(height: 24),
+
+                // Social Login Options
+                Row(
+                  children: [
+                    Expanded(child: Divider(color: Colors.grey[300])),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        'veya',
+                        style: AppTheme.safePoppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w400,
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                    ),
+                    Expanded(child: Divider(color: Colors.grey[300])),
+                  ],
+                ),
+
+                const SizedBox(height: 24),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () async {
+                          await authViewModel.signInWithGoogle();
+                          if (context.mounted &&
+                              authViewModel.state == AuthState.success) {
+                            _handleLoginSuccess(context);
+                          }
+                        },
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          side: BorderSide(color: Colors.grey[300]!),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.g_mobiledata, size: 28),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Google',
+                              style: AppTheme.safePoppins(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: AppTheme.textPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () async {
+                          await authViewModel.signInWithApple();
+                          if (context.mounted &&
+                              authViewModel.state == AuthState.success) {
+                            _handleLoginSuccess(context);
+                          }
+                        },
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          side: BorderSide(color: Colors.grey[300]!),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.apple, size: 28),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Apple',
+                              style: AppTheme.safePoppins(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: AppTheme.textPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
         ),
       ),
     );
+  }
+
+  void _handleLoginSuccess(BuildContext context) {
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const HomeView()),
+      (route) => false,
+    );
+  }
+
+  Future<void> _showContractDialog(int id, String title) async {
+    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    showDialog(
+      context: context,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final contract = await authViewModel.getContract(id);
+
+      if (!context.mounted) return;
+      Navigator.pop(context); // Close loading
+
+      if (contract != null) {
+        final content = contract.desc ?? '';
+
+        if (!context.mounted) return;
+
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(
+              title,
+              style: AppTheme.safePoppins(
+                fontWeight: FontWeight.w600,
+                fontSize: 18,
+                color: AppTheme.textPrimary,
+              ),
+            ),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: SingleChildScrollView(child: Html(data: content)),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Kapat'),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.pop(context); // Close loading
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Sözleşme yüklenemedi: $e')));
+      }
+    }
   }
 
   Widget _buildTextField({
@@ -246,6 +418,7 @@ class _RegisterViewState extends State<RegisterView> {
     required IconData icon,
     bool obscureText = false,
     TextInputType keyboardType = TextInputType.text,
+    Widget? suffixIcon,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -269,7 +442,11 @@ class _RegisterViewState extends State<RegisterView> {
                   obscureText)
               ? TextCapitalization.none
               : TextCapitalization.sentences,
-          decoration: InputDecoration(hintText: hint, prefixIcon: Icon(icon)),
+          decoration: InputDecoration(
+            hintText: hint,
+            prefixIcon: Icon(icon),
+            suffixIcon: suffixIcon,
+          ),
         ),
       ],
     );
@@ -279,6 +456,7 @@ class _RegisterViewState extends State<RegisterView> {
     required bool value,
     required ValueChanged<bool?> onChanged,
     required String text,
+    VoidCallback? onTapText,
   }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -297,12 +475,22 @@ class _RegisterViewState extends State<RegisterView> {
         ),
         const SizedBox(width: 8),
         Expanded(
-          child: Text(
-            text,
-            style: AppTheme.safePoppins(
-              fontSize: 12,
-              fontWeight: FontWeight.w400,
-              color: AppTheme.textSecondary,
+          child: GestureDetector(
+            onTap: onTapText,
+            child: Text(
+              text,
+              style:
+                  AppTheme.safePoppins(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w400,
+                    color: onTapText != null
+                        ? AppTheme.primary
+                        : AppTheme.textSecondary,
+                  ).copyWith(
+                    decoration: onTapText != null
+                        ? TextDecoration.underline
+                        : null,
+                  ),
             ),
           ),
         ),

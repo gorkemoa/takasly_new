@@ -15,6 +15,8 @@ import '../models/auth/get_user_model.dart';
 import '../services/auth_service.dart';
 import '../services/account_service.dart';
 import '../services/api_service.dart';
+import '../services/general_service.dart';
+import '../models/general_models.dart';
 import '../models/account/update_user_model.dart';
 import '../models/account/change_password_model.dart';
 import '../models/account/delete_user_model.dart';
@@ -28,8 +30,8 @@ enum AuthFlow { register, forgotPassword }
 
 class AuthViewModel extends ChangeNotifier {
   final AuthService _authService = AuthService();
-  final AccountService _accountService =
-      AccountService(); // Initialize AccountService
+  final AccountService _accountService = AccountService();
+  final GeneralService _generalService = GeneralService();
   final Logger _logger = Logger();
 
   AuthState _state = AuthState.idle;
@@ -95,6 +97,15 @@ class AuthViewModel extends ChangeNotifier {
     }
     _isAuthCheckComplete = true;
     notifyListeners();
+  }
+
+  Future<Contract?> getContract(int id) async {
+    try {
+      return await _generalService.getContract(id);
+    } catch (e) {
+      _logger.e("Get Contract failed: $e");
+      return null;
+    }
   }
 
   Future<void> login(String email, String password) async {

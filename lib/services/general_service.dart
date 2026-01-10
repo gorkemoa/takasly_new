@@ -141,4 +141,16 @@ class GeneralService {
       return [];
     }
   }
+
+  Future<Contract?> getContract(int id) async {
+    try {
+      final response = await _apiService.get('${ApiConstants.contract}$id');
+      if (response['success'] == true && response['data'] != null) {
+        return Contract.fromJson(response['data']);
+      }
+      return null;
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

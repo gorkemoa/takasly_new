@@ -75,3 +75,15 @@ class TradeStatus {
     );
   }
 }
+
+class Contract {
+  int? id;
+  String? title;
+  String? desc;
+
+  Contract({this.id, this.title, this.desc});
+
+  factory Contract.fromJson(Map<String, dynamic> json) {
+    return Contract(id: json['id'], title: json['title'], desc: json['desc']);
+  }
+}
