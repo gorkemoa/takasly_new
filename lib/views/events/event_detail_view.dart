@@ -27,36 +27,89 @@ class _EventDetailViewState extends State<EventDetailView> {
     });
   }
 
-  void _showFullScreenImage(BuildContext context, String imageUrl) {
+  void _showFullScreenImage(
+    BuildContext context,
+    List<String> imageUrls,
+    int initialIndex,
+  ) {
     showDialog(
       context: context,
       barrierColor: Colors.black,
       builder: (context) {
-        return Stack(
-          children: [
-            InteractiveViewer(
-              minScale: 0.5,
-              maxScale: 4.0,
-              child: Center(
-                child: Image.network(imageUrl, fit: BoxFit.contain),
-              ),
-            ),
-            Positioned(
-              top: 40,
-              right: 20,
-              child: GestureDetector(
-                onTap: () => Navigator.pop(context),
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: const BoxDecoration(
-                    color: Colors.black54,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.close, color: Colors.white, size: 24),
+        int currentIndex = initialIndex;
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Stack(
+              children: [
+                PageView.builder(
+                  controller: PageController(initialPage: initialIndex),
+                  itemCount: imageUrls.length,
+                  onPageChanged: (index) {
+                    setState(() {
+                      currentIndex = index;
+                    });
+                  },
+                  itemBuilder: (context, index) {
+                    return InteractiveViewer(
+                      minScale: 0.5,
+                      maxScale: 4.0,
+                      child: Center(
+                        child: Image.network(
+                          imageUrls[index],
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    );
+                  },
                 ),
-              ),
-            ),
-          ],
+                Positioned(
+                  top: 40,
+                  right: 20,
+                  child: GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: const BoxDecoration(
+                        color: Colors.black54,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 40,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black54,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        "${currentIndex + 1} / ${imageUrls.length}",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          decoration: TextDecoration.none,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -108,7 +161,13 @@ class _EventDetailViewState extends State<EventDetailView> {
               children: [
                 // Main Image - Tappable
                 GestureDetector(
-                  onTap: () => _showFullScreenImage(context, event.eventImage),
+                  onTap: () {
+                    final allImages = [
+                      event.eventImage,
+                      ...?event.images?.map((e) => e.imagePath),
+                    ];
+                    _showFullScreenImage(context, allImages, 0);
+                  },
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(16),
                     child: Stack(
@@ -252,8 +311,14 @@ class _EventDetailViewState extends State<EventDetailView> {
                       itemBuilder: (context, index) {
                         final img = event.images![index];
                         return GestureDetector(
-                          onTap: () =>
-                              _showFullScreenImage(context, img.imagePath),
+                          onTap: () {
+                            final allImages = [
+                              event.eventImage,
+                              ...?event.images?.map((e) => e.imagePath),
+                            ];
+                            // eventImage is at index 0, so gallery images start at index 1
+                            _showFullScreenImage(context, allImages, index + 1);
+                          },
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(12),
                             child: Image.network(
