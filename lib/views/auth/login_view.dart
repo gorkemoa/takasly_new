@@ -39,326 +39,172 @@ class _LoginViewState extends State<LoginView> {
     // but here we display error in the UI.
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppTheme.background,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 60),
-                // Logo or Title
-                Center(
-                  child: Column(
+        child: Center(
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 28.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 40),
+                  // Logo
+                  Center(
+                    child: Image.asset('assets/takaslylogo.png', height: 100),
+                  ),
+                  const SizedBox(height: 32),
+                  // Titles
+                  Text(
+                    'Tekrar Hoş Geldin!',
+                    textAlign: TextAlign.center,
+                    style: AppTheme.safePoppins(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'En sevdiğin eşyaları takaslamaya devam et.',
+                    textAlign: TextAlign.center,
+                    style: AppTheme.safePoppins(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w400,
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 48),
+
+                  // Social Login Options
+                  Row(
                     children: [
-                      Container(
-                        height: 80,
-                        width: 80,
-                        decoration: BoxDecoration(
-                          color: AppTheme.primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Icon(
-                          Icons.swap_horiz_rounded,
-                          color: AppTheme.primary,
-                          size: 40,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        'Hoş Geldiniz',
-                        style: AppTheme.safePoppins(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Devam etmek için giriş yapın',
-                        style: AppTheme.safePoppins(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w400,
-                          color: AppTheme.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 48),
-
-                // Email Input
-                Text(
-                  'E-posta',
-                  style: AppTheme.safePoppins(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: AppTheme.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
-                    hintText: 'ornek@email.com',
-                    prefixIcon: Icon(Icons.email_outlined),
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                // Password Input
-                Text(
-                  'Şifre',
-                  style: AppTheme.safePoppins(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: AppTheme.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: _obscurePassword,
-                  decoration: InputDecoration(
-                    hintText: '••••••••',
-                    prefixIcon: const Icon(Icons.lock_outline),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility_outlined
-                            : Icons.visibility_off_outlined,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _obscurePassword = !_obscurePassword;
-                        });
-                      },
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 12),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ForgotPasswordView(),
-                        ),
-                      );
-                    },
-                    child: Text(
-                      'Şifremi Unuttum?',
-                      style: AppTheme.safePoppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: AppTheme.primary,
-                      ),
-                    ),
-                  ),
-                ),
-
-                if (authViewModel.state == AuthState.error &&
-                    authViewModel.errorMessage != null)
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 16),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: AppTheme.error.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.error_outline, color: AppTheme.error),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            authViewModel.errorMessage!,
-                            style: AppTheme.safePoppins(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w400,
-                              color: AppTheme.error,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                const SizedBox(height: 24),
-
-                // Login Button
-                SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton(
-                    onPressed: authViewModel.state == AuthState.busy
-                        ? null
-                        : () async {
-                            await authViewModel.login(
-                              _emailController.text.trim(),
-                              _passwordController.text,
-                            );
-
+                      Expanded(
+                        child: _buildSocialButton(
+                          onPressed: () async {
+                            await authViewModel.signInWithGoogle();
                             if (context.mounted &&
                                 authViewModel.state == AuthState.success) {
                               _handleLoginSuccess(context);
                             }
                           },
-                    style: ElevatedButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                          icon: Icons.g_mobiledata,
+                          label: 'Google',
+                        ),
                       ),
-                      elevation: 0,
-                    ),
-                    child: authViewModel.state == AuthState.busy
-                        ? const SizedBox(
-                            height: 24,
-                            width: 24,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : Text(
-                            'Giriş Yap',
-                            style: AppTheme.safePoppins(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                          ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _buildSocialButton(
+                          onPressed: () async {
+                            await authViewModel.signInWithApple();
+                            if (context.mounted &&
+                                authViewModel.state == AuthState.success) {
+                              _handleLoginSuccess(context);
+                            }
+                          },
+                          icon: Icons.apple,
+                          label: 'Apple',
+                        ),
+                      ),
+                    ],
                   ),
-                ),
 
-                const SizedBox(height: 24),
+                  const SizedBox(height: 32),
 
-                // Social Login Options (Optional Placeholder)
-                Row(
-                  children: [
-                    Expanded(child: Divider(color: Colors.grey[300])),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text(
-                        'veya',
-                        style: AppTheme.safePoppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w400,
-                          color: AppTheme.textSecondary,
-                        ),
-                      ),
-                    ),
-                    Expanded(child: Divider(color: Colors.grey[300])),
-                  ],
-                ),
-
-                const SizedBox(height: 24),
-
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () async {
-                          await authViewModel.signInWithGoogle();
-                          if (context.mounted &&
-                              authViewModel.state == AuthState.success) {
-                            _handleLoginSuccess(context);
-                          }
-                        },
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                  Row(
+                    children: [
+                      const Expanded(child: Divider(thickness: 1)),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Text(
+                          'veya',
+                          style: AppTheme.safePoppins(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w400,
+                            color: AppTheme.textSecondary,
                           ),
-                          side: BorderSide(color: Colors.grey[300]!),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            // Placeholder for Google Icon
-                            const Icon(Icons.g_mobiledata, size: 28),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Google',
-                              style: AppTheme.safePoppins(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                                color: AppTheme.textPrimary,
-                              ),
-                            ),
-                          ],
                         ),
                       ),
+                      const Expanded(child: Divider(thickness: 1)),
+                    ],
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // Email Input
+                  _buildLabel('E-posta Adresi'),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    style: AppTheme.safePoppins(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: AppTheme.textPrimary,
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () async {
-                          await authViewModel.signInWithApple();
-                          if (context.mounted &&
-                              authViewModel.state == AuthState.success) {
-                            _handleLoginSuccess(context);
-                          }
+                    decoration: const InputDecoration(
+                      hintText: 'ornek@email.com',
+                      prefixIcon: Icon(Icons.mail_outline_rounded, size: 22),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Password Input
+                  _buildLabel('Şifre'),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _passwordController,
+                    obscureText: _obscurePassword,
+                    style: AppTheme.safePoppins(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: AppTheme.textPrimary,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: '••••••••',
+                      prefixIcon: const Icon(
+                        Icons.lock_outline_rounded,
+                        size: 22,
+                      ),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                          size: 20,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
                         },
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          side: BorderSide(color: Colors.grey[300]!),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.apple, size: 28),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Apple',
-                              style: AppTheme.safePoppins(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                                color: AppTheme.textPrimary,
-                              ),
-                            ),
-                          ],
-                        ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
 
-                const SizedBox(height: 24),
-
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Hesabınız yok mu?',
-                      style: AppTheme.safePoppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
-                        color: AppTheme.textSecondary,
-                      ),
-                    ),
-                    TextButton(
+                  const SizedBox(height: 12),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
                       onPressed: () {
-                        // Navigate to Register
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const RegisterView(),
+                            builder: (context) => const ForgotPasswordView(),
                           ),
                         );
                       },
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: const Size(0, 0),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
                       child: Text(
-                        'Kayıt Ol',
+                        'Şifremi Unuttum?',
                         style: AppTheme.safePoppins(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -366,12 +212,180 @@ class _LoginViewState extends State<LoginView> {
                         ),
                       ),
                     ),
-                  ],
-                ),
-              ],
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  if (authViewModel.state == AuthState.error &&
+                      authViewModel.errorMessage != null)
+                    _buildErrorBox(authViewModel.errorMessage!),
+
+                  // Login Button
+                  SizedBox(
+                    height: 58,
+                    child: ElevatedButton(
+                      onPressed: authViewModel.state == AuthState.busy
+                          ? null
+                          : () async {
+                              await authViewModel.login(
+                                _emailController.text.trim(),
+                                _passwordController.text,
+                              );
+
+                              if (context.mounted &&
+                                  authViewModel.state == AuthState.success) {
+                                _handleLoginSuccess(context);
+                              }
+                            },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primary,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: authViewModel.state == AuthState.busy
+                          ? const SizedBox(
+                              height: 24,
+                              width: 24,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : Text(
+                              'Giriş Yap',
+                              style: AppTheme.safePoppins(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Hesabınız yok mu?',
+                        style: AppTheme.safePoppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w400,
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const RegisterView(),
+                            ),
+                          );
+                        },
+                        child: Text(
+                          'Kayıt Ol',
+                          style: AppTheme.safePoppins(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.primary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ),
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildLabel(String label) {
+    return Text(
+      label,
+      style: AppTheme.safePoppins(
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+        color: AppTheme.textPrimary,
+      ),
+    );
+  }
+
+  Widget _buildSocialButton({
+    required VoidCallback onPressed,
+    required IconData icon,
+    required String label,
+  }) {
+    return OutlinedButton(
+      onPressed: onPressed,
+      style:
+          OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            side: BorderSide(color: Colors.grey.shade200),
+            elevation: 0,
+          ).copyWith(
+            overlayColor: WidgetStateProperty.all(
+              AppTheme.primary.withOpacity(0.05),
+            ),
+          ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 24, color: AppTheme.textPrimary),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: AppTheme.safePoppins(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorBox(String message) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.error.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.error.withOpacity(0.2)),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.error_outline_rounded,
+            color: AppTheme.error,
+            size: 20,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              message,
+              style: AppTheme.safePoppins(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: AppTheme.error,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

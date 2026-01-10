@@ -41,38 +41,108 @@ class _RegisterViewState extends State<RegisterView> {
     final authViewModel = Provider.of<AuthViewModel>(context);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppTheme.background,
       appBar: AppBar(
-        title: const Text('Kayıt Ol'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: AppTheme.textPrimary,
+            size: 20,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
       ),
+      extendBodyBehindAppBar: true,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 28.0),
           child: Form(
             key: _formKey,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                const SizedBox(height: 20),
+                // Logo
+                Center(
+                  child: Image.asset('assets/takaslylogo.png', height: 80),
+                ),
+                const SizedBox(height: 24),
+                // Titles
                 Text(
-                  'Hesap Oluşturun',
+                  'Hemen Katıl',
+                  textAlign: TextAlign.center,
                   style: AppTheme.safePoppins(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 26,
+                    fontWeight: FontWeight.w700,
                     color: AppTheme.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Hemen aramıza katılın ve takasa başlayın!',
+                  'Yeni takaslar keşfetmeye başla.',
+                  textAlign: TextAlign.center,
                   style: AppTheme.safePoppins(
-                    fontSize: 14,
+                    fontSize: 15,
                     fontWeight: FontWeight.w400,
                     color: AppTheme.textSecondary,
                   ),
+                ),
+                const SizedBox(height: 32),
+
+                // Social Login Options
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildSocialButton(
+                        onPressed: () async {
+                          await authViewModel.signInWithGoogle();
+                          if (context.mounted &&
+                              authViewModel.state == AuthState.success) {
+                            _handleLoginSuccess(context);
+                          }
+                        },
+                        icon: Icons.g_mobiledata,
+                        label: 'Google',
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildSocialButton(
+                        onPressed: () async {
+                          await authViewModel.signInWithApple();
+                          if (context.mounted &&
+                              authViewModel.state == AuthState.success) {
+                            _handleLoginSuccess(context);
+                          }
+                        },
+                        icon: Icons.apple,
+                        label: 'Apple',
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 24),
+
+                Row(
+                  children: [
+                    const Expanded(child: Divider(thickness: 1)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        'veya',
+                        style: AppTheme.safePoppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w400,
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                    ),
+                    const Expanded(child: Divider(thickness: 1)),
+                  ],
                 ),
 
                 const SizedBox(height: 32),
@@ -85,7 +155,7 @@ class _RegisterViewState extends State<RegisterView> {
                         controller: _firstNameController,
                         label: 'Ad',
                         hint: 'Adınız',
-                        icon: Icons.person_outline,
+                        icon: Icons.person_outline_rounded,
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -94,23 +164,23 @@ class _RegisterViewState extends State<RegisterView> {
                         controller: _lastNameController,
                         label: 'Soyad',
                         hint: 'Soyadınız',
-                        icon: Icons.person_outline,
+                        icon: Icons.person_outline_rounded,
                       ),
                     ),
                   ],
                 ),
 
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
 
                 _buildTextField(
                   controller: _emailController,
                   label: 'E-posta',
                   hint: 'ornek@email.com',
-                  icon: Icons.email_outlined,
+                  icon: Icons.mail_outline_rounded,
                   keyboardType: TextInputType.emailAddress,
                 ),
 
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
 
                 _buildTextField(
                   controller: _phoneController,
@@ -120,19 +190,20 @@ class _RegisterViewState extends State<RegisterView> {
                   keyboardType: TextInputType.phone,
                 ),
 
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
 
                 _buildTextField(
                   controller: _passwordController,
                   label: 'Şifre',
                   hint: '••••••••',
-                  icon: Icons.lock_outline,
+                  icon: Icons.lock_outline_rounded,
                   obscureText: _obscurePassword,
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscurePassword
                           ? Icons.visibility_outlined
                           : Icons.visibility_off_outlined,
+                      size: 20,
                     ),
                     onPressed: () {
                       setState(() {
@@ -151,6 +222,7 @@ class _RegisterViewState extends State<RegisterView> {
                   text: 'Kullanıcı sözleşmesini okudum ve kabul ediyorum.',
                   onTapText: () => _showContractDialog(4, 'Üyelik Sözleşmesi'),
                 ),
+                const SizedBox(height: 12),
                 _buildCheckbox(
                   value: _kvkkAccepted,
                   onChanged: (v) => setState(() => _kvkkAccepted = v!),
@@ -159,39 +231,15 @@ class _RegisterViewState extends State<RegisterView> {
                       _showContractDialog(3, 'KVKK Aydınlatma Metni'),
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 32),
 
                 if (authViewModel.state == AuthState.error &&
                     authViewModel.errorMessage != null)
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 16),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: AppTheme.error.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.error_outline, color: AppTheme.error),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            authViewModel.errorMessage!,
-                            style: AppTheme.safePoppins(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w400,
-                              color: AppTheme.error,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  _buildErrorBox(authViewModel.errorMessage!),
 
                 // Register Button
                 SizedBox(
-                  width: double.infinity,
-                  height: 56,
+                  height: 58,
                   child: ElevatedButton(
                     onPressed: authViewModel.state == AuthState.busy
                         ? null
@@ -225,6 +273,8 @@ class _RegisterViewState extends State<RegisterView> {
                             }
                           },
                     style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primary,
+                      foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
@@ -249,101 +299,7 @@ class _RegisterViewState extends State<RegisterView> {
                           ),
                   ),
                 ),
-
-                const SizedBox(height: 24),
-
-                // Social Login Options
-                Row(
-                  children: [
-                    Expanded(child: Divider(color: Colors.grey[300])),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text(
-                        'veya',
-                        style: AppTheme.safePoppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w400,
-                          color: AppTheme.textSecondary,
-                        ),
-                      ),
-                    ),
-                    Expanded(child: Divider(color: Colors.grey[300])),
-                  ],
-                ),
-
-                const SizedBox(height: 24),
-
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () async {
-                          await authViewModel.signInWithGoogle();
-                          if (context.mounted &&
-                              authViewModel.state == AuthState.success) {
-                            _handleLoginSuccess(context);
-                          }
-                        },
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          side: BorderSide(color: Colors.grey[300]!),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.g_mobiledata, size: 28),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Google',
-                              style: AppTheme.safePoppins(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                                color: AppTheme.textPrimary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () async {
-                          await authViewModel.signInWithApple();
-                          if (context.mounted &&
-                              authViewModel.state == AuthState.success) {
-                            _handleLoginSuccess(context);
-                          }
-                        },
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          side: BorderSide(color: Colors.grey[300]!),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.apple, size: 28),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Apple',
-                              style: AppTheme.safePoppins(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                                color: AppTheme.textPrimary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                const SizedBox(height: 40),
               ],
             ),
           ),
@@ -427,7 +383,7 @@ class _RegisterViewState extends State<RegisterView> {
           label,
           style: AppTheme.safePoppins(
             fontSize: 14,
-            fontWeight: FontWeight.w500,
+            fontWeight: FontWeight.w600,
             color: AppTheme.textPrimary,
           ),
         ),
@@ -442,9 +398,14 @@ class _RegisterViewState extends State<RegisterView> {
                   obscureText)
               ? TextCapitalization.none
               : TextCapitalization.sentences,
+          style: AppTheme.safePoppins(
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+            color: AppTheme.textPrimary,
+          ),
           decoration: InputDecoration(
             hintText: hint,
-            prefixIcon: Icon(icon),
+            prefixIcon: Icon(icon, size: 22),
             suffixIcon: suffixIcon,
           ),
         ),
@@ -495,6 +456,77 @@ class _RegisterViewState extends State<RegisterView> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildSocialButton({
+    required VoidCallback onPressed,
+    required IconData icon,
+    required String label,
+  }) {
+    return OutlinedButton(
+      onPressed: onPressed,
+      style:
+          OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            side: BorderSide(color: Colors.grey.shade200),
+            elevation: 0,
+          ).copyWith(
+            overlayColor: WidgetStateProperty.all(
+              AppTheme.primary.withOpacity(0.05),
+            ),
+          ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 24, color: AppTheme.textPrimary),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: AppTheme.safePoppins(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorBox(String message) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.error.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.error.withOpacity(0.2)),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.error_outline_rounded,
+            color: AppTheme.error,
+            size: 20,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              message,
+              style: AppTheme.safePoppins(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: AppTheme.error,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
