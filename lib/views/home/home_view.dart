@@ -424,9 +424,8 @@ class _HomeViewState extends State<HomeView> {
                                             0;
                                         return GestureDetector(
                                           onTap: () {
-                                            productViewModel.filterByCategory(
-                                              null,
-                                            );
+                                            homeViewModel.clearFilters();
+                                            productViewModel.clearAllFilters();
                                           },
                                           child: SizedBox(
                                             width: 70,
@@ -488,6 +487,9 @@ class _HomeViewState extends State<HomeView> {
                                         category: category,
                                         isSelected: isSelected,
                                         onTap: () {
+                                          homeViewModel.setSelectedCategory(
+                                            category,
+                                          );
                                           productViewModel.filterByCategory(
                                             category.catID,
                                           );

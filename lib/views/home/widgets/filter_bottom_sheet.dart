@@ -193,7 +193,7 @@ class FilterBottomSheet extends StatelessWidget {
                         Expanded(
                           flex: 2,
                           child: ElevatedButton(
-                            onPressed: () {
+                            onPressed: () async {
                               final cityId = homeVM.selectedCity?.cityNo ?? 0;
                               final districtId =
                                   homeVM.selectedDistrict?.districtNo ?? 0;
@@ -201,14 +201,21 @@ class FilterBottomSheet extends StatelessWidget {
                               final catId = homeVM.selectedCategory?.catID ?? 0;
                               final conds = homeVM.selectedConditionIds;
 
-                              context.read<ProductViewModel>().updateAllFilters(
+                              // Show a snackbar or some feedback if fetching location
+                              final productVM = context
+                                  .read<ProductViewModel>();
+
+                              await productVM.updateAllFilters(
                                 sortType: sortType,
                                 categoryID: catId,
                                 conditionIDs: conds,
                                 cityID: cityId,
                                 districtID: districtId,
                               );
-                              Navigator.pop(context);
+
+                              if (context.mounted) {
+                                Navigator.pop(context);
+                              }
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppTheme.primary,

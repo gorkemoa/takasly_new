@@ -61,6 +61,8 @@ class ProductViewModel extends ChangeNotifier {
     } catch (e) {
       _logger.e('Error fetching location: $e');
       _currentFilter.sortType = 'default';
+      _currentFilter.userLat = "";
+      _currentFilter.userLong = "";
     }
   }
 
@@ -113,6 +115,16 @@ class ProductViewModel extends ChangeNotifier {
 
     try {
       _currentFilter.page = currentPage;
+
+      // Safety check: if sortType is location but coordinates are missing, fallback to default
+      if (_currentFilter.sortType == 'location' &&
+          (_currentFilter.userLat == null || _currentFilter.userLat!.isEmpty)) {
+        _logger.w(
+          'FetchProducts: Sort is location but coordinates missing. Falling back to default sort.',
+        );
+        _currentFilter.sortType = 'default';
+      }
+
       final response = await _productService.getAllProducts(_currentFilter);
 
       // If a newer refresh has been started, ignore this response
@@ -175,8 +187,27 @@ class ProductViewModel extends ChangeNotifier {
     }
   }
 
-  void filterByCategory(int? categoryId) {
+  void filterByCategory(int? categoryId, {bool clearOthers = false}) {
+    if (clearOthers) {
+      _currentFilter.cityID = 0;
+      _currentFilter.districtID = 0;
+      _currentFilter.conditionIDs = [];
+      _currentFilter.sortType = 'location';
+      _logger.i(
+        'All filters cleared via filterByCategory(null, clearOthers: true)',
+      );
+    }
     _currentFilter.categoryID = categoryId ?? 0;
+    fetchProducts(isRefresh: true);
+  }
+
+  void clearAllFilters() {
+    _currentFilter.cityID = 0;
+    _currentFilter.districtID = 0;
+    _currentFilter.conditionIDs = [];
+    _currentFilter.sortType = 'location';
+    _currentFilter.categoryID = 0;
+    _logger.i('All filters cleared via clearAllFilters()');
     fetchProducts(isRefresh: true);
   }
 
@@ -186,21 +217,30 @@ class ProductViewModel extends ChangeNotifier {
     }
   }
 
-  void updateAllFilters({
+  Future<void> updateAllFilters({
     String? sortType,
     int? categoryID,
     List<int>? conditionIDs,
     int? cityID,
     int? districtID,
-  }) {
+  }) async {
     if (sortType != null) _currentFilter.sortType = sortType;
     if (categoryID != null) _currentFilter.categoryID = categoryID;
     if (conditionIDs != null) _currentFilter.conditionIDs = conditionIDs;
     if (cityID != null) _currentFilter.cityID = cityID;
     if (districtID != null) _currentFilter.districtID = districtID;
 
+    // If sort type is location and we don't have coordinates, try to fetch them
+    if (_currentFilter.sortType == 'location' &&
+        (_currentFilter.userLat == null || _currentFilter.userLat!.isEmpty)) {
+      _logger.i(
+        'Sort type set to location but no coordinates found. Fetching location...',
+      );
+      await _fetchLocation();
+    }
+
     _logger.i(
-      'Full Filter updated: Sort: $sortType, Cat: $categoryID, Conds: $conditionIDs, Loc: $cityID/$districtID',
+      'Full Filter updated: Sort: ${_currentFilter.sortType}, Cat: ${_currentFilter.categoryID}, Conds: ${_currentFilter.conditionIDs}, Loc: ${_currentFilter.cityID}/${_currentFilter.districtID}, Lat: ${_currentFilter.userLat}, Long: ${_currentFilter.userLong}',
     );
     fetchProducts(isRefresh: true);
   }
