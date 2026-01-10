@@ -25,44 +25,59 @@ class SearchFilterBottomSheet extends StatelessWidget {
             builder: (context, searchVM, child) {
               return Column(
                 children: [
-                  // Handle
-                  Center(
-                    child: Container(
-                      margin: const EdgeInsets.only(top: 12, bottom: 8),
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(2),
+                  // Header & Handle Area
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppTheme.primary,
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(24),
                       ),
                     ),
-                  ),
-
-                  // Header
-                  Container(
-                    color: AppTheme.primary,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Filtrele',
-                            style: AppTheme.safePoppins(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                    child: Column(
+                      children: [
+                        // Handle
+                        Center(
+                          child: Container(
+                            margin: const EdgeInsets.only(top: 12, bottom: 8),
+                            width: 40,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(2),
                             ),
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.close, color: Colors.white),
-                            onPressed: () => Navigator.pop(context),
+                        ),
+                        // Header
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Filtrele',
+                                style: AppTheme.safePoppins(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.close,
+                                  color: Colors.white,
+                                ),
+                                onPressed: () => Navigator.pop(context),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
+                        ),
+                        Divider(
+                          height: 1,
+                          color: Colors.white.withOpacity(0.2),
+                        ),
+                      ],
                     ),
                   ),
-                  Divider(height: 1, color: Colors.white.withOpacity(0.2)),
 
                   // Content
                   Expanded(
