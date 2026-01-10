@@ -1600,6 +1600,7 @@ class _ImageGrid extends StatelessWidget {
                   file: viewModel.selectedImages[index],
                   isCover: index == 0,
                   onDelete: () => viewModel.removeImage(index),
+                  onMakeCover: () => viewModel.makeCoverImage(index),
                 );
               },
             ),
@@ -1890,11 +1891,13 @@ class _ImageThumbnail extends StatelessWidget {
   final File file;
   final bool isCover;
   final VoidCallback onDelete;
+  final VoidCallback? onMakeCover;
 
   const _ImageThumbnail({
     required this.file,
     required this.isCover,
     required this.onDelete,
+    this.onMakeCover,
   });
 
   @override
@@ -1902,16 +1905,19 @@ class _ImageThumbnail extends StatelessWidget {
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        Container(
-          width: 100,
-          margin: const EdgeInsets.only(right: 12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: isCover ? AppTheme.primary : Colors.grey[200]!,
-              width: isCover ? 2 : 1,
+        GestureDetector(
+          onTap: isCover ? null : onMakeCover,
+          child: Container(
+            width: 100,
+            margin: const EdgeInsets.only(right: 12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isCover ? AppTheme.primary : Colors.grey[200]!,
+                width: isCover ? 2 : 1,
+              ),
+              image: DecorationImage(image: FileImage(file), fit: BoxFit.cover),
             ),
-            image: DecorationImage(image: FileImage(file), fit: BoxFit.cover),
           ),
         ),
         if (isCover)
@@ -1934,6 +1940,33 @@ class _ImageThumbnail extends StatelessWidget {
                   color: Colors.white,
                   fontSize: 8,
                   fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          )
+        else
+          Positioned(
+            bottom: 4,
+            left: 0,
+            right: 12,
+            child: GestureDetector(
+              onTap: onMakeCover,
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.6),
+                  borderRadius: const BorderRadius.vertical(
+                    bottom: Radius.circular(14),
+                  ),
+                ),
+                child: const Text(
+                  'KAPAK YAP',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 8,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),

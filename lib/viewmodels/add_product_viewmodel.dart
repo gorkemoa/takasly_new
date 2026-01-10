@@ -283,6 +283,14 @@ class AddProductViewModel extends ChangeNotifier {
     }
   }
 
+  void makeCoverImage(int index) {
+    if (index > 0 && index < selectedImages.length) {
+      final image = selectedImages.removeAt(index);
+      selectedImages.insert(0, image);
+      notifyListeners();
+    }
+  }
+
   // Location Logic
   Future<void> fetchCurrentLocation() async {
     try {
