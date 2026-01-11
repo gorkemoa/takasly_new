@@ -99,6 +99,7 @@ class Ticket {
   String? lastMessageAt;
   int? unreadCount;
   bool? isUnread;
+  bool? isAdmin;
 
   Ticket({
     this.ticketID,
@@ -116,6 +117,7 @@ class Ticket {
     this.lastMessageAt,
     this.unreadCount,
     this.isUnread,
+    this.isAdmin,
   });
 
   Ticket.fromJson(Map<String, dynamic> json) {
@@ -134,6 +136,7 @@ class Ticket {
     lastMessageAt = json['lastMessageAt'];
     unreadCount = json['unreadCount'];
     isUnread = json['isUnread'];
+    isAdmin = json['isAdmin'] == true || json['isAdmin'] == 1;
   }
 
   Map<String, dynamic> toJson() {
@@ -153,6 +156,7 @@ class Ticket {
     data['lastMessageAt'] = lastMessageAt;
     data['unreadCount'] = unreadCount;
     data['isUnread'] = isUnread;
+    data['isAdmin'] = isAdmin;
     return data;
   }
 }
@@ -244,7 +248,7 @@ class TicketMessage {
     message = json['message'];
     createdAt = json['createdAt'];
     isMine = json['isMine'];
-    isAdmin = json['isAdmin'];
+    isAdmin = json['isAdmin'] == true || json['isAdmin'] == 1;
     isRead = json['isRead'];
   }
 
@@ -293,6 +297,7 @@ class TicketDetailData {
   String? lastMessageAt;
   int? unreadCount;
   bool? isUnread;
+  bool? isAdmin;
   String? createdAt;
 
   TicketDetailData({
@@ -307,6 +312,7 @@ class TicketDetailData {
     this.lastMessageAt,
     this.unreadCount,
     this.isUnread,
+    this.isAdmin,
     this.createdAt,
   });
 
@@ -326,6 +332,7 @@ class TicketDetailData {
     lastMessageAt = json['lastMessageAt'];
     unreadCount = json['unreadCount'];
     isUnread = json['isUnread'];
+    isAdmin = json['isAdmin'] == true || json['isAdmin'] == 1;
     createdAt = json['createdAt'];
   }
 }

@@ -278,30 +278,40 @@ class _UserProfileViewState extends State<UserProfileView>
                     if (value == 'report') _showReportDialog();
                     if (value == 'block') _showBlockConfirmDialog();
                   },
-                  itemBuilder: (context) => [
-                    PopupMenuItem(
-                      value: 'report',
-                      child: Text(
-                        "Bildir",
-                        style: AppTheme.safePoppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w400,
-                          color: AppTheme.textPrimary,
+                  itemBuilder: (context) {
+                    final isAdmin =
+                        profile.isAdmin == true ||
+                        (profile.userFullname?.toLowerCase().contains(
+                              "takasly destek",
+                            ) ??
+                            false);
+                    return [
+                      if (!isAdmin) ...[
+                        PopupMenuItem(
+                          value: 'report',
+                          child: Text(
+                            "Bildir",
+                            style: AppTheme.safePoppins(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w400,
+                              color: AppTheme.textPrimary,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                    PopupMenuItem(
-                      value: 'block',
-                      child: Text(
-                        "Engelle",
-                        style: AppTheme.safePoppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w400,
-                          color: Colors.red,
+                        PopupMenuItem(
+                          value: 'block',
+                          child: Text(
+                            "Engelle",
+                            style: AppTheme.safePoppins(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w400,
+                              color: Colors.red,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                  ],
+                      ],
+                    ];
+                  },
                 ),
             ],
           ),
@@ -464,6 +474,39 @@ class _UserProfileViewState extends State<UserProfileView>
                           ),
                         ),
                       ],
+                    ),
+                  ),
+                if (profile.isAdmin == true)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.admin_panel_settings,
+                            size: 14,
+                            color: Colors.amber,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            "YÖNETİCİ",
+                            style: AppTheme.safePoppins(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.amber,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
               ],

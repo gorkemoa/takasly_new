@@ -193,26 +193,33 @@ class _TicketCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final userPhoto = ticket.otherProfilePhoto ?? ticket.otherPhoto;
     final isUnread = ticket.isUnread == true;
+    final name = ticket.otherFullname ?? "Kullanıcı";
+    final isAdmin =
+        ticket.isAdmin == true || name.toLowerCase().contains("takasly destek");
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isAdmin ? Colors.amber.shade50 : Colors.white,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: isAdmin
+                  ? Colors.amber.withOpacity(0.1)
+                  : Colors.black.withOpacity(0.03),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
           ],
           border: Border.all(
-            color: isUnread
-                ? AppTheme.primary.withOpacity(0.3)
-                : const Color(0xFFF1F5F9),
-            width: isUnread ? 1.5 : 1,
+            color: isAdmin
+                ? Colors.amber.shade600
+                : (isUnread
+                      ? AppTheme.primary.withOpacity(0.3)
+                      : const Color(0xFFF1F5F9)),
+            width: isAdmin ? 2 : (isUnread ? 1.5 : 1),
           ),
         ),
         child: Row(
@@ -224,24 +231,49 @@ class _TicketCard extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 28,
-                  backgroundColor: AppTheme.primary.withOpacity(0.1),
+                  backgroundColor: isAdmin
+                      ? Colors.amber.shade100
+                      : AppTheme.primary.withOpacity(0.1),
                   backgroundImage: userPhoto != null
                       ? NetworkImage(userPhoto)
                       : null,
                   child: userPhoto == null
                       ? Text(
-                          ticket.otherFullname != null &&
-                                  ticket.otherFullname!.isNotEmpty
-                              ? ticket.otherFullname![0].toUpperCase()
-                              : "?",
+                          name.isNotEmpty ? name[0].toUpperCase() : "?",
                           style: AppTheme.safePoppins(
                             fontSize: 20,
                             fontWeight: FontWeight.w700,
-                            color: AppTheme.primary,
+                            color: isAdmin
+                                ? Colors.amber.shade900
+                                : AppTheme.primary,
                           ),
                         )
                       : null,
                 ),
+                if (isAdmin)
+                  Positioned(
+                    right: -4,
+                    top: -4,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        color: Colors.amber,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black26,
+                            blurRadius: 4,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.verified_rounded,
+                        size: 14,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
                 if (ticket.productImage != null)
                   Positioned(
                     right: -2,
@@ -278,15 +310,44 @@ class _TicketCard extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Expanded(
-                        child: Text(
-                          ticket.otherFullname ?? "Kullanıcı",
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTheme.safePoppins(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 15,
-                            color: AppTheme.textPrimary,
-                          ),
+                        child: Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTheme.safePoppins(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 15,
+                                  color: isAdmin
+                                      ? Colors.amber.shade900
+                                      : AppTheme.textPrimary,
+                                ),
+                              ),
+                            ),
+                            if (isAdmin) ...[
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.amber,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  "YETKİLİ",
+                                  style: AppTheme.safePoppins(
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.w800,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ),
                       if (ticket.lastMessageAt != null)

@@ -861,7 +861,7 @@ class _ProductDetailViewState extends State<ProductDetailView> {
           if (product.userID != context.read<AuthViewModel>().user?.userID)
             Center(
               child: TextButton.icon(
-                onPressed: () {},
+                onPressed: () => _showReportDialog(context, product),
                 icon: Icon(
                   Icons.warning_amber_rounded,
                   size: 16,
@@ -1144,6 +1144,98 @@ class _ProductDetailViewState extends State<ProductDetailView> {
         ).showSnackBar(const SnackBar(content: Text('İlan başarıyla silindi')));
       }
     }
+  }
+
+  void _showReportDialog(BuildContext context, ProductDetail product) {
+    final TextEditingController reasonController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20),
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: Text(
+          "İlanı Şikayet Et",
+          style: AppTheme.safePoppins(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: AppTheme.textPrimary,
+          ),
+        ),
+        content: TextField(
+          controller: reasonController,
+          decoration: InputDecoration(
+            hintText: "Raporlama sebebinizi yazın...",
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            filled: true,
+            fillColor: Colors.grey[50],
+            hintStyle: AppTheme.safePoppins(
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+              color: AppTheme.textSecondary,
+            ),
+          ),
+          maxLines: 3,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              "İptal",
+              style: AppTheme.safePoppins(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: AppTheme.textSecondary,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              elevation: 0,
+            ),
+            onPressed: () async {
+              final reason = reasonController.text.trim();
+              if (reason.isEmpty) return;
+
+              final authVM = context.read<AuthViewModel>();
+              final productDetailVM = context.read<ProductDetailViewModel>();
+
+              if (authVM.user?.token != null) {
+                final success = await productDetailVM.reportProduct(
+                  userToken: authVM.user!.token,
+                  reason: reason,
+                  step: "product",
+                );
+
+                if (context.mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        success ? "İlan raporlandı." : "Hata oluştu.",
+                      ),
+                      backgroundColor: success ? Colors.green : Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+            child: Text(
+              "Gönder",
+              style: AppTheme.safePoppins(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

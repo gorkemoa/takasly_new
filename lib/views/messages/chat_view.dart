@@ -294,85 +294,150 @@ class _ChatViewState extends State<ChatView> {
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
-        title: Consumer<TicketViewModel>(
-          builder: (context, viewModel, child) {
+        title: Consumer2<TicketViewModel, AuthViewModel>(
+          builder: (context, viewModel, authVM, child) {
             final name =
                 viewModel.currentTicketDetail?.otherFullname ??
                 widget.ticket.otherFullname ??
                 "Sohbet";
+            final otherIsAdmin =
+                viewModel.currentTicketDetail?.isAdmin == true ||
+                widget.ticket.isAdmin == true ||
+                name.toLowerCase().contains("takasly destek");
+
             return InkWell(
-              onTap: () => _navigateToProfile(
-                viewModel.currentTicketDetail?.otherUserID ??
-                    widget.ticket.otherUserID,
-              ),
-              child: Text(
-                name,
-                style: AppTheme.safePoppins(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 18,
-                  color: AppTheme.surface,
-                ),
+              onTap: otherIsAdmin
+                  ? null
+                  : () => _navigateToProfile(
+                      viewModel.currentTicketDetail?.otherUserID ??
+                          widget.ticket.otherUserID,
+                    ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        name,
+                        style: AppTheme.safePoppins(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                          color: AppTheme.surface,
+                        ),
+                      ),
+                      if (otherIsAdmin) ...[
+                        const SizedBox(width: 4),
+                        const Icon(
+                          Icons.verified_rounded,
+                          size: 16,
+                          color: Colors.amber,
+                        ),
+                      ],
+                    ],
+                  ),
+                  if (otherIsAdmin)
+                    Text(
+                      "RESMİ YETKİLİ",
+                      style: AppTheme.safePoppins(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 10,
+                        color: Colors.white,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                ],
               ),
             );
           },
         ),
         centerTitle: true,
-        backgroundColor: AppTheme.primary,
+        backgroundColor:
+            context.watch<TicketViewModel>().currentTicketDetail?.isAdmin ==
+                    true ||
+                widget.ticket.isAdmin == true ||
+                (widget.ticket.otherFullname?.toLowerCase().contains(
+                      "takasly destek",
+                    ) ??
+                    false)
+            ? Colors.amber.shade800
+            : (context.watch<AuthViewModel>().userProfile?.isAdmin == true
+                  ? Colors.black
+                  : AppTheme.primary),
         elevation: 0,
         iconTheme: const IconThemeData(color: AppTheme.surface),
         actions: [
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert, color: AppTheme.surface),
-            onSelected: (value) {
-              if (value == 'profile') {
-                _navigateToProfile(widget.ticket.otherUserID);
-              } else if (value == 'report') {
-                _showReportDialog();
-              } else if (value == 'block') {
-                _showBlockConfirmDialog();
-              }
-            },
-            itemBuilder: (BuildContext context) {
-              return [
-                const PopupMenuItem<String>(
-                  value: 'profile',
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.person_outline,
-                        size: 18,
-                        color: AppTheme.textPrimary,
+          Consumer<TicketViewModel>(
+            builder: (context, viewModel, child) {
+              final name =
+                  viewModel.currentTicketDetail?.otherFullname ??
+                  widget.ticket.otherFullname ??
+                  "";
+              final isAdmin =
+                  viewModel.currentTicketDetail?.isAdmin == true ||
+                  widget.ticket.isAdmin == true ||
+                  name.toLowerCase().contains("takasly destek");
+
+              if (isAdmin) return const SizedBox.shrink();
+
+              return PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert, color: AppTheme.surface),
+                onSelected: (value) {
+                  if (value == 'profile') {
+                    _navigateToProfile(widget.ticket.otherUserID);
+                  } else if (value == 'report') {
+                    _showReportDialog();
+                  } else if (value == 'block') {
+                    _showBlockConfirmDialog();
+                  }
+                },
+                itemBuilder: (BuildContext context) {
+                  return [
+                    const PopupMenuItem<String>(
+                      value: 'profile',
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.person_outline,
+                            size: 18,
+                            color: AppTheme.textPrimary,
+                          ),
+                          const SizedBox(width: 8),
+                          Text("Kullanıcının profiline git"),
+                        ],
                       ),
-                      SizedBox(width: 8),
-                      Text("Kullanıcının profiline git"),
-                    ],
-                  ),
-                ),
-                const PopupMenuItem<String>(
-                  value: 'report',
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.report_problem_outlined,
-                        size: 18,
-                        color: Colors.orange,
+                    ),
+                    const PopupMenuItem<String>(
+                      value: 'report',
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.report_problem_outlined,
+                            size: 18,
+                            color: Colors.orange,
+                          ),
+                          const SizedBox(width: 8),
+                          Text("Kullanıcıyı Raporla"),
+                        ],
                       ),
-                      SizedBox(width: 8),
-                      Text("Kullanıcıyı Raporla"),
-                    ],
-                  ),
-                ),
-                const PopupMenuItem<String>(
-                  value: 'block',
-                  child: Row(
-                    children: [
-                      Icon(Icons.block_flipped, size: 18, color: Colors.red),
-                      SizedBox(width: 8),
-                      Text("Kullanıcıyı Engelle"),
-                    ],
-                  ),
-                ),
-              ];
+                    ),
+                    const PopupMenuItem<String>(
+                      value: 'block',
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.block_flipped,
+                            size: 18,
+                            color: Colors.red,
+                          ),
+                          const SizedBox(width: 8),
+                          Text("Kullanıcıyı Engelle"),
+                        ],
+                      ),
+                    ),
+                  ];
+                },
+              );
             },
           ),
         ],
@@ -382,6 +447,16 @@ class _ChatViewState extends State<ChatView> {
           Consumer<TicketViewModel>(
             builder: (context, viewModel, child) {
               final detail = viewModel.currentTicketDetail;
+              final isAdmin =
+                  detail?.isAdmin == true ||
+                  widget.ticket.isAdmin == true ||
+                  (detail?.otherFullname?.toLowerCase().contains(
+                        "takasly destek",
+                      ) ??
+                      widget.ticket.otherFullname?.toLowerCase().contains(
+                        "takasly destek",
+                      ) ??
+                      false);
 
               // 1. Determine Target Product Info
               final targetId =
@@ -556,7 +631,7 @@ class _ChatViewState extends State<ChatView> {
                             ),
                           ),
                         )
-                      else
+                      else if (!isAdmin)
                         Padding(
                           padding: const EdgeInsets.only(bottom: 12),
                           child: ElevatedButton.icon(
@@ -587,7 +662,7 @@ class _ChatViewState extends State<ChatView> {
 
               // --- CASE B: SINGLE PRODUCT CONTEXT ---
               return InkWell(
-                onTap: () => _navigateToProduct(targetId),
+                onTap: isAdmin ? null : () => _navigateToProduct(targetId),
                 child: Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
@@ -636,27 +711,28 @@ class _ChatViewState extends State<ChatView> {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      ElevatedButton(
-                        onPressed: () => _startTradeFlow(targetId),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.primary,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
+                      if (!isAdmin)
+                        ElevatedButton(
+                          onPressed: () => _startTradeFlow(targetId),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.primary,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            textStyle: AppTheme.safePoppins(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            elevation: 0,
                           ),
-                          textStyle: AppTheme.safePoppins(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          elevation: 0,
+                          child: const Text("Takas Başlat"),
                         ),
-                        child: const Text("Takas Başlat"),
-                      ),
                       const SizedBox(width: 8),
                       Icon(Icons.chevron_right, color: Colors.grey.shade400),
                     ],
@@ -665,9 +741,74 @@ class _ChatViewState extends State<ChatView> {
               );
             },
           ),
+          Consumer<TicketViewModel>(
+            builder: (context, viewModel, child) {
+              final name =
+                  viewModel.currentTicketDetail?.otherFullname ??
+                  widget.ticket.otherFullname ??
+                  "";
+              final isAdmin =
+                  viewModel.currentTicketDetail?.isAdmin == true ||
+                  widget.ticket.isAdmin == true ||
+                  name.toLowerCase().contains("takasly destek");
+
+              if (isAdmin) {
+                return Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.amber.shade200),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.verified_user_rounded,
+                        color: Colors.amber.shade800,
+                        size: 24,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "RESMİ YETKİLİ BİLGİLENDİRMESİ",
+                              style: AppTheme.safePoppins(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.amber.shade900,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              "Bu hesap bir Takasly yöneticisine aittir. Kurumsal güvenliğiniz için tüm görüşmeleriniz Takasly güvencesi altındadır.",
+                              style: AppTheme.safePoppins(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.amber.shade900,
+                                height: 1.3,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
           Expanded(
-            child: Consumer<TicketViewModel>(
-              builder: (context, viewModel, child) {
+            child: Consumer2<TicketViewModel, AuthViewModel>(
+              builder: (context, viewModel, authVM, child) {
                 if (viewModel.isMessageLoading && viewModel.messages.isEmpty) {
                   return const Center(child: CircularProgressIndicator());
                 }
@@ -697,9 +838,17 @@ class _ChatViewState extends State<ChatView> {
 
                     final message = viewModel.messages[index];
                     final isMine = message.isMine == true;
-                    final isAdmin = message.isAdmin == true;
+                    final name = message.senderName ?? "";
+                    final isAdmin =
+                        message.isAdmin == true ||
+                        name.toLowerCase().contains("takasly destek");
 
-                    if (isAdmin) {
+                    // If isAdmin is true but there's no senderID, it's a system message.
+                    // If there's a senderID, it's a message from an admin user.
+                    final isSystemMessage =
+                        isAdmin && message.senderUserID == null;
+
+                    if (isSystemMessage) {
                       return Center(
                         child: Container(
                           margin: const EdgeInsets.symmetric(vertical: 12),
@@ -708,17 +857,34 @@ class _ChatViewState extends State<ChatView> {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.05),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            message.message ?? "",
-                            textAlign: TextAlign.center,
-                            style: AppTheme.safePoppins(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: AppTheme.textSecondary,
+                            color: Colors.amber.shade50,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: Colors.amber.shade200,
+                              width: 1,
                             ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.info_outline_rounded,
+                                size: 14,
+                                color: Colors.amber.shade800,
+                              ),
+                              const SizedBox(width: 6),
+                              Flexible(
+                                child: Text(
+                                  message.message ?? "",
+                                  style: AppTheme.safePoppins(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.amber.shade900,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       );
@@ -774,8 +940,20 @@ class _ChatViewState extends State<ChatView> {
                               ),
                               decoration: BoxDecoration(
                                 color: isMine
-                                    ? AppTheme.primary.withOpacity(0.8)
-                                    : AppTheme.surface,
+                                    ? (authVM.userProfile?.isAdmin == true
+                                          ? Colors.black
+                                          : AppTheme.primary.withOpacity(0.8))
+                                    : (isAdmin ? null : AppTheme.surface),
+                                gradient: !isMine && isAdmin
+                                    ? LinearGradient(
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                        colors: [
+                                          Colors.amber.shade50,
+                                          Colors.amber.shade100,
+                                        ],
+                                      )
+                                    : null,
                                 borderRadius: BorderRadius.only(
                                   topLeft: const Radius.circular(16),
                                   topRight: const Radius.circular(16),
@@ -786,10 +964,18 @@ class _ChatViewState extends State<ChatView> {
                                       ? Radius.zero
                                       : const Radius.circular(16),
                                 ),
+                                border: isAdmin
+                                    ? Border.all(
+                                        color: Colors.amber.shade600,
+                                        width: 1.5,
+                                      )
+                                    : null,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.05),
-                                    blurRadius: 5,
+                                    color: isAdmin
+                                        ? Colors.amber.withOpacity(0.2)
+                                        : Colors.black.withOpacity(0.05),
+                                    blurRadius: isAdmin ? 8 : 5,
                                     offset: const Offset(0, 2),
                                   ),
                                 ],
@@ -797,6 +983,42 @@ class _ChatViewState extends State<ChatView> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
+                                  if (isAdmin && !isMine)
+                                    Padding(
+                                      padding: const EdgeInsets.only(bottom: 6),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 4,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.amber.shade700,
+                                          borderRadius: BorderRadius.circular(
+                                            6,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(
+                                              Icons.verified_user_rounded,
+                                              size: 12,
+                                              color: Colors.white,
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              "TAKASLY YETKİLİSİ",
+                                              style: AppTheme.safePoppins(
+                                                fontSize: 9,
+                                                fontWeight: FontWeight.w900,
+                                                color: Colors.white,
+                                                letterSpacing: 0.5,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
                                   Text(
                                     message.message ?? "",
                                     style: AppTheme.safePoppins(
@@ -811,29 +1033,39 @@ class _ChatViewState extends State<ChatView> {
                                   Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Text(
-                                        message.createdAt?.split(' ').last ??
-                                            "",
-                                        style: AppTheme.safePoppins(
-                                          fontSize: 9,
-                                          fontWeight: FontWeight.normal,
-                                          color: isMine
-                                              ? AppTheme.surface.withOpacity(
-                                                  0.9,
-                                                )
-                                              : AppTheme.textSecondary,
-                                        ),
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.end,
+                                        children: [
+                                          Text(
+                                            message.createdAt
+                                                    ?.split(' ')
+                                                    .last ??
+                                                "",
+                                            style: AppTheme.safePoppins(
+                                              fontSize: 9,
+                                              fontWeight: FontWeight.normal,
+                                              color: isMine
+                                                  ? AppTheme.surface
+                                                        .withOpacity(0.9)
+                                                  : AppTheme.textSecondary,
+                                            ),
+                                          ),
+                                          if (isMine)
+                                            Text(
+                                              message.isRead == true
+                                                  ? "Okundu"
+                                                  : "Okunmadı",
+                                              style: AppTheme.safePoppins(
+                                                fontSize: 8,
+                                                fontWeight: FontWeight.w500,
+                                                color: Colors.white.withOpacity(
+                                                  0.8,
+                                                ),
+                                              ),
+                                            ),
+                                        ],
                                       ),
-                                      if (isMine) ...[
-                                        const SizedBox(width: 4),
-                                        Icon(
-                                          Icons.done_all_rounded,
-                                          size: 15,
-                                          color: message.isRead == true
-                                              ? Colors.greenAccent
-                                              : Colors.white,
-                                        ),
-                                      ],
                                     ],
                                   ),
                                 ],

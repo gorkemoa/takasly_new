@@ -385,13 +385,38 @@ class _ProfileViewState extends State<ProfileView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  profile?.userFullname ?? "Kullanıcı",
-                  style: AppTheme.safePoppins(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.textPrimary,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      profile?.userFullname ?? "Kullanıcı",
+                      style: AppTheme.safePoppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    if (profile?.isAdmin == true) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          "YÖNETİCİ",
+                          style: AppTheme.safePoppins(
+                            fontSize: 8,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.amber,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
                 const SizedBox(height: 6),
                 GestureDetector(

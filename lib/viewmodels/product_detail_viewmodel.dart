@@ -3,6 +3,7 @@ import '../models/product_detail_model.dart';
 import '../services/product_service.dart';
 import 'package:logger/logger.dart';
 import '../services/analytics_service.dart';
+import '../models/user/report_user_model.dart';
 
 class ProductDetailViewModel extends ChangeNotifier {
   final ProductService _productService = ProductService();
@@ -111,6 +112,38 @@ class ProductDetailViewModel extends ChangeNotifier {
       _logger.e('Failed to toggle favorite', error: e);
       errorMessage = "Favori işlemi başarısız oldu.";
       notifyListeners();
+    }
+  }
+
+  Future<bool> reportProduct({
+    required String userToken,
+    required String reason,
+    required String step,
+  }) async {
+    if (productDetail == null || productDetail!.userID == null) return false;
+
+    try {
+      final request = ReportUserRequest(
+        userToken: userToken,
+        reportedUserID: productDetail!.userID!,
+        reason: reason,
+        step: step,
+        productID: productDetail!.productID,
+      );
+      await _productService.reportUser(request);
+      AnalyticsService().logEvent(
+        'report_product',
+        parameters: {
+          'reported_user_id': productDetail!.userID!,
+          'product_id': productDetail!.productID!,
+          'reason': reason,
+          'step': step,
+        },
+      );
+      return true;
+    } catch (e) {
+      _logger.e("Report Product Hata", error: e);
+      return false;
     }
   }
 }

@@ -8,6 +8,7 @@ class ProfileDetailModel {
   final List<ProfileProduct>? products;
   final List<ProfileReview>? reviews;
   final bool? isApproved;
+  final bool? isAdmin;
 
   ProfileDetailModel({
     this.userID,
@@ -19,6 +20,7 @@ class ProfileDetailModel {
     this.products,
     this.reviews,
     this.isApproved,
+    this.isAdmin,
   });
 
   factory ProfileDetailModel.fromJson(Map<String, dynamic> json) {
@@ -40,6 +42,7 @@ class ProfileDetailModel {
                 .toList()
           : null,
       isApproved: json['isApproved'],
+      isAdmin: json['isAdmin'] == true || json['isAdmin'] == 1,
     );
   }
 }

@@ -51,6 +51,7 @@ class User {
   final bool? isShowContact; // Changed to bool
   final bool? isApproved;
   final bool? isTree;
+  final bool? isAdmin;
   final List<Review>? reviews;
   final List<Review>? myReviews;
 
@@ -79,6 +80,7 @@ class User {
     this.isShowContact, // Updated constructor
     this.isApproved,
     this.isTree,
+    this.isAdmin,
     this.reviews,
     this.myReviews,
   });
@@ -113,6 +115,7 @@ class User {
           json['showContact'] == 1,
       isApproved: json['isApproved'],
       isTree: json['isTree'],
+      isAdmin: json['isAdmin'] == true || json['isAdmin'] == 1,
       reviews: json['reviews'] != null
           ? (json['reviews'] as List).map((i) => Review.fromJson(i)).toList()
           : null,
