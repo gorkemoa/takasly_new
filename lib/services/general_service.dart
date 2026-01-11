@@ -1,6 +1,7 @@
 import 'api_service.dart';
 import '../core/constants/api_constants.dart';
 import '../models/general_models.dart';
+import '../models/onboarding/source_models.dart';
 
 import '../models/search/popular_category_model.dart';
 
@@ -189,6 +190,31 @@ class GeneralService {
       return [];
     } catch (e) {
       return [];
+    }
+  }
+
+  Future<List<OnboardingSource>> getSourcesTypes() async {
+    try {
+      final response = await _apiService.get(ApiConstants.sourcesTypes);
+      if (response['success'] == true && response['data'] != null) {
+        final List list = response['data'];
+        return list.map((e) => OnboardingSource.fromJson(e)).toList();
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  Future<bool> addSource(AddSourceRequestModel request) async {
+    try {
+      final response = await _apiService.post(
+        ApiConstants.addSource,
+        request.toJson(),
+      );
+      return response['success'] == true;
+    } catch (e) {
+      return false;
     }
   }
 }

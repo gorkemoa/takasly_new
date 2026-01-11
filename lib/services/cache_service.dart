@@ -77,6 +77,18 @@ class CacheService {
     }
   }
 
+  static const String _onboardingKey = 'onboarding_shown';
+
+  Future<bool> isOnboardingShown() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_onboardingKey) ?? false;
+  }
+
+  Future<void> setOnboardingShown() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_onboardingKey, true);
+  }
+
   Future<void> clearCache() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_categoriesKey);

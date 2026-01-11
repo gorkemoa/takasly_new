@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:takasly/viewmodels/product_detail_viewmodel.dart';
 import 'firebase_options.dart';
 
-import 'views/home/home_view.dart'; // Import HomeView
+import 'views/root_view.dart';
 
 import 'viewmodels/product_viewmodel.dart';
 import 'viewmodels/home_viewmodel.dart'; // Import HomeViewModel
@@ -93,7 +93,7 @@ class _MyAppState extends State<MyApp> {
           GlobalCupertinoLocalizations.delegate,
         ],
         supportedLocales: const [Locale('tr', 'TR'), Locale('en', 'US')],
-        home: const HomeView(),
+        home: const RootView(),
         builder: (context, child) {
           return GlobalInteractionObserver(
             child: GestureDetector(

@@ -89,6 +89,15 @@ class NavigationService {
     }
   }
 
+  static void pushAndRemoveUntil(Widget page) {
+    if (navigatorKey?.currentState != null) {
+      navigatorKey!.currentState!.pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => page),
+        (route) => false,
+      );
+    }
+  }
+
   /// Harici URL'i aç
   Future<void> _launchUrl(String url) async {
     debugPrint('🌐 NavigationService: Opening URL: $url');
