@@ -8,6 +8,7 @@ import 'package:logger/logger.dart';
 import '../services/general_service.dart';
 import '../models/search/popular_category_model.dart';
 import '../models/general_models.dart';
+import '../services/analytics_service.dart';
 
 class SearchViewModel extends ChangeNotifier {
   final ProductService _productService = ProductService();
@@ -211,8 +212,18 @@ class SearchViewModel extends ChangeNotifier {
       try {
         if (newStatus) {
           await _productService.addFavorite(token, productId);
+          // Note: In list view we might not have full details for logAddToWishlist (like category),
+          // but we can log what we have.
+          AnalyticsService().logAddToWishlist(
+            itemId: productId.toString(),
+            itemCategory: 'Search', // Context
+          );
         } else {
           await _productService.removeFavoriteProduct(token, productId);
+          AnalyticsService().logEvent(
+            'remove_favorite',
+            parameters: {'product_id': productId, 'from': 'search'},
+          );
         }
       } catch (e) {
         _logger.e("Error toggling favorite: $e");
@@ -378,6 +389,22 @@ class SearchViewModel extends ChangeNotifier {
           isLastPage = true;
         } else {
           currentPage++;
+        }
+
+        // Log deep search only on first page
+        if (isRefresh) {
+          AnalyticsService().logSearch(
+            searchTerm: _currentQuery.isEmpty ? "All" : _currentQuery,
+            category: _currentCategoryName,
+            resultCount: totalItems,
+            origin: "search_view",
+          );
+          // Keep detailed log as well if needed, but standard search is above.
+          // Or just rely on standard search.
+          // Let's us keep the custom one as a debug/detailed event with diff name or just rely on parameters
+          // attached to logSearch if we extend it, but logSearch takes specific params.
+          // We can add extra params to logSearch if we update AnalyticsService.
+          // For now, let's just log the standard search event.
         }
       } else {
         errorMessage = response.message ?? "Arama sonucu alınamadı.";

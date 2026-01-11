@@ -18,6 +18,8 @@ import '../widgets/ads/banner_ad_widget.dart';
 import 'edit_product_view.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../services/analytics_service.dart';
+
 class ProductDetailView extends StatefulWidget {
   final int productId;
 
@@ -33,6 +35,7 @@ class _ProductDetailViewState extends State<ProductDetailView> {
   @override
   void initState() {
     super.initState();
+    AnalyticsService().logScreenView('Urun Detay');
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final userToken = context.read<AuthViewModel>().user?.token;
       context.read<ProductDetailViewModel>().getProductDetail(

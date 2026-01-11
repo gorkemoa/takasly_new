@@ -7,6 +7,7 @@ import '../services/account_service.dart';
 import '../services/ad_service.dart';
 import '../models/user/report_user_model.dart';
 import '../models/account/blocked_user_model.dart';
+import '../services/analytics_service.dart';
 
 enum ProfileState { idle, busy, error, success }
 
@@ -109,6 +110,10 @@ class ProfileViewModel extends ChangeNotifier {
         _profileDetail!.products!.removeWhere((p) => p.productID == productId);
       }
       _state = ProfileState.success;
+      AnalyticsService().logEvent(
+        'delete_product',
+        parameters: {'product_id': productId, 'from': 'profile'},
+      );
       return true;
     } catch (e) {
       _state = ProfileState.error;
@@ -131,6 +136,10 @@ class ProfileViewModel extends ChangeNotifier {
       final message = await _productService.sponsorProduct(
         userToken,
         productId,
+      );
+      AnalyticsService().logEvent(
+        'sponsor_product',
+        parameters: {'product_id': productId, 'from': 'profile'},
       );
       return message;
     } catch (e) {

@@ -112,10 +112,7 @@ class _TicketsViewState extends State<TicketsView> {
                 children: [
                   Container(
                     padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primary.withOpacity(0.05),
-                      shape: BoxShape.circle,
-                    ),
+
                     child: Icon(
                       Icons.chat_bubble_outline_rounded,
                       size: 64,

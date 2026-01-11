@@ -18,6 +18,8 @@ import '../settings/about_view.dart';
 
 import '../widgets/ads/banner_ad_widget.dart';
 
+import 'package:takasly/services/analytics_service.dart';
+
 class ProfileView extends StatefulWidget {
   const ProfileView({super.key});
 
@@ -29,6 +31,7 @@ class _ProfileViewState extends State<ProfileView> {
   @override
   void initState() {
     super.initState();
+    AnalyticsService().logScreenView('Profilim');
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
       if (authViewModel.user != null && authViewModel.state != AuthState.busy) {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/product_detail_model.dart';
 import '../services/product_service.dart';
 import 'package:logger/logger.dart';
+import '../services/analytics_service.dart';
 
 class ProductDetailViewModel extends ChangeNotifier {
   final ProductService _productService = ProductService();
@@ -23,6 +24,16 @@ class ProductDetailViewModel extends ChangeNotifier {
       );
       if (response.success == true && response.data?.product != null) {
         productDetail = response.data!.product;
+        // Log view item
+        if (productDetail != null) {
+          AnalyticsService().logViewItem(
+            itemId: productDetail!.productID.toString(),
+            itemName: productDetail!.productTitle ?? 'Unknown',
+            itemCategory: productDetail!.categoryList?.isNotEmpty == true
+                ? productDetail!.categoryList!.first.catName ?? 'Unknown'
+                : 'Unknown',
+          );
+        }
       } else {
         errorMessage = "Ürün detayları alınamadı.";
       }
@@ -46,6 +57,10 @@ class ProductDetailViewModel extends ChangeNotifier {
         userToken,
         userId,
         productDetail!.productID!,
+      );
+      AnalyticsService().logEvent(
+        'delete_product',
+        parameters: {'product_id': productDetail!.productID!, 'from': 'detail'},
       );
       productDetail = null;
       return true;
@@ -71,10 +86,20 @@ class ProductDetailViewModel extends ChangeNotifier {
     try {
       if (productDetail?.isFavorite == true) {
         await _productService.addFavorite(userToken, productDetail!.productID!);
+        AnalyticsService().logAddToWishlist(
+          itemId: productDetail!.productID.toString(),
+          itemCategory: productDetail!.categoryList?.isNotEmpty == true
+              ? productDetail!.categoryList!.first.catName ?? 'Unknown'
+              : 'Unknown',
+        );
       } else {
         await _productService.removeFavoriteProduct(
           userToken,
           productDetail!.productID!,
+        );
+        AnalyticsService().logEvent(
+          'remove_favorite',
+          parameters: {'product_id': productDetail!.productID!},
         );
       }
       _logger.i(

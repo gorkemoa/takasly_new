@@ -10,6 +10,7 @@ import '../services/general_service.dart';
 import '../models/products/add_product_request_model.dart';
 import '../models/general_models.dart';
 import '../models/products/product_models.dart';
+import '../services/analytics_service.dart';
 
 class EditProductViewModel extends ChangeNotifier {
   final ProductService _productService = ProductService();
@@ -485,6 +486,13 @@ class EditProductViewModel extends ChangeNotifier {
 
       // Call EDIT
       await _productService.editProduct(request, userId, productId);
+      AnalyticsService().logEvent(
+        'complete_edit_product',
+        parameters: {
+          'product_id': productId,
+          'category_id': request.categoryID,
+        },
+      );
       return true;
     } catch (e) {
       if (e is BusinessException) {
@@ -506,6 +514,10 @@ class EditProductViewModel extends ChangeNotifier {
 
     try {
       await _productService.deleteProduct(userToken, userId, productId);
+      AnalyticsService().logEvent(
+        'delete_product',
+        parameters: {'product_id': productId},
+      );
       return true;
     } catch (e) {
       if (e is BusinessException) {

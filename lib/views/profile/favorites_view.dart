@@ -7,6 +7,8 @@ import '../../viewmodels/product_detail_viewmodel.dart';
 import '../widgets/product_card.dart';
 import '../products/product_detail_view.dart';
 
+import '../../services/analytics_service.dart';
+
 class FavoritesView extends StatelessWidget {
   const FavoritesView({super.key});
 
@@ -32,6 +34,7 @@ class _FavoritesViewContentState extends State<_FavoritesViewContent> {
   @override
   void initState() {
     super.initState();
+    AnalyticsService().logScreenView('Favoriler');
     // Fetching handled in didChangeDependencies to wait for Auth Check
   }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/general_models.dart';
 import '../services/general_service.dart';
+import '../services/analytics_service.dart';
 
 class ContactViewModel extends ChangeNotifier {
   final GeneralService _generalService = GeneralService();
@@ -44,6 +45,10 @@ class ContactViewModel extends ChangeNotifier {
       );
 
       if (response['success'] == true) {
+        AnalyticsService().logEvent(
+          'send_contact_message',
+          parameters: {'subject_id': _selectedSubject!.subjectID!},
+        );
         messageController.clear();
         _selectedSubject = null;
         return true;

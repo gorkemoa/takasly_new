@@ -12,6 +12,7 @@ import '../models/profile/profile_detail_model.dart';
 import '../services/auth_service.dart';
 import '../services/general_service.dart';
 import '../models/general_models.dart';
+import '../services/analytics_service.dart';
 
 class TicketViewModel extends ChangeNotifier {
   final TicketService _ticketService = TicketService();
@@ -269,6 +270,10 @@ class TicketViewModel extends ChangeNotifier {
       if (success) {
         // Option A: Refresh messages list
         await fetchMessages(ticketID, userToken, isRefresh: true);
+        AnalyticsService().logEvent(
+          'send_message',
+          parameters: {'ticket_id': ticketID},
+        );
 
         // Option B: Optimistically append message (Requires creating a TicketMessage object)
         // For now, refreshing is safer to ensure we get the full server-side object (like ID, timestamp)
@@ -305,13 +310,27 @@ class TicketViewModel extends ChangeNotifier {
       );
 
       if (response['success'] == true) {
+        int? ticketID;
         // Assuming the response data contains the new ticketID or we can just return true/false
         // Typical structure: data: { ticketID: 123 }
         // Let's print response to be sure in dev, but code safely
         if (response['data'] != null && response['data']['ticketID'] != null) {
-          return int.tryParse(response['data']['ticketID'].toString());
+          ticketID = int.tryParse(response['data']['ticketID'].toString());
+        } else {
+          ticketID =
+              1; // Return a dummy success if ID is missing but success is true (fallback)
         }
-        return 1; // Return a dummy success if ID is missing but success is true (fallback)
+
+        AnalyticsService().logEvent(
+          'create_ticket',
+          parameters: {
+            'target_product_id': targetProductID,
+            'offered_product_id': offeredProductID,
+            'ticket_id': ticketID ?? 0,
+          },
+        );
+
+        return ticketID;
       } else {
         messageErrorMessage = response['message'] ?? "Teklif oluşturulamadı.";
         return null;
@@ -354,6 +373,14 @@ class TicketViewModel extends ChangeNotifier {
         offerID: offerID,
       );
       await _productService.reportUser(request);
+      AnalyticsService().logEvent(
+        'report_user',
+        parameters: {
+          'reported_user_id': reportedUserID,
+          'reason': reason,
+          'step': step,
+        },
+      );
       return true;
     } catch (e) {
       _logger.e("Report User Hata", error: e);
@@ -373,6 +400,10 @@ class TicketViewModel extends ChangeNotifier {
         reason: reason,
       );
       await _accountService.blockUser(request);
+      AnalyticsService().logEvent(
+        'block_user',
+        parameters: {'blocked_user_id': blockedUserID},
+      );
       return true;
     } catch (e) {
       _logger.e("Block User Hata", error: e);
@@ -403,6 +434,13 @@ class TicketViewModel extends ChangeNotifier {
   ) async {
     try {
       final response = await _productService.startTrade(request);
+      AnalyticsService().logEvent(
+        'start_trade',
+        parameters: {
+          'sender_product_id': request.senderProductID,
+          'receiver_product_id': request.receiverProductID,
+        },
+      );
       return response;
     } catch (e) {
       _logger.e("Start Trade Error", error: e);

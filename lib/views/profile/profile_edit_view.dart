@@ -7,6 +7,8 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:image_picker/image_picker.dart';
 
+import '../../services/analytics_service.dart';
+
 class ProfileEditView extends StatefulWidget {
   final bool isMandatory;
   const ProfileEditView({super.key, this.isMandatory = false});
@@ -55,6 +57,7 @@ class _ProfileEditViewState extends State<ProfileEditView> {
   @override
   void initState() {
     super.initState();
+    AnalyticsService().logScreenView('Profil Duzenle');
     final user = context.read<AuthViewModel>().userProfile;
     _nameController = TextEditingController(text: user?.userFirstname ?? '');
     _surnameController = TextEditingController(text: user?.userLastname ?? '');

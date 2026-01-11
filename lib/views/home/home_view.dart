@@ -29,6 +29,8 @@ import '../auth/login_view.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../widgets/ads/banner_ad_widget.dart';
 
+import 'package:takasly/services/analytics_service.dart';
+
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
 
@@ -45,6 +47,7 @@ class _HomeViewState extends State<HomeView> {
   @override
   void initState() {
     super.initState();
+    AnalyticsService().logScreenView('Ana Sayfa');
     _requestNotificationPermissions();
     _scrollController.addListener(_onScroll);
 

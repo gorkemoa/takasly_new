@@ -14,6 +14,8 @@ import '../auth/login_view.dart';
 import '../../viewmodels/auth_viewmodel.dart';
 import '../products/add_product_view.dart';
 
+import 'package:takasly/services/analytics_service.dart';
+
 class SearchView extends StatefulWidget {
   final String? initialQuery; // Add initialQuery
   const SearchView({super.key, this.initialQuery});
@@ -29,6 +31,7 @@ class _SearchViewState extends State<SearchView> {
   @override
   void initState() {
     super.initState();
+    AnalyticsService().logScreenView('Arama');
     _scrollController.addListener(_onScroll);
 
     // Handle initial query if present

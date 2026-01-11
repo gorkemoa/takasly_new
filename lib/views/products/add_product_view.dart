@@ -12,6 +12,7 @@ import '../../viewmodels/add_product_viewmodel.dart';
 import '../../models/general_models.dart';
 import '../../models/products/product_models.dart' show Category;
 import '../widgets/category_selection_view.dart';
+import '../../services/analytics_service.dart';
 
 class AddProductView extends HookWidget {
   const AddProductView({super.key});
@@ -33,6 +34,12 @@ class _AddProductViewBody extends HookWidget {
     final viewModel = Provider.of<AddProductViewModel>(context);
     final pageController = usePageController();
     final currentStep = useState(0);
+
+    // Initial Screen View Log
+    useEffect(() {
+      AnalyticsService().logScreenView('Ilan Ekle');
+      return null;
+    }, []);
 
     // Listen to error messages
     useEffect(() {

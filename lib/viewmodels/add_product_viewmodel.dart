@@ -8,6 +8,8 @@ import 'package:geocoding/geocoding.dart';
 import '../services/product_service.dart';
 import '../services/general_service.dart';
 import '../services/api_service.dart';
+import '../services/analytics_service.dart';
+import '../services/in_app_review_service.dart';
 import '../models/products/add_product_request_model.dart';
 import '../models/general_models.dart';
 import '../models/products/product_models.dart'
@@ -447,6 +449,19 @@ class AddProductViewModel extends ChangeNotifier {
       );
 
       final productId = await _productService.addProduct(request, userId);
+
+      if (productId != null) {
+        AnalyticsService().logEvent(
+          'complete_add_product',
+          parameters: {
+            'product_id': productId,
+            'category_id': request.categoryID,
+            'city_id': request.productCity,
+          },
+        );
+        InAppReviewService().incrementActionAndCheck();
+      }
+
       return productId;
     } catch (e) {
       _logger.e("Submit error: $e");
@@ -467,6 +482,10 @@ class AddProductViewModel extends ChangeNotifier {
     notifyListeners();
     try {
       await _productService.sponsorProduct(userToken, productId);
+      AnalyticsService().logEvent(
+        'sponsor_product',
+        parameters: {'product_id': productId},
+      );
       return true;
     } catch (e) {
       _logger.e("Sponsor error: $e");
@@ -476,19 +495,6 @@ class AddProductViewModel extends ChangeNotifier {
       isLoading = false;
       notifyListeners();
     }
-  }
-
-  // Relaxed validation to allow API to return errors
-  bool _validate() {
-    /* 
-    // Old strict validation
-    if (titleController.text.trim().isEmpty) {
-      errorMessage = "Lütfen ürün başlığı giriniz.";
-      return false;
-    }
-    ...
-    */
-    return true;
   }
 
   // Determine which step has missing data for auto-navigation

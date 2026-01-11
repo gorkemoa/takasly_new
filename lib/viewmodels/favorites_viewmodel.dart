@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import '../models/products/product_models.dart';
 import '../services/product_service.dart';
+import '../services/analytics_service.dart';
 
 class FavoritesViewModel extends ChangeNotifier {
   final ProductService _productService = ProductService();
@@ -47,6 +48,13 @@ class FavoritesViewModel extends ChangeNotifier {
         product.productID!,
       );
       _logger.i('Removed product ${product.productID} from favorites');
+      AnalyticsService().logEvent(
+        'remove_favorite',
+        parameters: {
+          'product_id': product.productID!,
+          'from': 'favorites_page',
+        },
+      );
     } catch (e) {
       // Revert if failed
       if (index != -1) {

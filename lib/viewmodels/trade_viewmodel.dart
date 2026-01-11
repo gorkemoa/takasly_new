@@ -5,6 +5,8 @@ import '../models/trade_detail_model.dart';
 import '../services/product_service.dart';
 import '../services/general_service.dart';
 import '../models/general_models.dart';
+import '../services/analytics_service.dart';
+import '../services/in_app_review_service.dart';
 
 class TradeViewModel extends ChangeNotifier {
   final ProductService _productService = ProductService();
@@ -96,6 +98,10 @@ class TradeViewModel extends ChangeNotifier {
     try {
       final message = await _productService.confirmTrade(request);
       _logger.i('Trade ${request.offerID} confirmation: $message');
+      AnalyticsService().logEvent(
+        'confirm_trade',
+        parameters: {'offer_id': request.offerID},
+      );
       return message;
     } finally {
       _setProcessing(request.offerID, false);
@@ -126,6 +132,11 @@ class TradeViewModel extends ChangeNotifier {
     try {
       final message = await _productService.completeTrade(token, offerID);
       _logger.i('Trade $offerID completed: $message');
+      AnalyticsService().logEvent(
+        'complete_trade',
+        parameters: {'offer_id': offerID},
+      );
+      InAppReviewService().incrementActionAndCheck();
       return message;
     } catch (e) {
       _logger.e('Error completing trade', error: e);
@@ -170,6 +181,11 @@ class TradeViewModel extends ChangeNotifier {
         comment: comment,
       );
       _logger.i('Trade $offerID review sent: $message');
+      AnalyticsService().logEvent(
+        'add_trade_review',
+        parameters: {'offer_id': offerID, 'rating': rating},
+      );
+      InAppReviewService().incrementActionAndCheck();
       return message;
     } catch (e) {
       _logger.e('Error sending trade review', error: e);

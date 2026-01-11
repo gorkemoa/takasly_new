@@ -23,6 +23,9 @@ import 'services/firebase_messaging_service.dart';
 import 'services/navigation_service.dart';
 
 import 'services/ad_service.dart';
+import 'services/analytics_service.dart';
+import 'services/in_app_review_service.dart';
+import 'widgets/global_interaction_observer.dart'; // Import GlobalInteractionObserver
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -38,6 +41,9 @@ void main() async {
 
   // Initialize AdService
   await AdService().init();
+
+  // Initialize InAppReview Service
+  await InAppReviewService().init();
 
   runApp(const MyApp());
 }
@@ -80,6 +86,7 @@ class _MyAppState extends State<MyApp> {
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         navigatorKey: navigatorKey,
+        navigatorObservers: [AnalyticsService().getAnalyticsObserver()],
         localizationsDelegates: const [
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,
@@ -88,11 +95,13 @@ class _MyAppState extends State<MyApp> {
         supportedLocales: const [Locale('tr', 'TR'), Locale('en', 'US')],
         home: const HomeView(),
         builder: (context, child) {
-          return GestureDetector(
-            onTap: () {
-              FocusManager.instance.primaryFocus?.unfocus();
-            },
-            child: child,
+          return GlobalInteractionObserver(
+            child: GestureDetector(
+              onTap: () {
+                FocusManager.instance.primaryFocus?.unfocus();
+              },
+              child: child,
+            ),
           );
         },
       ),

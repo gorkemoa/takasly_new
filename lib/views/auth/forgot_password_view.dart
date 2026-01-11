@@ -4,6 +4,8 @@ import '../../theme/app_theme.dart';
 import '../../viewmodels/auth_viewmodel.dart';
 import 'code_verification_view.dart';
 
+import '../../services/analytics_service.dart';
+
 class ForgotPasswordView extends StatefulWidget {
   const ForgotPasswordView({super.key});
 
@@ -14,6 +16,12 @@ class ForgotPasswordView extends StatefulWidget {
 class _ForgotPasswordViewState extends State<ForgotPasswordView> {
   final _emailController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+
+  @override
+  void initState() {
+    super.initState();
+    AnalyticsService().logScreenView('Sifremi Unuttum');
+  }
 
   @override
   void dispose() {

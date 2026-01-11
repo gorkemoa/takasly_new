@@ -22,6 +22,7 @@ import '../models/account/change_password_model.dart';
 import '../models/account/delete_user_model.dart';
 import '../services/firebase_messaging_service.dart';
 import '../services/navigation_service.dart';
+import '../services/analytics_service.dart';
 import '../views/auth/login_view.dart';
 
 enum AuthState { idle, busy, error, success }
@@ -133,6 +134,7 @@ class AuthViewModel extends ChangeNotifier {
 
       _state = AuthState.success;
       _logger.i("Login successful for user: ${_user?.userID}");
+      AnalyticsService().logLogin('email');
     } catch (e) {
       _state = AuthState.error;
       _errorMessage = e.toString();
@@ -290,6 +292,7 @@ class AuthViewModel extends ChangeNotifier {
           _logger.i(
             "Verification successful (Register). User logged in: ${_user?.userID}",
           );
+          AnalyticsService().logSignUp('email');
 
           // Automatically fetch user profile after successful verification
           await _getUserInternal();
@@ -554,6 +557,7 @@ class AuthViewModel extends ChangeNotifier {
         _logger.i(
           "Social Login successful ($platform). User: ${_user!.userID}",
         );
+        AnalyticsService().logLogin(platform);
       }
       // notifyListeners() is called in finally block of caller
     } catch (e) {
@@ -637,6 +641,7 @@ class AuthViewModel extends ChangeNotifier {
       final response = await _accountService.updateUser(request);
       if (response.success == true) {
         _logger.i("User account updated successfully.");
+        AnalyticsService().logEvent('update_account');
         // Refresh user profile
         await _getUserInternal();
       } else {
@@ -677,6 +682,7 @@ class AuthViewModel extends ChangeNotifier {
       if (response.success == true) {
         _state = AuthState.success;
         _logger.i("Password changed successfully.");
+        AnalyticsService().logEvent('change_password');
       } else {
         throw Exception("Password change failed");
       }
@@ -701,6 +707,7 @@ class AuthViewModel extends ChangeNotifier {
       await _accountService.deleteUser(request);
 
       _logger.i("Account deleted successfully.");
+      AnalyticsService().logEvent('delete_account');
       // Logout user after deletion
       await logout(autoRedirect: true);
     } catch (e) {

@@ -6,6 +6,8 @@ import '../../viewmodels/auth_viewmodel.dart';
 import '../home/home_view.dart';
 import 'code_verification_view.dart';
 
+import '../../services/analytics_service.dart';
+
 class RegisterView extends StatefulWidget {
   const RegisterView({super.key});
 
@@ -25,6 +27,12 @@ class _RegisterViewState extends State<RegisterView> {
   bool _policyAccepted = true;
   bool _kvkkAccepted = true;
   bool _obscurePassword = true;
+
+  @override
+  void initState() {
+    super.initState();
+    AnalyticsService().logScreenView('Kayit Ol');
+  }
 
   @override
   void dispose() {

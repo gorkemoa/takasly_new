@@ -4,6 +4,7 @@ import '../services/product_service.dart';
 import '../services/api_service.dart';
 import '../services/location_service.dart';
 
+import 'package:takasly/services/analytics_service.dart';
 import 'package:logger/logger.dart';
 
 class ProductViewModel extends ChangeNotifier {
@@ -139,6 +140,15 @@ class ProductViewModel extends ChangeNotifier {
         if (isRefresh && currentPage == 1) {
           products = List.from(newProducts);
           isLoading = false; // Hide initial loader once first page is here
+          // Log event
+          AnalyticsService().logEvent(
+            'view_product_list',
+            parameters: {
+              'category_id': _currentFilter.categoryID ?? 0,
+              'sort_type': _currentFilter.sortType ?? 'default',
+              'search_text': _currentFilter.searchText ?? '',
+            },
+          );
         } else {
           products.addAll(newProducts);
         }

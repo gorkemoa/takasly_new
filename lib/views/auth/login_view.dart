@@ -7,6 +7,8 @@ import 'register_view.dart';
 import 'forgot_password_view.dart';
 import '../home/home_view.dart';
 
+import '../../services/analytics_service.dart';
+
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
 
@@ -19,6 +21,12 @@ class _LoginViewState extends State<LoginView> {
   final TextEditingController _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _obscurePassword = true;
+
+  @override
+  void initState() {
+    super.initState();
+    AnalyticsService().logScreenView('Giris Yap');
+  }
 
   @override
   void dispose() {

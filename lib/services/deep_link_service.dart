@@ -1,7 +1,6 @@
 import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'navigation_service.dart';
-import '../views/products/product_detail_view.dart';
 import '../views/home/home_view.dart';
 import '../views/search/search_view.dart';
 import 'package:provider/provider.dart';

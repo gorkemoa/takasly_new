@@ -5,6 +5,8 @@ import 'package:takasly/viewmodels/ticket_viewmodel.dart';
 import 'package:takasly/viewmodels/auth_viewmodel.dart';
 import 'package:takasly/theme/app_theme.dart';
 
+import '../../services/analytics_service.dart';
+
 import '../../models/tickets/ticket_model.dart';
 import '../products/product_detail_view.dart';
 import '../profile/user_profile_view.dart';
@@ -31,6 +33,7 @@ class _ChatViewState extends State<ChatView> {
   @override
   void initState() {
     super.initState();
+    AnalyticsService().logScreenView('Sohbet');
     _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fetchMessages(isRefresh: true);

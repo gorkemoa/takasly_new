@@ -9,6 +9,7 @@ import '../../messages/chat_view.dart';
 import '../../widgets/product_card.dart';
 import '../../../models/products/product_models.dart' as prod_models;
 import '../../../models/tickets/ticket_model.dart';
+import '../../../services/in_app_review_service.dart';
 
 class OfferBottomSheet extends StatefulWidget {
   final ProductDetail targetProduct;
@@ -521,6 +522,7 @@ class _OfferBottomSheetState extends State<OfferBottomSheet> {
                           behavior: SnackBarBehavior.floating,
                         ),
                       );
+                      InAppReviewService().incrementActionAndCheck();
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
