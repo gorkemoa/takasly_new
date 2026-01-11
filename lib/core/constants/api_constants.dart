@@ -37,6 +37,7 @@ class ApiConstants {
   static const String eventDetail = 'service/user/event/'; // + {id}/detail
 
   // General Endpoints
+  static const String popups = 'service/general/general/popups';
   static const String logos = 'service/general/general/logos';
   static const String categories =
       'service/general/general/categories/'; // + {parentId}

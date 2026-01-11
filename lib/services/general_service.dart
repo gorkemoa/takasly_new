@@ -178,4 +178,17 @@ class GeneralService {
       rethrow;
     }
   }
+
+  Future<List<Popup>> getPopups() async {
+    try {
+      final response = await _apiService.get(ApiConstants.popups);
+      if (response['success'] == true && response['data'] != null) {
+        final List list = response['data']['popups'];
+        return list.map((e) => Popup.fromJson(e)).toList();
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
 }

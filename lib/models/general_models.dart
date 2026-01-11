@@ -87,3 +87,38 @@ class Contract {
     return Contract(id: json['id'], title: json['title'], desc: json['desc']);
   }
 }
+
+class Popup {
+  int? popupID;
+  String? popupTitle;
+  String? popupDesc;
+  int? popupView;
+  String? popupLink;
+  String? popupImage;
+  String? popupStartDate;
+  String? popupEndDate;
+
+  Popup({
+    this.popupID,
+    this.popupTitle,
+    this.popupDesc,
+    this.popupView,
+    this.popupLink,
+    this.popupImage,
+    this.popupStartDate,
+    this.popupEndDate,
+  });
+
+  factory Popup.fromJson(Map<String, dynamic> json) {
+    return Popup(
+      popupID: json['popupID'],
+      popupTitle: json['popupTitle'],
+      popupDesc: json['popupDesc'],
+      popupView: json['popupView'],
+      popupLink: json['popupLink'],
+      popupImage: json['popupImage'],
+      popupStartDate: json['popupStartDate'],
+      popupEndDate: json['popupEndDate'],
+    );
+  }
+}

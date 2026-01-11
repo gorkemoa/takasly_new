@@ -6,9 +6,11 @@ import '../models/general_models.dart';
 import 'package:logger/logger.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import '../services/cache_service.dart';
 
 class HomeViewModel extends ChangeNotifier {
   final GeneralService _generalService = GeneralService();
+  final CacheService _cacheService = CacheService();
   final Logger _logger = Logger();
 
   bool _isLoading = true;
@@ -40,6 +42,9 @@ class HomeViewModel extends ChangeNotifier {
 
   List<Condition> _conditions = [];
   List<Condition> get conditions => _conditions;
+
+  List<Popup> _popups = [];
+  List<Popup> get popups => _popups;
 
   // Filter State
   String _sortType = 'location';
@@ -77,6 +82,9 @@ class HomeViewModel extends ChangeNotifier {
         }),
         fetchConditions().catchError((e) {
           _logger.w('Conditions fetch failed: $e');
+        }),
+        fetchPopups().catchError((e) {
+          _logger.w('Popups fetch failed: $e');
         }),
       ]);
 
@@ -277,5 +285,37 @@ class HomeViewModel extends ChangeNotifier {
   void setSelectedDistrict(District? district) {
     _selectedDistrict = district;
     notifyListeners();
+  }
+
+  Future<void> fetchPopups() async {
+    try {
+      final allPopups = await _generalService.getPopups();
+      final hiddenPopupIds = await _cacheService.getHiddenPopups();
+
+      // Filter logic:
+      // If popupView == 1 (Show Once) and it's in hidden list -> Don't show
+      // If popupView == 2 (Always Show) -> Always show (ignore hidden list or don't add to it)
+      // Actually, if user checked "Don't show again", we probably shouldn't show it even if it was type 2 originally?
+      // Requirement says: "1 gelirse checkbox koyarsın 1 kere göster diye cache de tuta"
+      // So type 2 implies "Sürekli Göster" (Always Show), likely no checkbox.
+      // So we only filter if it is in hidden list.
+
+      _popups = allPopups.where((popup) {
+        if (popup.popupID == null) return false;
+        // If it's in hidden list, we don't show it.
+        // Logic for adding to hidden list is in the View/VM action.
+        return !hiddenPopupIds.contains(popup.popupID);
+      }).toList();
+
+      notifyListeners();
+    } catch (e) {
+      _logger.e('Error fetching popups: $e');
+    }
+  }
+
+  Future<void> hidePopup(int popupId) async {
+    await _cacheService.saveHiddenPopup(popupId);
+    // Optionally remove from current _popups list if we want immediate feedback,
+    // but usually this runs when dialog closes so list update for next launch is enough.
   }
 }

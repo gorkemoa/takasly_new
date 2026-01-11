@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../models/general_models.dart';
 import 'package:takasly/views/products/product_detail_view.dart';
 import 'package:takasly/views/products/add_product_view.dart';
 import '../../viewmodels/home_viewmodel.dart';
@@ -48,7 +49,12 @@ class _HomeViewState extends State<HomeView> {
     // Fetch Data on startup
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        context.read<HomeViewModel>().init(isRefresh: true);
+        final homeVM = context.read<HomeViewModel>();
+        homeVM.init(isRefresh: true).then((_) {
+          if (mounted && homeVM.popups.isNotEmpty) {
+            _showPopups(homeVM.popups);
+          }
+        });
 
         // Handle Product Initialization once Auth is checked
         final authVM = context.read<AuthViewModel>();
@@ -731,6 +737,114 @@ class _HomeViewState extends State<HomeView> {
         },
       ),
     );
+  }
+
+  Future<void> _showPopups(List<Popup> popups) async {
+    final homeViewModel = context.read<HomeViewModel>();
+
+    for (final popup in popups) {
+      if (!mounted) return;
+
+      // Checkbox state for this specific popup
+      bool doNotShowAgain = false;
+
+      await showDialog(
+        context: context,
+        barrierDismissible: false, // Force user to use button
+        builder: (context) {
+          return StatefulBuilder(
+            builder: (context, setState) {
+              return Dialog(
+                insetPadding: const EdgeInsets.all(5),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (popup.popupImage != null &&
+                          popup.popupImage!.isNotEmpty)
+                        ClipRRect(
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(20),
+                          ),
+                          child: Image.network(
+                            popup.popupImage!,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            errorBuilder: (c, e, s) => const SizedBox(),
+                          ),
+                        ),
+                      Padding(
+                        padding: const EdgeInsets.all(10.0),
+                        child: Column(
+                          children: [
+                            // 'Do Not Show Again' Checkbox for Type 1
+                            if (popup.popupView == 1)
+                              GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    doNotShowAgain = !doNotShowAgain;
+                                  });
+                                },
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Checkbox(
+                                      value: doNotShowAgain,
+                                      activeColor: AppTheme.primary,
+                                      onChanged: (val) {
+                                        setState(() {
+                                          doNotShowAgain = val ?? false;
+                                        });
+                                      },
+                                    ),
+                                    Text(
+                                      'Bir daha gösterme',
+                                      style: AppTheme.safePoppins(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w400,
+                                        color: AppTheme.textSecondary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  if (doNotShowAgain && popup.popupID != null) {
+                                    homeViewModel.hidePopup(popup.popupID!);
+                                  }
+                                  Navigator.pop(context);
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppTheme.primary,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Kapat',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      );
+    }
   }
 
   Widget _buildEmptyState(BuildContext context) {

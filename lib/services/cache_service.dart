@@ -52,9 +52,35 @@ class CacheService {
     return prefs.getInt(_categoriesTimeKey);
   }
 
+  static const String _hiddenPopupsKey = 'hidden_popups';
+
+  Future<void> saveHiddenPopup(int popupId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      List<String> hidden = prefs.getStringList(_hiddenPopupsKey) ?? [];
+      if (!hidden.contains(popupId.toString())) {
+        hidden.add(popupId.toString());
+        await prefs.setStringList(_hiddenPopupsKey, hidden);
+      }
+    } catch (e) {
+      // Ignore
+    }
+  }
+
+  Future<List<int>> getHiddenPopups() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      List<String> hidden = prefs.getStringList(_hiddenPopupsKey) ?? [];
+      return hidden.map((e) => int.parse(e)).toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
   Future<void> clearCache() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_categoriesKey);
     await prefs.remove(_categoriesTimeKey);
+    // Don't clear hidden popups on general cache clear usually
   }
 }
