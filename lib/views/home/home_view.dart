@@ -30,6 +30,7 @@ import 'package:permission_handler/permission_handler.dart';
 import '../widgets/ads/banner_ad_widget.dart';
 
 import 'package:takasly/services/analytics_service.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -51,17 +52,16 @@ class _HomeViewState extends State<HomeView> {
     _requestNotificationPermissions();
     _scrollController.addListener(_onScroll);
 
-    // Fetch Data on startup
+    // Data fetching moved to RootView (Splash phase)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         final homeVM = context.read<HomeViewModel>();
-        homeVM.init(isRefresh: true).then((_) {
-          if (mounted && homeVM.popups.isNotEmpty) {
-            _showPopups(homeVM.popups);
-          }
-        });
+        // Show already loaded popups
+        if (homeVM.popups.isNotEmpty) {
+          _showPopups(homeVM.popups);
+        }
 
-        // Handle Product Initialization once Auth is checked
+        // Handle Product Initialization (Notifications, profile check etc.)
         final authVM = context.read<AuthViewModel>();
         if (authVM.isAuthCheckComplete) {
           _initProducts();
@@ -927,26 +927,72 @@ class _HomeViewState extends State<HomeView> {
                                 ),
                               ),
 
-                            SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton(
-                                onPressed: () {
-                                  if (doNotShowAgain && popup.popupID != null) {
-                                    homeViewModel.hidePopup(popup.popupID!);
-                                  }
-                                  Navigator.pop(context);
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppTheme.primary,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: OutlinedButton(
+                                    onPressed: () {
+                                      if (doNotShowAgain &&
+                                          popup.popupID != null) {
+                                        homeViewModel.hidePopup(popup.popupID!);
+                                      }
+                                      Navigator.pop(context);
+                                    },
+                                    style: OutlinedButton.styleFrom(
+                                      side: const BorderSide(
+                                        color: AppTheme.primary,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                    ),
+                                    child: const Text(
+                                      'Kapat',
+                                      style: TextStyle(color: AppTheme.primary),
+                                    ),
                                   ),
                                 ),
-                                child: const Text(
-                                  'Kapat',
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                              ),
+                                if (popup.popupLink != null &&
+                                    popup.popupLink!.isNotEmpty) ...[
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: ElevatedButton(
+                                      onPressed: () async {
+                                        final urlString = popup.popupLink!
+                                            .trim();
+                                        final uri = Uri.tryParse(urlString);
+                                        if (uri != null) {
+                                          try {
+                                            await launchUrl(
+                                              uri,
+                                              mode: LaunchMode
+                                                  .externalApplication,
+                                            );
+                                          } catch (e) {
+                                            debugPrint("Launch error: $e");
+                                          }
+                                        }
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: AppTheme.primary,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
+                                        ),
+                                      ),
+                                      child: const Text(
+                                        'DETAYA GİT',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
                             ),
                           ],
                         ),

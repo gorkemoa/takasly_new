@@ -79,9 +79,14 @@ class AddProductViewModel extends ChangeNotifier {
   String? errorMessage;
 
   // Init
-  Future<void> init() async {
+  Future<void> init({List<File>? initialImages}) async {
     isLoading = true;
     notifyListeners();
+
+    if (initialImages != null && initialImages.isNotEmpty) {
+      selectedImages.addAll(initialImages);
+    }
+
     try {
       // Start all fetches in parallel
       final catFuture = _fetchCategories();

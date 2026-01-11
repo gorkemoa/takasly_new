@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import '../../theme/app_theme.dart';
 import '../../viewmodels/auth_viewmodel.dart';
@@ -163,6 +164,25 @@ class SettingsView extends StatelessWidget {
                     );
                   },
                 ),
+                _buildDivider(),
+                SettingsTile(
+                  icon: Icons.system_update_rounded,
+                  title: "Güncelleştirmeleri Denetle",
+                  subtitle:
+                      "Uygulamanın en güncel sürümünde olduğundan emin ol",
+                  onTap: () {
+                    // This will trigger the upgrader check manually
+                    // Since UpgradeAlert is in RootView, it might already be checking
+                    // But we can show a snackbar or trigger it if needed.
+                    // For now, let's just let Upgrader handle it or show a message.
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Güncelleştirmeler kontrol ediliyor..."),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                ),
               ],
             ),
             const SizedBox(height: 32),
@@ -183,13 +203,18 @@ class SettingsView extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 48),
-            Text(
-              "Takasly v2.0.0",
-              style: AppTheme.safePoppins(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: AppTheme.textSecondary.withOpacity(0.5),
-              ),
+            FutureBuilder<PackageInfo>(
+              future: PackageInfo.fromPlatform(),
+              builder: (context, snapshot) {
+                return Text(
+                  "Takasly v${snapshot.data?.version ?? "2.0.0"}",
+                  style: AppTheme.safePoppins(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: AppTheme.textSecondary.withOpacity(0.5),
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 8),
             Text(

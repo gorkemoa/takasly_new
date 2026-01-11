@@ -1,10 +1,60 @@
+import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:takasly/services/cache_service.dart';
+import 'package:takasly/viewmodels/home_viewmodel.dart';
+import 'package:takasly/viewmodels/product_viewmodel.dart';
 import 'package:takasly/viewmodels/auth_viewmodel.dart';
 import 'package:takasly/views/home/home_view.dart';
 import 'package:takasly/views/onboarding/onboarding_view.dart';
+import 'package:takasly/views/products/add_product_view.dart';
 import 'package:takasly/views/splash/splash_view.dart';
+import 'package:receive_sharing_intent/receive_sharing_intent.dart';
+
+import 'package:upgrader/upgrader.dart';
+
+import 'package:takasly/services/navigation_service.dart';
+import 'package:takasly/widgets/custom_upgrade_dialog.dart';
+
+class TakaslyUpgradeAlert extends UpgradeAlert {
+  TakaslyUpgradeAlert({
+    super.key,
+    required super.upgrader,
+    super.child,
+    super.showIgnore = true,
+    super.showLater = true,
+    super.barrierDismissible = true,
+  });
+
+  @override
+  UpgradeAlertState createState() => _TakaslyUpgradeAlertState();
+}
+
+class _TakaslyUpgradeAlertState extends UpgradeAlertState {
+  @override
+  void showTheDialog({
+    required BuildContext context,
+    required String? title,
+    required String message,
+    required String? releaseNotes,
+    required bool barrierDismissible,
+    required UpgraderMessages messages,
+    Key? key,
+  }) {
+    // If showIgnore or showLater is false, we treat it as mandatory
+    final bool isMandatory = !widget.showIgnore || !widget.showLater;
+
+    showDialog(
+      context: context,
+      barrierDismissible: barrierDismissible,
+      builder: (context) => CustomUpgradeDialog(
+        upgrader: widget.upgrader,
+        isMandatory: isMandatory,
+      ),
+    );
+  }
+}
 
 class RootView extends StatefulWidget {
   const RootView({super.key});
@@ -15,23 +65,113 @@ class RootView extends StatefulWidget {
 
 class _RootViewState extends State<RootView> {
   bool? _isOnboardingShown;
+  bool _isDataLoaded = false;
+  late StreamSubscription _intentDataStreamSubscription;
 
   @override
   void initState() {
     super.initState();
-    _checkStatus();
+    _initializeAppData();
+    _initSharingIntent();
   }
 
-  Future<void> _checkStatus() async {
-    // Check onboarding status
+  @override
+  void dispose() {
+    _intentDataStreamSubscription.cancel();
+    super.dispose();
+  }
+
+  void _initSharingIntent() {
+    // For sharing images coming from outside the app while the app is in the memory
+    _intentDataStreamSubscription = ReceiveSharingIntent.instance
+        .getMediaStream()
+        .listen(
+          (List<SharedMediaFile> value) {
+            if (value.isNotEmpty) {
+              _handleSharedFiles(value);
+            }
+          },
+          onError: (err) {
+            debugPrint("getIntentDataStream error: $err");
+          },
+        );
+
+    // For sharing images coming from outside the app while the app is closed
+    ReceiveSharingIntent.instance.getInitialMedia().then((
+      List<SharedMediaFile> value,
+    ) {
+      if (value.isNotEmpty) {
+        _handleSharedFiles(value);
+      }
+    });
+  }
+
+  void _handleSharedFiles(List<SharedMediaFile> files) {
+    if (files.isEmpty) return;
+
+    final List<File> imageFiles = files
+        .where((f) => f.type == SharedMediaType.image)
+        .map((f) => File(f.path))
+        .toList();
+
+    if (imageFiles.isEmpty) return;
+
+    // Navigate to AddProductView with these images
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final state = NavigationService.navigatorKey?.currentState;
+      if (state != null) {
+        state.push(
+          MaterialPageRoute(
+            builder: (context) => AddProductView(initialImages: imageFiles),
+          ),
+        );
+      }
+    });
+  }
+
+  Future<void> _initializeAppData() async {
+    // 1. Check onboarding status
     final shown = await CacheService().isOnboardingShown();
 
-    // Minimum delay for splash visibility (remove after testing if desired)
-    await Future.delayed(const Duration(seconds: 2));
+    // 2. Wait for Auth Check
+    final authVM = context.read<AuthViewModel>();
+    while (!authVM.isAuthCheckComplete) {
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+
+    // 3. Start pre-loading Home and Product data
+    if (mounted) {
+      final homeVM = context.read<HomeViewModel>();
+      final productVM = context.read<ProductViewModel>();
+
+      // Setup token first if authenticated
+      if (authVM.user != null) {
+        productVM.setUserToken(authVM.user?.token, refresh: false);
+      }
+
+      // Initialize Home Data (Categories, Logos, Popups) & Products in parallel
+      await Future.wait([
+        homeVM.init(isRefresh: true),
+        productVM.fetchProducts(isRefresh: true),
+      ]);
+
+      // 4. Pre-cache popup images
+      if (mounted) {
+        for (final popup in homeVM.popups) {
+          if (popup.popupImage != null && popup.popupImage!.isNotEmpty) {
+            precacheImage(NetworkImage(popup.popupImage!), context);
+          }
+        }
+      }
+    }
+
+    // Minimum delay for splash visibility (optional, keep it for smooth transition)
+    await Future.delayed(const Duration(milliseconds: 500));
 
     if (mounted) {
       setState(() {
         _isOnboardingShown = shown;
+        _isDataLoaded = true;
       });
     }
   }
@@ -40,7 +180,9 @@ class _RootViewState extends State<RootView> {
   Widget build(BuildContext context) {
     return Consumer<AuthViewModel>(
       builder: (context, authViewModel, child) {
-        if (_isOnboardingShown == null || !authViewModel.isAuthCheckComplete) {
+        if (_isOnboardingShown == null ||
+            !authViewModel.isAuthCheckComplete ||
+            !_isDataLoaded) {
           return const SplashView();
         }
 
@@ -48,7 +190,22 @@ class _RootViewState extends State<RootView> {
           return const OnboardingView();
         }
 
-        return const HomeView();
+        // Use our custom TakaslyUpgradeAlert to show a beautiful dialog
+        return TakaslyUpgradeAlert(
+          upgrader: Upgrader(
+            languageCode: 'tr',
+            messages: UpgraderMessages(code: 'tr'),
+            durationUntilAlertAgain: const Duration(days: 3),
+            debugLogging: true,
+            debugDisplayAlways: false,
+            minAppVersion: '2.0.0',
+          ),
+          showIgnore: false, // İptal etme butonunu kaldırır
+          showLater: false, // Sonra hatırlat butonunu kaldırır
+          barrierDismissible:
+              false, // Dialog dışına tıklayarak kapatmayı engeller
+          child: const HomeView(),
+        );
       },
     );
   }

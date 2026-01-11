@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../theme/app_theme.dart';
 import 'package:flutter_html/flutter_html.dart';
@@ -49,58 +50,75 @@ class _RegisterViewState extends State<RegisterView> {
     final authViewModel = Provider.of<AuthViewModel>(context);
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(
             Icons.arrow_back_ios_new_rounded,
-            color: AppTheme.textPrimary,
+            color: Color(0xFF1E293B), // Slate 800
             size: 20,
           ),
           onPressed: () => Navigator.pop(context),
         ),
+        systemOverlayStyle: SystemUiOverlayStyle.dark,
       ),
       extendBodyBehindAppBar: true,
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 28.0),
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 20),
                 // Logo
                 Center(
-                  child: Image.asset('assets/takaslylogo.png', height: 80),
+                  child: Hero(
+                    tag: 'app_logo',
+                    child: Image.asset(
+                      'assets/logo/logo2.png',
+                      height: 160,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 24),
-                // Titles
+
+                // Titles - Center Aligned
                 Text(
                   'Hemen Katıl',
-                  textAlign: TextAlign.center,
+                  textAlign: TextAlign.start,
                   style: AppTheme.safePoppins(
-                    fontSize: 26,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.textPrimary,
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF1E293B), // Slate 800
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Yeni takaslar keşfetmeye başla.',
-                  textAlign: TextAlign.center,
+                  'Yeni takaslar keşfetmeye başlamak için kayıt ol.',
+                  textAlign: TextAlign.start,
                   style: AppTheme.safePoppins(
-                    fontSize: 15,
+                    fontSize: 16,
                     fontWeight: FontWeight.w400,
-                    color: AppTheme.textSecondary,
+                    color: const Color(0xFF64748B), // Slate 500
                   ),
                 ),
                 const SizedBox(height: 32),
 
-                // Social Login Options
+                // Social Signup Section - MOVED TO TOP
+                Text(
+                  'Hızlı üye olun',
+                  textAlign: TextAlign.center,
+                  style: AppTheme.safePoppins(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF64748B), // Slate 500
+                  ),
+                ),
+                const SizedBox(height: 12),
                 Row(
                   children: [
                     Expanded(
@@ -112,7 +130,7 @@ class _RegisterViewState extends State<RegisterView> {
                             _handleLoginSuccess(context);
                           }
                         },
-                        icon: Icons.g_mobiledata,
+                        iconPath: 'assets/icons/google.png',
                         label: 'Google',
                       ),
                     ),
@@ -126,7 +144,7 @@ class _RegisterViewState extends State<RegisterView> {
                             _handleLoginSuccess(context);
                           }
                         },
-                        icon: Icons.apple,
+                        iconData: Icons.apple,
                         label: 'Apple',
                       ),
                     ),
@@ -134,26 +152,26 @@ class _RegisterViewState extends State<RegisterView> {
                 ),
 
                 const SizedBox(height: 24),
-
                 Row(
                   children: [
-                    const Expanded(child: Divider(thickness: 1)),
+                    const Expanded(
+                      child: Divider(color: Color(0xFFE2E8F0)), // Slate 200
+                    ),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Text(
-                        'veya',
+                        'veya e-posta ile',
                         style: AppTheme.safePoppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w400,
-                          color: AppTheme.textSecondary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF94A3B8), // Slate 400
                         ),
                       ),
                     ),
-                    const Expanded(child: Divider(thickness: 1)),
+                    const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
                   ],
                 ),
-
-                const SizedBox(height: 32),
+                const SizedBox(height: 24),
 
                 // Name Fields
                 Row(
@@ -184,7 +202,7 @@ class _RegisterViewState extends State<RegisterView> {
                   controller: _emailController,
                   label: 'E-posta',
                   hint: 'ornek@email.com',
-                  icon: Icons.mail_outline_rounded,
+                  icon: Icons.email_outlined,
                   keyboardType: TextInputType.emailAddress,
                 ),
 
@@ -212,6 +230,7 @@ class _RegisterViewState extends State<RegisterView> {
                           ? Icons.visibility_outlined
                           : Icons.visibility_off_outlined,
                       size: 20,
+                      color: const Color(0xFF94A3B8),
                     ),
                     onPressed: () {
                       setState(() {
@@ -247,7 +266,7 @@ class _RegisterViewState extends State<RegisterView> {
 
                 // Register Button
                 SizedBox(
-                  height: 58,
+                  height: 56,
                   child: ElevatedButton(
                     onPressed: authViewModel.state == AuthState.busy
                         ? null
@@ -284,10 +303,11 @@ class _RegisterViewState extends State<RegisterView> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.primary,
                       foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
                       elevation: 0,
+                      shadowColor: Colors.transparent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                     child: authViewModel.state == AuthState.busy
                         ? const SizedBox(
@@ -308,7 +328,8 @@ class _RegisterViewState extends State<RegisterView> {
                           ),
                   ),
                 ),
-                const SizedBox(height: 40),
+
+                const SizedBox(height: 48),
               ],
             ),
           ),
@@ -345,6 +366,11 @@ class _RegisterViewState extends State<RegisterView> {
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
+            backgroundColor: Colors.white,
+            surfaceTintColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
             title: Text(
               title,
               style: AppTheme.safePoppins(
@@ -360,7 +386,14 @@ class _RegisterViewState extends State<RegisterView> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Kapat'),
+                child: Text(
+                  'Kapat',
+                  style: AppTheme.safePoppins(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    color: AppTheme.primary,
+                  ),
+                ),
               ),
             ],
           ),
@@ -393,7 +426,7 @@ class _RegisterViewState extends State<RegisterView> {
           style: AppTheme.safePoppins(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: AppTheme.textPrimary,
+            color: const Color(0xFF334155), // Slate 700
           ),
         ),
         const SizedBox(height: 8),
@@ -410,15 +443,54 @@ class _RegisterViewState extends State<RegisterView> {
           style: AppTheme.safePoppins(
             fontSize: 15,
             fontWeight: FontWeight.w500,
-            color: AppTheme.textPrimary,
+            color: const Color(0xFF0F172A), // Slate 900
           ),
-          decoration: InputDecoration(
-            hintText: hint,
-            prefixIcon: Icon(icon, size: 22),
+          decoration: _buildInputDecoration(
+            hint: hint,
+            icon: icon,
             suffixIcon: suffixIcon,
           ),
         ),
       ],
+    );
+  }
+
+  InputDecoration _buildInputDecoration({
+    required String hint,
+    required IconData icon,
+    Widget? suffixIcon,
+  }) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: AppTheme.safePoppins(
+        fontSize: 14,
+        fontWeight: FontWeight.w400,
+        color: const Color(0xFF94A3B8), // Slate 400
+      ),
+      filled: true,
+      fillColor: const Color(0xFFF8FAFC), // Slate 50
+      prefixIcon: Icon(icon, color: const Color(0xFF64748B), size: 20),
+      suffixIcon: suffixIcon,
+      contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: AppTheme.primary, width: 1.5),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(
+          color: AppTheme.error.withOpacity(0.5),
+          width: 1,
+        ),
+      ),
     );
   }
 
@@ -443,7 +515,7 @@ class _RegisterViewState extends State<RegisterView> {
             ),
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 12),
         Expanded(
           child: GestureDetector(
             onTap: onTapText,
@@ -451,11 +523,11 @@ class _RegisterViewState extends State<RegisterView> {
               text,
               style:
                   AppTheme.safePoppins(
-                    fontSize: 12,
+                    fontSize: 13,
                     fontWeight: FontWeight.w400,
                     color: onTapText != null
                         ? AppTheme.primary
-                        : AppTheme.textSecondary,
+                        : const Color(0xFF64748B),
                   ).copyWith(
                     decoration: onTapText != null
                         ? TextDecoration.underline
@@ -470,19 +542,20 @@ class _RegisterViewState extends State<RegisterView> {
 
   Widget _buildSocialButton({
     required VoidCallback onPressed,
-    required IconData icon,
+    String? iconPath,
+    IconData? iconData,
     required String label,
   }) {
     return OutlinedButton(
       onPressed: onPressed,
       style:
           OutlinedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 14),
+            padding: const EdgeInsets.symmetric(vertical: 16),
             backgroundColor: Colors.white,
+            side: const BorderSide(color: Color(0xFFE2E8F0)), // Slate 200
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(12),
             ),
-            side: BorderSide(color: Colors.grey.shade200),
             elevation: 0,
           ).copyWith(
             overlayColor: WidgetStateProperty.all(
@@ -492,14 +565,17 @@ class _RegisterViewState extends State<RegisterView> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 24, color: AppTheme.textPrimary),
+          if (iconPath != null)
+            Image.asset(iconPath, height: 22)
+          else if (iconData != null)
+            Icon(iconData, size: 24, color: Colors.black),
           const SizedBox(width: 8),
           Text(
             label,
             style: AppTheme.safePoppins(
               fontSize: 15,
               fontWeight: FontWeight.w600,
-              color: AppTheme.textPrimary,
+              color: const Color(0xFF334155),
             ),
           ),
         ],
@@ -512,9 +588,9 @@ class _RegisterViewState extends State<RegisterView> {
       margin: const EdgeInsets.only(bottom: 24),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.error.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.error.withOpacity(0.2)),
+        color: const Color(0xFFFEF2F2), // Red 50
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFFECACA)), // Red 200
       ),
       child: Row(
         children: [

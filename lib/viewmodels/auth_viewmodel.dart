@@ -160,10 +160,11 @@ class AuthViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
+      final packageInfo = await PackageInfo.fromPlatform();
       final request = GetUserRequestModel(
         userToken: _user!.token,
-        platform: "ios", // Placeholder, ideally from device info
-        version: "1.0.0", // Placeholder, ideally from package_info
+        platform: Platform.isIOS ? "ios" : "android",
+        version: packageInfo.version,
       );
 
       final response = await _authService.getUser(request);
@@ -195,14 +196,15 @@ class AuthViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
+      final packageInfo = await PackageInfo.fromPlatform();
       final request = RegisterRequestModel(
         userFirstname: firstName,
         userLastname: lastName,
         userEmail: email,
         userPhone: phone,
         userPassword: password,
-        version: "1.0.0",
-        platform: "android", // TODO: Update based on real platform if needed
+        version: packageInfo.version,
+        platform: Platform.isIOS ? "ios" : "android",
         policy: policy,
         kvkk: kvkk,
       );

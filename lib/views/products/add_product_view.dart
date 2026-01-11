@@ -15,12 +15,13 @@ import '../widgets/category_selection_view.dart';
 import '../../services/analytics_service.dart';
 
 class AddProductView extends HookWidget {
-  const AddProductView({super.key});
+  final List<File>? initialImages;
+  const AddProductView({super.key, this.initialImages});
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => AddProductViewModel()..init(),
+      create: (_) => AddProductViewModel()..init(initialImages: initialImages),
       child: const _AddProductViewBody(),
     );
   }

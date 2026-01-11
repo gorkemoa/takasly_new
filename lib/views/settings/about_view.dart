@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../../theme/app_theme.dart';
 
 class AboutView extends StatelessWidget {
@@ -72,13 +73,19 @@ class AboutView extends StatelessWidget {
               icon: Icons.check_circle_outline_rounded,
             ),
             const SizedBox(height: 48),
-            Text(
-              "Versiyon 2.0.0",
-              style: AppTheme.safePoppins(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: AppTheme.textSecondary.withOpacity(0.6),
-              ),
+            FutureBuilder<PackageInfo>(
+              future: PackageInfo.fromPlatform(),
+              builder: (context, snapshot) {
+                final version = snapshot.data?.version ?? "2.0.0";
+                return Text(
+                  "Versiyon $version",
+                  style: AppTheme.safePoppins(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: AppTheme.textSecondary.withOpacity(0.6),
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 4),
             Text(
