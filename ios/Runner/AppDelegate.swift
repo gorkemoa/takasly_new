@@ -13,9 +13,13 @@ import FirebaseMessaging
     GeneratedPluginRegistrant.register(with: self)
     
     // Remote bildirimler için delegate set edilmesi (Firebase Messaging için önemli)
+    /* 
+       FirebaseMessaging plugin handles the delegate automatically.
+       Manual assignment can cause conflicts.
     if #available(iOS 10.0, *) {
       UNUserNotificationCenter.current().delegate = self as? UNUserNotificationCenterDelegate
     }
+    */
     
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }

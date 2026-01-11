@@ -204,25 +204,6 @@ class _OnboardingViewState extends State<OnboardingView> {
               ],
             ),
           ),
-          // Skip button
-          if (_currentPage != _images.length)
-            Positioned(
-              top: MediaQuery.of(context).padding.top + 10,
-              right: 20,
-              child: TextButton(
-                onPressed: _onFinish,
-                child: Text(
-                  'Atla',
-                  style: TextStyle(
-                    color: _currentPage == _images.length
-                        ? Colors.black54
-                        : AppTheme.primary,
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
         ],
       ),
     );

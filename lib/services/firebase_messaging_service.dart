@@ -20,7 +20,7 @@ class FirebaseMessagingService {
       FlutterLocalNotificationsPlugin();
 
   static const AndroidNotificationChannel _channel = AndroidNotificationChannel(
-    'high_importance_channel',
+    'high_importance_channel_v2', // Updated channel ID to refresh settings
     'High Importance Notifications',
     description: 'This channel is used for important notifications.',
     importance: Importance.max,
@@ -86,30 +86,39 @@ class FirebaseMessagingService {
         name: 'FCM',
       );
 
-      // 2. Initialize Flutter Local Notifications for Android Foreground
-      if (Platform.isAndroid) {
-        const androidInitialize = AndroidInitializationSettings(
-          '@mipmap/launcher_icon',
-        );
-        const initializationSettings = InitializationSettings(
-          android: androidInitialize,
-        );
+      // 2. Initialize Flutter Local Notifications (Android & iOS)
+      const AndroidInitializationSettings androidInitialize =
+          AndroidInitializationSettings('@mipmap/launcher_icon');
 
-        await _localNotifications.initialize(
-          initializationSettings,
-          onDidReceiveNotificationResponse: (NotificationResponse response) {
-            // Foreground notification tap logic
-            if (response.payload != null) {
-              try {
-                final Map<String, dynamic> data = jsonDecode(response.payload!);
-                _processNavigation(data, null);
-              } catch (e) {
-                developer.log('❌ Error parsing payload: $e', name: 'FCM');
-              }
+      const DarwinInitializationSettings iosInitialize =
+          DarwinInitializationSettings(
+            requestSoundPermission: true,
+            requestBadgePermission: true,
+            requestAlertPermission: true,
+          );
+
+      const InitializationSettings initializationSettings =
+          InitializationSettings(
+            android: androidInitialize,
+            iOS: iosInitialize,
+          );
+
+      await _localNotifications.initialize(
+        initializationSettings,
+        onDidReceiveNotificationResponse: (NotificationResponse response) {
+          // Foreground notification tap logic
+          if (response.payload != null) {
+            try {
+              final Map<String, dynamic> data = jsonDecode(response.payload!);
+              _processNavigation(data, null);
+            } catch (e) {
+              developer.log('❌ Error parsing payload: $e', name: 'FCM');
             }
-          },
-        );
+          }
+        },
+      );
 
+      if (Platform.isAndroid) {
         await _localNotifications
             .resolvePlatformSpecificImplementation<
               AndroidFlutterLocalNotificationsPlugin
@@ -119,12 +128,13 @@ class FirebaseMessagingService {
         developer.log('✅ Android Notification Channel Created', name: 'FCM');
       }
 
-      // 3. iOS: Foreground presentation options
+      // 3. iOS: Disable native foreground presentation to avoid duplicates
+      // We will use Local Notifications for both Android and iOS in foreground
       if (Platform.isIOS) {
         await _firebaseMessaging.setForegroundNotificationPresentationOptions(
-          alert: true,
+          alert: false,
           badge: true,
-          sound: true,
+          sound: false,
         );
       }
 
@@ -140,7 +150,8 @@ class FirebaseMessagingService {
         RemoteNotification? notification = message.notification;
         AndroidNotification? android = message.notification?.android;
 
-        if (notification != null && Platform.isAndroid) {
+        // Show local notification for both Android and iOS
+        if (notification != null) {
           _localNotifications.show(
             notification.hashCode,
             notification.title,
@@ -154,6 +165,12 @@ class FirebaseMessagingService {
                 importance: Importance.max,
                 priority: Priority.high,
                 ticker: 'ticker',
+                playSound: true,
+              ),
+              iOS: const DarwinNotificationDetails(
+                presentSound: true,
+                presentAlert: true,
+                presentBadge: true,
               ),
             ),
             payload: jsonEncode(message.data),
