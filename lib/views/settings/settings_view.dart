@@ -9,6 +9,7 @@ import 'contact_view.dart';
 import 'widgets/delete_account_dialogs.dart';
 import 'widgets/settings_section.dart';
 import 'widgets/settings_tile.dart';
+import 'about_view.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -144,6 +145,20 @@ class SettingsView extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                         builder: (context) => const ContactView(),
+                      ),
+                    );
+                  },
+                ),
+                _buildDivider(),
+                SettingsTile(
+                  icon: Icons.info_outline_rounded,
+                  title: "Hakkımızda",
+                  subtitle: "Takasly topluluğu ve misyonumuz hakkında",
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AboutView(),
                       ),
                     );
                   },

@@ -23,7 +23,6 @@ import 'services/firebase_messaging_service.dart';
 import 'services/navigation_service.dart';
 
 import 'services/ad_service.dart';
-import 'services/deep_link_service.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 

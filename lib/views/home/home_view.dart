@@ -21,6 +21,7 @@ import '../../viewmodels/search_viewmodel.dart';
 
 import '../events/events_view.dart';
 import '../profile/profile_view.dart';
+import '../profile/profile_edit_view.dart';
 import '../profile/my_trades_view.dart';
 import '../messages/tickets_view.dart';
 import '../auth/login_view.dart';
@@ -39,6 +40,7 @@ class _HomeViewState extends State<HomeView> {
   // Bottom Nav Index
   int _selectedIndex = 0;
   final ScrollController _scrollController = ScrollController();
+  bool _hasShownProfileWarning = false;
 
   @override
   void initState() {
@@ -74,6 +76,8 @@ class _HomeViewState extends State<HomeView> {
     if (authVM.isAuthCheckComplete) {
       authVM.removeListener(_authListener);
       _initProducts();
+      // Also check profile completion when auth is complete
+      _checkProfileCompletion();
     }
   }
 
@@ -96,6 +100,114 @@ class _HomeViewState extends State<HomeView> {
     // If we haven't loaded yet, or if it failed/empty, load now.
     if (productVM.products.isEmpty) {
       productVM.init();
+    }
+
+    _checkProfileCompletion();
+  }
+
+  void _checkProfileCompletion({bool force = false}) {
+    if (_hasShownProfileWarning && !force) return;
+
+    final authVM = context.read<AuthViewModel>();
+    final profile = authVM.userProfile;
+
+    if (profile != null) {
+      final firstName = profile.userFirstname?.trim() ?? "";
+      final lastName = profile.userLastname?.trim() ?? "";
+
+      if (firstName.isEmpty || lastName.isEmpty) {
+        _hasShownProfileWarning = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => PopScope(
+              canPop: false,
+              child: AlertDialog(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                title: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        "Değerli Kullanıcımız 💚",
+                        style: AppTheme.safePoppins(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.textPrimary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                content: Text(
+                  "Topluluğumuzda güvenli ve sağlıklı bir deneyim sunabilmek için ad ve soyad bilgilerine ihtiyaç duyuyoruz.",
+                  style: AppTheme.safePoppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: AppTheme.textSecondary,
+                  ),
+                ),
+                actions: [
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      onPressed: () async {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                const ProfileEditView(isMandatory: true),
+                          ),
+                        );
+                        // Back from edit: get fresh data
+                        await authVM.getUser();
+                        final fName =
+                            authVM.userProfile?.userFirstname?.trim() ?? "";
+                        final lName =
+                            authVM.userProfile?.userLastname?.trim() ?? "";
+
+                        if (fName.isNotEmpty && lName.isNotEmpty) {
+                          // Success! Close the dialog and reset flag
+                          if (context.mounted) Navigator.pop(context);
+                          _hasShownProfileWarning = false;
+                        }
+                      },
+                      child: const Text(
+                        "PROFİLİ GÜNCELLE",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        });
+      }
+    } else if (authVM.isAuthCheckComplete && authVM.user != null) {
+      // If profile is null but user is logged in, profile might be loading.
+      // Listen for changes once.
+      void tempListener() {
+        if (authVM.userProfile != null) {
+          authVM.removeListener(tempListener);
+          _checkProfileCompletion(force: force);
+        }
+      }
+
+      authVM.addListener(tempListener);
     }
   }
 

@@ -8,7 +8,8 @@ import 'dart:convert';
 import 'package:image_picker/image_picker.dart';
 
 class ProfileEditView extends StatefulWidget {
-  const ProfileEditView({super.key});
+  final bool isMandatory;
+  const ProfileEditView({super.key, this.isMandatory = false});
 
   @override
   State<ProfileEditView> createState() => _ProfileEditViewState();
@@ -163,179 +164,193 @@ class _ProfileEditViewState extends State<ProfileEditView> {
     final authViewModel = context.watch<AuthViewModel>();
     final user = authViewModel.userProfile;
 
-    return Scaffold(
-      backgroundColor: AppTheme.background,
-      appBar: AppBar(
-        title: Text(
-          "Profili Düzenle",
-          style: AppTheme.safePoppins(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
+    return PopScope(
+      canPop: !widget.isMandatory,
+      onPopInvoked: (didPop) {
+        if (didPop) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Lütfen profil bilgilerinizi kaydedin."),
+            backgroundColor: AppTheme.error,
           ),
-        ),
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios_new,
-            size: 20,
-            color: Colors.white,
+        );
+      },
+      child: Scaffold(
+        backgroundColor: AppTheme.background,
+        appBar: AppBar(
+          title: Text(
+            "Profili Düzenle",
+            style: AppTheme.safePoppins(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
           ),
-          onPressed: () => Navigator.pop(context),
+          leading: widget.isMandatory
+              ? null
+              : IconButton(
+                  icon: const Icon(
+                    Icons.arrow_back_ios_new,
+                    size: 20,
+                    color: Colors.white,
+                  ),
+                  onPressed: () => Navigator.pop(context),
+                ),
+          centerTitle: true,
         ),
-        centerTitle: true,
-      ),
-      body: authViewModel.state == AuthState.busy
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    // Profile Photo Edit Section
-                    Center(
-                      child: Stack(
-                        children: [
-                          Container(
-                            height: 100,
-                            width: 100,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: Colors.grey.shade300,
-                                width: 2,
+        body: authViewModel.state == AuthState.busy
+            ? const Center(child: CircularProgressIndicator())
+            : SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      // Profile Photo Edit Section
+                      Center(
+                        child: Stack(
+                          children: [
+                            Container(
+                              height: 100,
+                              width: 100,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.grey.shade300,
+                                  width: 2,
+                                ),
+                                image: _pickedImage != null
+                                    ? DecorationImage(
+                                        image: FileImage(_pickedImage!),
+                                        fit: BoxFit.cover,
+                                      )
+                                    : (user?.profilePhoto != null &&
+                                          user!.profilePhoto!.isNotEmpty)
+                                    ? DecorationImage(
+                                        image: NetworkImage(user.profilePhoto!),
+                                        fit: BoxFit.cover,
+                                      )
+                                    : null,
                               ),
-                              image: _pickedImage != null
-                                  ? DecorationImage(
-                                      image: FileImage(_pickedImage!),
-                                      fit: BoxFit.cover,
-                                    )
-                                  : (user?.profilePhoto != null &&
-                                        user!.profilePhoto!.isNotEmpty)
-                                  ? DecorationImage(
-                                      image: NetworkImage(user.profilePhoto!),
-                                      fit: BoxFit.cover,
+                              child:
+                                  (_pickedImage == null &&
+                                      (user?.profilePhoto == null ||
+                                          user!.profilePhoto!.isEmpty))
+                                  ? const Center(
+                                      child: Icon(
+                                        Icons.person,
+                                        size: 50,
+                                        color: Colors.grey,
+                                      ),
                                     )
                                   : null,
                             ),
-                            child:
-                                (_pickedImage == null &&
-                                    (user?.profilePhoto == null ||
-                                        user!.profilePhoto!.isEmpty))
-                                ? const Center(
-                                    child: Icon(
-                                      Icons.person,
-                                      size: 50,
-                                      color: Colors.grey,
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: InkWell(
+                                onTap: _pickImage,
+                                child: Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.primary,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: Colors.white,
+                                      width: 2,
                                     ),
-                                  )
-                                : null,
-                          ),
-                          Positioned(
-                            bottom: 0,
-                            right: 0,
-                            child: InkWell(
-                              onTap: _pickImage,
-                              child: Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color: AppTheme.primary,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: Colors.white,
-                                    width: 2,
                                   ),
-                                ),
-                                child: const Icon(
-                                  Icons.camera_alt_rounded,
-                                  size: 18,
-                                  color: Colors.white,
+                                  child: const Icon(
+                                    Icons.camera_alt_rounded,
+                                    size: 18,
+                                    color: Colors.white,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 24),
+                      const SizedBox(height: 24),
 
-                    _buildTextField("Ad", _nameController),
-                    const SizedBox(height: 16),
-                    _buildTextField("Soyad", _surnameController),
-                    const SizedBox(height: 16),
-                    _buildTextField(
-                      "E-posta",
-                      _emailController,
-                      TextInputType.emailAddress,
-                    ),
-                    const SizedBox(height: 16),
-                    _buildTextField(
-                      "Telefon",
-                      _phoneController,
-                      TextInputType.phone,
-                    ),
-                    const SizedBox(height: 16),
-                    // Birthday Selector
-                    _buildBirthdaySelector(),
-                    const SizedBox(height: 24),
-                    // Gender Selector
-                    _buildGenderSection(),
-                    const SizedBox(height: 24),
-                    // Show Contact Switch
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.grey.shade300,
-                          width: 1.5,
-                        ),
+                      _buildTextField("Ad", _nameController),
+                      const SizedBox(height: 16),
+                      _buildTextField("Soyad", _surnameController),
+                      const SizedBox(height: 16),
+                      _buildTextField(
+                        "E-posta",
+                        _emailController,
+                        TextInputType.emailAddress,
                       ),
-                      child: SwitchListTile(
-                        title: Text(
-                          "İletişim Bilgisi Görünsün",
-                          style: AppTheme.safePoppins(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: AppTheme.textPrimary,
+                      const SizedBox(height: 16),
+                      _buildTextField(
+                        "Telefon",
+                        _phoneController,
+                        TextInputType.phone,
+                      ),
+                      const SizedBox(height: 16),
+                      // Birthday Selector
+                      _buildBirthdaySelector(),
+                      const SizedBox(height: 24),
+                      // Gender Selector
+                      _buildGenderSection(),
+                      const SizedBox(height: 24),
+                      // Show Contact Switch
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.grey.shade300,
+                            width: 1.5,
                           ),
                         ),
-                        value: _showContact,
-                        onChanged: (bool value) {
-                          setState(() {
-                            _showContact = value;
-                          });
-                        },
-                        activeColor: AppTheme.primary,
+                        child: SwitchListTile(
+                          title: Text(
+                            "İletişim Bilgisi Görünsün",
+                            style: AppTheme.safePoppins(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: AppTheme.textPrimary,
+                            ),
+                          ),
+                          value: _showContact,
+                          onChanged: (bool value) {
+                            setState(() {
+                              _showContact = value;
+                            });
+                          },
+                          activeColor: AppTheme.primary,
+                        ),
                       ),
-                    ),
 
-                    const SizedBox(height: 32),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _onSave,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.primary,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                      const SizedBox(height: 32),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: _onSave,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.primary,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
-                        ),
-                        child: const Text(
-                          "Kaydet",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                          child: const Text(
+                            "Kaydet",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
+      ),
     );
   }
 
@@ -393,12 +408,6 @@ class _ProfileEditViewState extends State<ProfileEditView> {
               vertical: 16,
             ),
           ),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return '$label boş olamaz';
-            }
-            return null;
-          },
         ),
       ],
     );

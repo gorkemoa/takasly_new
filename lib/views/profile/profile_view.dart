@@ -14,6 +14,7 @@ import '../settings/settings_view.dart';
 import '../settings/contact_view.dart';
 import 'profile_reviews_view.dart';
 import '../notifications/notifications_view.dart';
+import '../settings/about_view.dart';
 
 import '../widgets/ads/banner_ad_widget.dart';
 
@@ -189,7 +190,12 @@ class _ProfileViewState extends State<ProfileView> {
                   icon: Icons.info_outline_rounded,
                   title: "Hakkımızda",
                   onTap: () {
-                    // Navigate to About
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AboutView(),
+                      ),
+                    );
                   },
                 ),
               ],
