@@ -15,6 +15,7 @@ import '../settings/contact_view.dart';
 import 'profile_reviews_view.dart';
 import '../notifications/notifications_view.dart';
 import '../settings/about_view.dart';
+import '../events/events_view.dart';
 
 import '../widgets/ads/banner_ad_widget.dart';
 
@@ -135,6 +136,20 @@ class _ProfileViewState extends State<ProfileView> {
                       context,
                       MaterialPageRoute(
                         builder: (context) => const ProfileReviewsView(),
+                      ),
+                    );
+                  },
+                ),
+                _buildDivider(),
+                _buildMenuItem(
+                  context,
+                  icon: Icons.celebration_outlined,
+                  title: "Etkinlikler",
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const EventsView(),
                       ),
                     );
                   },

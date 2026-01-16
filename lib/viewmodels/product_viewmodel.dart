@@ -269,6 +269,8 @@ class ProductViewModel extends ChangeNotifier {
 
   String? get userToken => _currentFilter.userToken;
 
+  String get sortType => _currentFilter.sortType ?? 'default';
+
   void setUserToken(String? token, {bool refresh = true}) {
     if (_currentFilter.userToken != token) {
       _currentFilter.userToken = token;

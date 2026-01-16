@@ -19,7 +19,6 @@ import 'widgets/filter_bottom_sheet.dart';
 import '../search/search_view.dart';
 import '../../viewmodels/search_viewmodel.dart';
 
-import '../events/events_view.dart';
 import '../profile/profile_view.dart';
 import '../profile/my_trades_view.dart';
 import '../messages/tickets_view.dart';
@@ -232,554 +231,673 @@ class _HomeViewState extends State<HomeView> {
           ? const MyTradesView(showBackButton: false)
           : _selectedIndex == 1
           ? const TicketsView()
-          : SafeArea(
-              child: Consumer2<HomeViewModel, ProductViewModel>(
-                builder: (context, homeViewModel, productViewModel, child) {
-                  return RefreshIndicator(
-                    color: AppTheme.primary,
-                    onRefresh: () async {
-                      final authVM = context.read<AuthViewModel>();
-                      final notificationVM = context
-                          .read<NotificationViewModel>();
+          : DefaultTabController(
+              length: 2,
+              initialIndex:
+                  context.read<ProductViewModel>().sortType == 'location'
+                  ? 1
+                  : 0,
+              child: SafeArea(
+                child: Consumer2<HomeViewModel, ProductViewModel>(
+                  builder: (context, homeViewModel, productViewModel, child) {
+                    return RefreshIndicator(
+                      color: AppTheme.primary,
+                      onRefresh: () async {
+                        final authVM = context.read<AuthViewModel>();
+                        final notificationVM = context
+                            .read<NotificationViewModel>();
 
-                      await Future.wait([
-                        productViewModel.fetchProducts(isRefresh: true),
-                        homeViewModel.init(isRefresh: true),
-                        if (authVM.user?.userID != null)
-                          notificationVM.fetchNotifications(
-                            authVM.user!.userID,
-                          ),
-                      ]);
-                    },
-                    child: CustomScrollView(
-                      controller: _scrollController,
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      slivers: [
-                        // Header - Logo, Buttons
-                        SliverToBoxAdapter(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10.0,
-                              vertical: 10.0,
+                        await Future.wait([
+                          productViewModel.fetchProducts(isRefresh: true),
+                          homeViewModel.init(isRefresh: true),
+                          if (authVM.user?.userID != null)
+                            notificationVM.fetchNotifications(
+                              authVM.user!.userID,
                             ),
-                            child: Row(
-                              children: [
-                                // Logo
-                                if (homeViewModel.logos?.logo != null)
-                                  Image.network(
-                                    homeViewModel.logos!.logo!,
-                                    height: 50, // Adjust height
-                                    errorBuilder: (c, e, s) => const Text(
+                        ]);
+                      },
+                      child: CustomScrollView(
+                        controller: _scrollController,
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        slivers: [
+                          // Header - Logo, Buttons
+                          SliverToBoxAdapter(
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(
+                                16,
+                                12,
+                                16,
+                                12,
+                              ),
+                              child: Row(
+                                children: [
+                                  // Logo
+                                  if (homeViewModel.logos?.logo != null)
+                                    Image.network(
+                                      homeViewModel.logos!.logo!,
+                                      height: 48, // Slightly cleaner height
+                                      errorBuilder: (c, e, s) => Text(
+                                        'Takasly',
+                                        style: AppTheme.safePoppins(
+                                          fontWeight: FontWeight.w800,
+                                          fontSize: 22,
+                                          color: AppTheme.primary,
+                                        ),
+                                      ),
+                                    )
+                                  else
+                                    Text(
                                       'Takasly',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 24,
+                                      style: AppTheme.safePoppins(
+                                        fontWeight: FontWeight.w800,
+                                        fontSize: 22,
                                         color: AppTheme.primary,
                                       ),
                                     ),
-                                  )
-                                else
-                                  const Text(
-                                    'Takasly',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 24,
-                                      color: AppTheme.primary,
-                                    ),
-                                  ),
 
-                                const Spacer(),
+                                  const Spacer(),
 
-                                // Activities Button
-                                GestureDetector(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const EventsView(),
-                                      ),
-                                    );
-                                  },
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 8,
-                                    ),
+                                  // --- Premium Header Sorting Switcher ---
+                                  Container(
+                                    width:
+                                        200, // Widened for more breathability
+                                    height: 38,
+                                    padding: const EdgeInsets.all(4),
                                     decoration: BoxDecoration(
-                                      color: AppTheme.primary,
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        const Icon(
-                                          Icons.celebration,
-                                          color: Colors.white,
-                                          size: 16,
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          'ETKİNLİKLER',
-                                          style: AppTheme.safePoppins(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w600,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-
-                                const SizedBox(width: 12),
-
-                                // Notification Icon
-                                GestureDetector(
-                                  onTap: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const NotificationsView(),
-                                      ),
-                                    );
-                                  },
-                                  child: Consumer<NotificationViewModel>(
-                                    builder: (context, notificationVM, child) {
-                                      return Stack(
-                                        children: [
-                                          Container(
-                                            padding: const EdgeInsets.all(8),
-                                            decoration: const BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              color: Colors.white,
-                                            ),
-                                            child: const Icon(
-                                              Icons.notifications_none,
-                                              color: AppTheme.textPrimary,
-                                            ),
-                                          ),
-                                          if (notificationVM.unreadCount > 0)
-                                            Positioned(
-                                              top: 0,
-                                              right: 0,
-                                              child: Container(
-                                                padding: const EdgeInsets.all(
-                                                  4,
-                                                ),
-                                                constraints:
-                                                    const BoxConstraints(
-                                                      minWidth: 16,
-                                                      minHeight: 16,
-                                                    ),
-                                                decoration: const BoxDecoration(
-                                                  shape: BoxShape.circle,
-                                                  color: Colors.red,
-                                                ),
-                                                child: Text(
-                                                  notificationVM.unreadCount > 9
-                                                      ? '9+'
-                                                      : notificationVM
-                                                            .unreadCount
-                                                            .toString(),
-                                                  style: const TextStyle(
-                                                    color: Colors.white,
-                                                    fontSize: 10,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                              ),
-                                            ),
-                                        ],
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-
-                        // Search Bar
-                        SliverToBoxAdapter(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16.0,
-                              vertical: 8.0,
-                            ),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              ChangeNotifierProvider(
-                                                create: (_) =>
-                                                    SearchViewModel(),
-                                                child: const SearchView(),
-                                              ),
-                                        ),
-                                      );
-                                    },
-                                    child: AbsorbPointer(
-                                      child: TextField(
-                                        readOnly: true,
-                                        decoration: InputDecoration(
-                                          hintText: 'Ürün ara...',
-                                          prefixIcon: const Icon(
-                                            Icons.search,
-                                            color: Colors.grey,
-                                          ),
-                                          filled: true,
-                                          fillColor: Colors.white,
-                                          border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              30,
-                                            ),
-                                            borderSide: BorderSide.none,
-                                          ),
-                                          contentPadding:
-                                              const EdgeInsets.symmetric(
-                                                vertical: 0,
-                                              ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                GestureDetector(
-                                  onTap: () {
-                                    _showFilterBottomSheet(context);
-                                  },
-                                  child: Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: const Color(
-                                        0xFF424242,
-                                      ), // Dark Grey for filter bg
+                                      color: const Color(0xFFF1F1F5),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
-                                    child: const Icon(
-                                      Icons.filter_list,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-
-                        // Categories
-                        SliverToBoxAdapter(
-                          child: SizedBox(
-                            height: 92,
-                            child:
-                                homeViewModel.categories.isEmpty &&
-                                    homeViewModel.isCategoriesLoading
-                                ? _buildCategorySkeleton()
-                                : ListView.separated(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 8,
-                                    ),
-                                    scrollDirection: Axis.horizontal,
-                                    itemCount: homeViewModel.categories.isEmpty
-                                        ? 1
-                                        : homeViewModel.categories.length +
-                                              1, // +1 for 'Tümü'
-                                    separatorBuilder: (c, i) =>
-                                        const SizedBox(width: 8),
-                                    itemBuilder: (context, index) {
-                                      if (index == 0) {
-                                        // 'Tümü' (All) Static Item
-                                        final isAllSelected =
-                                            productViewModel
-                                                .selectedCategoryId ==
-                                            0;
-                                        return GestureDetector(
-                                          onTap: () {
-                                            homeViewModel.clearFilters();
-                                            productViewModel.clearAllFilters();
-                                          },
-                                          child: SizedBox(
-                                            width: 70,
-                                            child: Column(
-                                              children: [
-                                                Container(
-                                                  width: 40,
-                                                  height: 40,
-                                                  decoration: BoxDecoration(
-                                                    color: AppTheme.primary,
-                                                    shape: BoxShape.circle,
-                                                  ),
-                                                  child: const Icon(
-                                                    Icons.grid_view,
-                                                    color: Colors.white,
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 8),
-                                                Text(
-                                                  'Tümü',
-                                                  textAlign: TextAlign.center,
-                                                  style: AppTheme.safePoppins(
-                                                    fontSize: 10,
-                                                    fontWeight: isAllSelected
-                                                        ? FontWeight.w700
-                                                        : FontWeight.w600,
-                                                    color: isAllSelected
-                                                        ? AppTheme.primary
-                                                        : AppTheme.textPrimary,
-                                                  ),
-                                                ),
-                                                if (isAllSelected)
-                                                  Container(
-                                                    margin:
-                                                        const EdgeInsets.only(
-                                                          top: 4,
-                                                        ),
-                                                    width: 4,
-                                                    height: 4,
-                                                    decoration:
-                                                        const BoxDecoration(
-                                                          color:
-                                                              AppTheme.primary,
-                                                          shape:
-                                                              BoxShape.circle,
-                                                        ),
-                                                  ),
-                                              ],
+                                    child: TabBar(
+                                      dividerColor: Colors.transparent,
+                                      indicatorSize: TabBarIndicatorSize.tab,
+                                      indicator: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(9),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(
+                                              0.05,
                                             ),
+                                            blurRadius: 5,
+                                            offset: const Offset(0, 2),
                                           ),
-                                        );
-                                      }
-                                      final category =
-                                          homeViewModel.categories[index - 1];
-                                      final isSelected =
-                                          productViewModel.selectedCategoryId ==
-                                          category.catID;
-                                      return CategoryCard(
-                                        category: category,
-                                        isSelected: isSelected,
-                                        onTap: () {
-                                          homeViewModel.setSelectedCategory(
-                                            category,
+                                        ],
+                                      ),
+                                      onTap: (index) {
+                                        if (index == 0) {
+                                          productViewModel.updateAllFilters(
+                                            sortType: 'default',
                                           );
-                                          productViewModel.filterByCategory(
-                                            category.catID,
+                                        } else {
+                                          productViewModel.updateAllFilters(
+                                            sortType: 'location',
                                           );
-                                        },
-                                      );
-                                    },
-                                  ),
-                          ),
-                        ),
-
-                        // Product List with Interspersed Banners
-                        if (productViewModel.isLoading &&
-                            productViewModel.products.isEmpty)
-                          _buildProductListSkeleton()
-                        else if (productViewModel.errorMessage != null &&
-                            productViewModel.products.isEmpty)
-                          SliverFillRemaining(
-                            child: Center(
-                              child: Text(productViewModel.errorMessage!),
-                            ),
-                          )
-                        else if (productViewModel.products.isEmpty)
-                          SliverFillRemaining(
-                            hasScrollBody: false,
-                            child: _buildEmptyState(context),
-                          )
-                        else
-                          SliverPadding(
-                            padding: const EdgeInsets.all(16),
-                            sliver: SliverList(
-                              delegate: SliverChildBuilderDelegate(
-                                (context, index) {
-                                  const int kCycleSize = 3; // Row, Row, Banner
-
-                                  // Check if it's a Banner Slot
-                                  if ((index + 1) % kCycleSize == 0) {
-                                    return const Padding(
-                                      padding: EdgeInsets.only(bottom: 16),
-                                      child: BannerAdWidget(),
-                                    );
-                                  }
-
-                                  // Calculate Product Row
-                                  // How many banners before this index?
-                                  final int bannersBefore =
-                                      (index + 1) ~/ kCycleSize;
-                                  // How many product rows (items in list that are not banners)
-                                  final int productRowsBefore =
-                                      index - bannersBefore;
-                                  // First product index for this row
-                                  final int startProductIndex =
-                                      productRowsBefore * 2;
-
-                                  if (startProductIndex >=
-                                      productViewModel.products.length) {
-                                    return null;
-                                  }
-
-                                  final firstProduct = productViewModel
-                                      .products[startProductIndex];
-                                  final secondProduct =
-                                      (startProductIndex + 1 <
-                                          productViewModel.products.length)
-                                      ? productViewModel
-                                            .products[startProductIndex + 1]
-                                      : null;
-
-                                  return Padding(
-                                    padding: const EdgeInsets.only(bottom: 16),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          child: AspectRatio(
-                                            aspectRatio: 0.65,
-                                            child: ProductCard(
-                                              product: firstProduct,
-                                              onTap: () async {
-                                                await Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                    builder: (context) =>
-                                                        ChangeNotifierProvider(
-                                                          create: (_) =>
-                                                              ProductDetailViewModel(),
-                                                          child: ProductDetailView(
-                                                            productId:
-                                                                firstProduct
-                                                                    .productID!,
-                                                          ),
-                                                        ),
-                                                  ),
-                                                );
-                                                // Refresh products when returning from detail
-                                                if (context.mounted) {
-                                                  context
-                                                      .read<ProductViewModel>()
-                                                      .fetchProducts(
-                                                        isRefresh: true,
-                                                      );
-                                                }
-                                              },
-                                              onFavoritePressed: () {
-                                                final authVM = context
-                                                    .read<AuthViewModel>();
-                                                if (authVM.user == null) {
-                                                  Navigator.push(
-                                                    context,
-                                                    MaterialPageRoute(
-                                                      builder: (context) =>
-                                                          const LoginView(),
-                                                    ),
-                                                  );
-                                                  return;
-                                                }
-                                                productViewModel.toggleFavorite(
-                                                  firstProduct,
-                                                );
-                                              },
-                                            ),
+                                        }
+                                      },
+                                      labelColor: AppTheme.primary,
+                                      unselectedLabelColor: const Color(
+                                        0xFF64748B,
+                                      ),
+                                      labelStyle: AppTheme.safePoppins(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppTheme.primary,
+                                      ),
+                                      unselectedLabelStyle:
+                                          AppTheme.safePoppins(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w600,
+                                            color: const Color(0xFF64748B),
                                           ),
-                                        ),
-                                        const SizedBox(width: 16),
-                                        Expanded(
-                                          child: secondProduct != null
-                                              ? AspectRatio(
-                                                  aspectRatio: 0.65,
-                                                  child: ProductCard(
-                                                    product: secondProduct,
-                                                    onTap: () async {
-                                                      await Navigator.push(
-                                                        context,
-                                                        MaterialPageRoute(
-                                                          builder: (context) =>
-                                                              ChangeNotifierProvider(
-                                                                create: (_) =>
-                                                                    ProductDetailViewModel(),
-                                                                child: ProductDetailView(
-                                                                  productId:
-                                                                      secondProduct
-                                                                          .productID!,
-                                                                ),
-                                                              ),
-                                                        ),
-                                                      );
-                                                      // Refresh products when returning from detail
-                                                      if (context.mounted) {
-                                                        context
-                                                            .read<
-                                                              ProductViewModel
-                                                            >()
-                                                            .fetchProducts(
-                                                              isRefresh: true,
-                                                            );
-                                                      }
-                                                    },
-                                                    onFavoritePressed: () {
-                                                      final authVM = context
-                                                          .read<
-                                                            AuthViewModel
-                                                          >();
-                                                      if (authVM.user == null) {
-                                                        Navigator.push(
-                                                          context,
-                                                          MaterialPageRoute(
-                                                            builder: (context) =>
-                                                                const LoginView(),
-                                                          ),
-                                                        );
-                                                        return;
-                                                      }
-                                                      productViewModel
-                                                          .toggleFavorite(
-                                                            secondProduct,
-                                                          );
-                                                    },
-                                                  ),
+                                      tabs: [
+                                        Tab(
+                                          child:
+                                              productViewModel.sortType ==
+                                                  'default'
+                                              ? const Icon(
+                                                  Icons.auto_awesome,
+                                                  size: 20,
                                                 )
-                                              : const SizedBox(), // Empty holder
+                                              : const Text('En Yeniler'),
+                                        ),
+                                        Tab(
+                                          child:
+                                              productViewModel.sortType ==
+                                                  'location'
+                                              ? const Icon(
+                                                  Icons.near_me_rounded,
+                                                  size: 20,
+                                                )
+                                              : const Text('Yakınımda'),
                                         ),
                                       ],
                                     ),
-                                  );
-                                },
-                                // Count rough estimate: (Products / 2) + Banners
-                                childCount: (() {
-                                  final productCount =
-                                      productViewModel.products.length;
-                                  final rowCount = (productCount / 2).ceil();
-                                  final bannerCount = rowCount ~/ 2;
-                                  return rowCount + bannerCount;
-                                })(),
+                                  ),
+
+                                  const SizedBox(width: 10),
+
+                                  // Notification Icon
+                                  GestureDetector(
+                                    onTap: () {
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const NotificationsView(),
+                                        ),
+                                      );
+                                    },
+                                    child: Consumer<NotificationViewModel>(
+                                      builder: (context, notificationVM, child) {
+                                        return Stack(
+                                          clipBehavior: Clip.none,
+                                          children: [
+                                            Container(
+                                              padding: const EdgeInsets.all(9),
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                color: Colors.white,
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Colors.black
+                                                        .withOpacity(0.04),
+                                                    blurRadius: 4,
+                                                    offset: const Offset(0, 2),
+                                                  ),
+                                                ],
+                                              ),
+                                              child: const Icon(
+                                                Icons
+                                                    .notifications_none_rounded,
+                                                color: AppTheme.textPrimary,
+                                                size: 22,
+                                              ),
+                                            ),
+                                            if (notificationVM.unreadCount > 0)
+                                              Positioned(
+                                                top: -2,
+                                                right: -2,
+                                                child: Container(
+                                                  padding: const EdgeInsets.all(
+                                                    4,
+                                                  ),
+                                                  constraints:
+                                                      const BoxConstraints(
+                                                        minWidth: 16,
+                                                        minHeight: 16,
+                                                      ),
+                                                  decoration: BoxDecoration(
+                                                    shape: BoxShape.circle,
+                                                    color: AppTheme.error,
+                                                    border: Border.all(
+                                                      color: Colors.white,
+                                                      width: 1.5,
+                                                    ),
+                                                  ),
+                                                  child: Text(
+                                                    notificationVM.unreadCount >
+                                                            9
+                                                        ? '9+'
+                                                        : notificationVM
+                                                              .unreadCount
+                                                              .toString(),
+                                                    style: const TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 8,
+                                                      fontWeight:
+                                                          FontWeight.w800,
+                                                    ),
+                                                    textAlign: TextAlign.center,
+                                                  ),
+                                                ),
+                                              ),
+                                          ],
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
 
-                        // Loading More Indicator
-                        if (productViewModel.isLoadMoreRunning)
-                          const SliverToBoxAdapter(
+                          // Search Bar
+                          SliverToBoxAdapter(
                             child: Padding(
-                              padding: EdgeInsets.symmetric(vertical: 20),
-                              child: Center(child: CircularProgressIndicator()),
+                              padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                ChangeNotifierProvider(
+                                                  create: (_) =>
+                                                      SearchViewModel(),
+                                                  child: const SearchView(),
+                                                ),
+                                          ),
+                                        );
+                                      },
+                                      child: Container(
+                                        height: 50,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.circular(
+                                            16,
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withOpacity(
+                                                0.03,
+                                              ),
+                                              blurRadius: 10,
+                                              offset: const Offset(0, 4),
+                                            ),
+                                          ],
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            const Icon(
+                                              Icons.search_rounded,
+                                              color: Color(0xFF94A3B8),
+                                              size: 22,
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Text(
+                                              'Neye ihtiyacın var?',
+                                              style: AppTheme.safePoppins(
+                                                color: const Color(0xFF94A3B8),
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  GestureDetector(
+                                    onTap: () {
+                                      _showFilterBottomSheet(context);
+                                    },
+                                    child: Container(
+                                      height: 50,
+                                      width: 50,
+                                      decoration: BoxDecoration(
+                                        color: AppTheme.primary,
+                                        borderRadius: BorderRadius.circular(16),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: AppTheme.primary.withOpacity(
+                                              0.2,
+                                            ),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 4),
+                                          ),
+                                        ],
+                                      ),
+                                      child: const Icon(
+                                        Icons.tune_rounded,
+                                        color: Colors.white,
+                                        size: 22,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
 
-                        const SliverToBoxAdapter(
-                          child: SizedBox(height: 100),
-                        ), // Bottom padding
-                      ],
-                    ),
-                  );
-                },
+                          // Categories
+                          SliverToBoxAdapter(
+                            child: SizedBox(
+                              height: 105,
+                              child:
+                                  homeViewModel.categories.isEmpty &&
+                                      homeViewModel.isCategoriesLoading
+                                  ? _buildCategorySkeleton()
+                                  : ListView.separated(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 12,
+                                      ),
+                                      scrollDirection: Axis.horizontal,
+                                      itemCount:
+                                          homeViewModel.categories.isEmpty
+                                          ? 1
+                                          : homeViewModel.categories.length + 1,
+                                      separatorBuilder: (c, i) =>
+                                          const SizedBox(width: 12),
+                                      itemBuilder: (context, index) {
+                                        if (index == 0) {
+                                          final isAllSelected =
+                                              productViewModel
+                                                  .selectedCategoryId ==
+                                              0;
+                                          return GestureDetector(
+                                            onTap: () {
+                                              homeViewModel.clearFilters();
+                                              productViewModel
+                                                  .clearAllFilters();
+                                            },
+                                            child: SizedBox(
+                                              width: 70,
+                                              child: Column(
+                                                children: [
+                                                  Container(
+                                                    width: 44,
+                                                    height: 44,
+                                                    decoration: BoxDecoration(
+                                                      color: isAllSelected
+                                                          ? AppTheme.primary
+                                                          : Colors.white,
+                                                      shape: BoxShape.circle,
+                                                      boxShadow: [
+                                                        BoxShadow(
+                                                          color: Colors.black
+                                                              .withOpacity(
+                                                                0.05,
+                                                              ),
+                                                          blurRadius: 6,
+                                                          offset: const Offset(
+                                                            0,
+                                                            3,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                      border: isAllSelected
+                                                          ? null
+                                                          : Border.all(
+                                                              color: Colors
+                                                                  .grey
+                                                                  .shade100,
+                                                            ),
+                                                    ),
+                                                    child: Icon(
+                                                      Icons.grid_view_rounded,
+                                                      color: isAllSelected
+                                                          ? Colors.white
+                                                          : AppTheme.primary,
+                                                      size: 20,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 8),
+                                                  Text(
+                                                    'Tümü',
+                                                    textAlign: TextAlign.center,
+                                                    style: AppTheme.safePoppins(
+                                                      fontSize: 11,
+                                                      fontWeight: isAllSelected
+                                                          ? FontWeight.w700
+                                                          : FontWeight.w600,
+                                                      color: isAllSelected
+                                                          ? AppTheme.primary
+                                                          : AppTheme
+                                                                .textPrimary,
+                                                    ),
+                                                  ),
+                                                  if (isAllSelected)
+                                                    Container(
+                                                      margin:
+                                                          const EdgeInsets.only(
+                                                            top: 4,
+                                                          ),
+                                                      width: 4,
+                                                      height: 4,
+                                                      decoration:
+                                                          const BoxDecoration(
+                                                            color: AppTheme
+                                                                .primary,
+                                                            shape:
+                                                                BoxShape.circle,
+                                                          ),
+                                                    ),
+                                                ],
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                        final category =
+                                            homeViewModel.categories[index - 1];
+                                        final isSelected =
+                                            productViewModel
+                                                .selectedCategoryId ==
+                                            category.catID;
+                                        return CategoryCard(
+                                          category: category,
+                                          isSelected: isSelected,
+                                          onTap: () {
+                                            homeViewModel.setSelectedCategory(
+                                              category,
+                                            );
+                                            productViewModel.filterByCategory(
+                                              category.catID,
+                                            );
+                                          },
+                                        );
+                                      },
+                                    ),
+                            ),
+                          ),
+
+                          // Product List with Interspersed Banners
+                          if (productViewModel.isLoading &&
+                              productViewModel.products.isEmpty)
+                            _buildProductListSkeleton()
+                          else if (productViewModel.errorMessage != null &&
+                              productViewModel.products.isEmpty)
+                            SliverFillRemaining(
+                              child: Center(
+                                child: Text(productViewModel.errorMessage!),
+                              ),
+                            )
+                          else if (productViewModel.products.isEmpty)
+                            SliverFillRemaining(
+                              hasScrollBody: false,
+                              child: _buildEmptyState(context),
+                            )
+                          else
+                            SliverPadding(
+                              padding: const EdgeInsets.all(16),
+                              sliver: SliverList(
+                                delegate: SliverChildBuilderDelegate(
+                                  (context, index) {
+                                    const int kCycleSize =
+                                        3; // Row, Row, Banner
+
+                                    // Check if it's a Banner Slot
+                                    if ((index + 1) % kCycleSize == 0) {
+                                      return const Padding(
+                                        padding: EdgeInsets.only(bottom: 16),
+                                        child: BannerAdWidget(),
+                                      );
+                                    }
+
+                                    // Calculate Product Row
+                                    // How many banners before this index?
+                                    final int bannersBefore =
+                                        (index + 1) ~/ kCycleSize;
+                                    // How many product rows (items in list that are not banners)
+                                    final int productRowsBefore =
+                                        index - bannersBefore;
+                                    // First product index for this row
+                                    final int startProductIndex =
+                                        productRowsBefore * 2;
+
+                                    if (startProductIndex >=
+                                        productViewModel.products.length) {
+                                      return null;
+                                    }
+
+                                    final firstProduct = productViewModel
+                                        .products[startProductIndex];
+                                    final secondProduct =
+                                        (startProductIndex + 1 <
+                                            productViewModel.products.length)
+                                        ? productViewModel
+                                              .products[startProductIndex + 1]
+                                        : null;
+
+                                    return Padding(
+                                      padding: const EdgeInsets.only(
+                                        bottom: 16,
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            child: AspectRatio(
+                                              aspectRatio: 0.65,
+                                              child: ProductCard(
+                                                product: firstProduct,
+                                                onTap: () async {
+                                                  await Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (context) =>
+                                                          ChangeNotifierProvider(
+                                                            create: (_) =>
+                                                                ProductDetailViewModel(),
+                                                            child: ProductDetailView(
+                                                              productId:
+                                                                  firstProduct
+                                                                      .productID!,
+                                                            ),
+                                                          ),
+                                                    ),
+                                                  );
+                                                  // Refresh products when returning from detail
+                                                  if (context.mounted) {
+                                                    context
+                                                        .read<
+                                                          ProductViewModel
+                                                        >()
+                                                        .fetchProducts(
+                                                          isRefresh: true,
+                                                        );
+                                                  }
+                                                },
+                                                onFavoritePressed: () {
+                                                  final authVM = context
+                                                      .read<AuthViewModel>();
+                                                  if (authVM.user == null) {
+                                                    Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                        builder: (context) =>
+                                                            const LoginView(),
+                                                      ),
+                                                    );
+                                                    return;
+                                                  }
+                                                  productViewModel
+                                                      .toggleFavorite(
+                                                        firstProduct,
+                                                      );
+                                                },
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 16),
+                                          Expanded(
+                                            child: secondProduct != null
+                                                ? AspectRatio(
+                                                    aspectRatio: 0.65,
+                                                    child: ProductCard(
+                                                      product: secondProduct,
+                                                      onTap: () async {
+                                                        await Navigator.push(
+                                                          context,
+                                                          MaterialPageRoute(
+                                                            builder: (context) =>
+                                                                ChangeNotifierProvider(
+                                                                  create: (_) =>
+                                                                      ProductDetailViewModel(),
+                                                                  child: ProductDetailView(
+                                                                    productId:
+                                                                        secondProduct
+                                                                            .productID!,
+                                                                  ),
+                                                                ),
+                                                          ),
+                                                        );
+                                                        // Refresh products when returning from detail
+                                                        if (context.mounted) {
+                                                          context
+                                                              .read<
+                                                                ProductViewModel
+                                                              >()
+                                                              .fetchProducts(
+                                                                isRefresh: true,
+                                                              );
+                                                        }
+                                                      },
+                                                      onFavoritePressed: () {
+                                                        final authVM = context
+                                                            .read<
+                                                              AuthViewModel
+                                                            >();
+                                                        if (authVM.user ==
+                                                            null) {
+                                                          Navigator.push(
+                                                            context,
+                                                            MaterialPageRoute(
+                                                              builder: (context) =>
+                                                                  const LoginView(),
+                                                            ),
+                                                          );
+                                                          return;
+                                                        }
+                                                        productViewModel
+                                                            .toggleFavorite(
+                                                              secondProduct,
+                                                            );
+                                                      },
+                                                    ),
+                                                  )
+                                                : const SizedBox(), // Empty holder
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                  // Count rough estimate: (Products / 2) + Banners
+                                  childCount: (() {
+                                    final productCount =
+                                        productViewModel.products.length;
+                                    final rowCount = (productCount / 2).ceil();
+                                    final bannerCount = rowCount ~/ 2;
+                                    return rowCount + bannerCount;
+                                  })(),
+                                ),
+                              ),
+                            ),
+
+                          // Loading More Indicator
+                          if (productViewModel.isLoadMoreRunning)
+                            const SliverToBoxAdapter(
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(vertical: 20),
+                                child: Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                              ),
+                            ),
+
+                          const SliverToBoxAdapter(
+                            child: SizedBox(height: 100),
+                          ), // Bottom padding
+                        ],
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
       // Bottom Navigation Bar
