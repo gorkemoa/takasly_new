@@ -89,6 +89,18 @@ class CacheService {
     await prefs.setBool(_onboardingKey, true);
   }
 
+  static const String _notificationPromptKey = 'notification_prompt_shown';
+
+  Future<bool> isNotificationPromptShown() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_notificationPromptKey) ?? false;
+  }
+
+  Future<void> setNotificationPromptShown() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_notificationPromptKey, true);
+  }
+
   Future<void> clearCache() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_categoriesKey);

@@ -13,6 +13,8 @@ import '../../models/general_models.dart';
 import '../../models/products/product_models.dart' show Category;
 import '../widgets/category_selection_view.dart';
 import '../../services/analytics_service.dart';
+import '../../viewmodels/auth_viewmodel.dart';
+import '../../models/account/update_user_model.dart';
 
 class AddProductView extends HookWidget {
   final List<File>? initialImages;
@@ -280,6 +282,35 @@ class _AddProductViewBody extends HookWidget {
       userId = int.tryParse(rawUserId);
 
     if (token != null && userId != null) {
+      // Check for mandatory profile info if missing
+      final authViewModel = context.read<AuthViewModel>();
+      // Ensure we have the latest profile
+      if (authViewModel.userProfile == null) {
+        await authViewModel.getUser();
+      }
+
+      final profile = authViewModel.userProfile;
+      final bool isNameMissing =
+          (profile?.userFirstname?.trim().isEmpty ?? true) ||
+          (profile?.userLastname?.trim().isEmpty ?? true);
+      final bool isPhoneMissing =
+          (profile?.userPhone == null || profile!.userPhone!.isEmpty);
+
+      if (isNameMissing || isPhoneMissing) {
+        if (context.mounted) {
+          final bool profileUpdated = await _showProfileCompletionDialog(
+            context,
+            authViewModel,
+            isNameMissing,
+            isPhoneMissing,
+          );
+          if (!profileUpdated) {
+            // User cancelled profile update, stop submission
+            return;
+          }
+        }
+      }
+
       final productId = await viewModel.submitProduct(token, userId);
 
       // If failed, check for missing fields and navigate
@@ -449,6 +480,165 @@ class _AddProductViewBody extends HookWidget {
       }
     }
   }
+}
+
+Future<bool> _showProfileCompletionDialog(
+  BuildContext context,
+  AuthViewModel authViewModel,
+  bool isNameMissing,
+  bool isPhoneMissing,
+) async {
+  final nameController = TextEditingController(
+    text: authViewModel.userProfile?.userFirstname,
+  );
+  final surnameController = TextEditingController(
+    text: authViewModel.userProfile?.userLastname,
+  );
+  final phoneController = TextEditingController(
+    text: authViewModel.userProfile?.userPhone,
+  );
+
+  return await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => PopScope(
+          canPop: false,
+          child: AlertDialog(
+            title: const Text('Profilini Tamamla 🚀'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Güvenli bir takas deneyimi için eksik bilgilerini tamamlaman gerekiyor.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 14, color: Colors.black87),
+                  ),
+                  const SizedBox(height: 20),
+                  if (isNameMissing) ...[
+                    TextField(
+                      controller: nameController,
+                      decoration: InputDecoration(
+                        labelText: 'Ad',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey[50],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: surnameController,
+                      decoration: InputDecoration(
+                        labelText: 'Soyad',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey[50],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                  if (isPhoneMissing)
+                    TextField(
+                      controller: phoneController,
+                      keyboardType: TextInputType.phone,
+                      decoration: InputDecoration(
+                        labelText: 'Telefon Numarası',
+                        hintText: '05XXXXXXXXX',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey[50],
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false), // Cancel
+                child: const Text(
+                  'İptal',
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  final name = nameController.text.trim();
+                  final surname = surnameController.text.trim();
+                  final phone = phoneController.text.trim();
+
+                  if (isNameMissing && (name.isEmpty || surname.isEmpty)) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Lütfen ad ve soyad giriniz.'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                    return;
+                  }
+
+                  if (isPhoneMissing && (phone.isEmpty || phone.length < 10)) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Geçerli bir telefon numarası giriniz.'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                    return;
+                  }
+
+                  // Submit update
+                  await authViewModel.updateAccount(
+                    UpdateUserRequestModel(
+                      userFirstname: isNameMissing ? name : null,
+                      userLastname: isNameMissing ? surname : null,
+                      userPhone: isPhoneMissing ? phone : null,
+                    ),
+                  );
+
+                  if (authViewModel.state == AuthState.success) {
+                    if (context.mounted) Navigator.pop(context, true);
+                  } else {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            authViewModel.errorMessage ??
+                                'Güncelleme başarısız.',
+                          ),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text(
+                  'Kaydet ve Devam Et',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+          ),
+        ),
+      ) ??
+      false;
 }
 
 String _getStepTitle(int step) {

@@ -11,6 +11,8 @@ import 'package:takasly/views/onboarding/onboarding_view.dart';
 import 'package:takasly/views/products/add_product_view.dart';
 import 'package:takasly/views/splash/splash_view.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
+import 'package:app_tracking_transparency/app_tracking_transparency.dart';
+import 'package:takasly/services/ad_service.dart';
 
 import 'package:upgrader/upgrader.dart';
 
@@ -130,6 +132,19 @@ class _RootViewState extends State<RootView> {
   }
 
   Future<void> _initializeAppData() async {
+    // 0. Request App Tracking Transparency (ATT)
+    try {
+      final status = await AppTrackingTransparency.trackingAuthorizationStatus;
+      if (status == TrackingStatus.notDetermined) {
+        await AppTrackingTransparency.requestTrackingAuthorization();
+      }
+    } catch (e) {
+      debugPrint("ATT Error: $e");
+    }
+
+    // Initialize AdService after ATT check
+    await AdService().init();
+
     // 1. Check onboarding status
     final shown = await CacheService().isOnboardingShown();
 

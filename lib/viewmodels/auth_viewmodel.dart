@@ -438,8 +438,6 @@ class AuthViewModel extends ChangeNotifier {
 
     try {
       final GoogleSignIn googleSignIn = GoogleSignIn(
-        serverClientId:
-            '422264804561-jo429jh0c16gk38d3jdaikob0iet5mpd.apps.googleusercontent.com',
         clientId: Platform.isIOS
             ? '422264804561-llio284tijfqkh873at3ci09fna2epl0.apps.googleusercontent.com'
             : null,
@@ -496,8 +494,9 @@ class AuthViewModel extends ChangeNotifier {
       await _processSocialLogin(
         platform: 'apple',
         idToken: identityToken,
-        // appleGivenName: credential.givenName,
-        // appleFamilyName: credential.familyName,
+        appleGivenName: credential.givenName,
+        appleFamilyName: credential.familyName,
+        appleEmail: credential.email,
       );
     } catch (e) {
       if (e is SignInWithAppleAuthorizationException &&
@@ -519,6 +518,9 @@ class AuthViewModel extends ChangeNotifier {
   Future<void> _processSocialLogin({
     required String platform,
     required String idToken,
+    String? appleGivenName,
+    String? appleFamilyName,
+    String? appleEmail,
   }) async {
     try {
       // 1. Get Device Info
@@ -544,6 +546,9 @@ class AuthViewModel extends ChangeNotifier {
         version: version,
         fcmToken: fcmToken,
         idToken: idToken,
+        email: appleEmail,
+        firstName: appleGivenName,
+        lastName: appleFamilyName,
       );
 
       _user = await _authService.loginSocial(request);

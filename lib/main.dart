@@ -22,7 +22,6 @@ import 'theme/app_theme.dart';
 import 'services/firebase_messaging_service.dart';
 import 'services/navigation_service.dart';
 
-import 'services/ad_service.dart';
 import 'services/analytics_service.dart';
 import 'services/in_app_review_service.dart';
 import 'widgets/global_interaction_observer.dart'; // Import GlobalInteractionObserver
@@ -39,8 +38,7 @@ void main() async {
   // Initialize Firebase Messaging Service
   await FirebaseMessagingService.initialize();
 
-  // Initialize AdService
-  await AdService().init();
+  // AdService init moved to RootView to wait for ATT
 
   // Initialize InAppReview Service
   await InAppReviewService().init();
@@ -95,10 +93,17 @@ class _MyAppState extends State<MyApp> {
         supportedLocales: const [Locale('tr', 'TR'), Locale('en', 'US')],
         home: const RootView(),
         builder: (context, child) {
+          final mediaQuery = MediaQuery.of(context);
+
           return MediaQuery(
-            data: MediaQuery.of(
-              context,
-            ).copyWith(textScaler: TextScaler.noScaling, boldText: false),
+            data: mediaQuery.copyWith(
+              // AŞIRI büyümeyi engelle, ama erişilebilirliği öldürme
+              textScaler: mediaQuery.textScaler.clamp(
+                minScaleFactor: 1.0,
+                maxScaleFactor: 1.15, // 1.10–1.20 arası ideal
+              ),
+              boldText: false, // Kalın yazıların tasarımı bozmasını engelle
+            ),
             child: DefaultTextStyle(
               // Android'deki yazı kaymalarını ve "patlamaları" engellemek için
               // tüm uygulamada geçerli tek bir yazı yüksekliği ve hizalama kuralı.
@@ -111,9 +116,8 @@ class _MyAppState extends State<MyApp> {
               ),
               child: GlobalInteractionObserver(
                 child: GestureDetector(
-                  onTap: () {
-                    FocusManager.instance.primaryFocus?.unfocus();
-                  },
+                  behavior: HitTestBehavior.translucent,
+                  onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
                   child: child,
                 ),
               ),
