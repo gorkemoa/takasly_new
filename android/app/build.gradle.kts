@@ -47,7 +47,7 @@ android {
         applicationId = "com.rivorya.takaslyapp"
         minSdk = 23
         targetSdk = flutter.targetSdkVersion
-        versionCode = 4
+        versionCode = 5
         versionName = "2.0.2"
     }
 

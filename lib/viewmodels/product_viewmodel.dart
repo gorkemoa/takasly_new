@@ -50,19 +50,23 @@ class ProductViewModel extends ChangeNotifier {
       if (position != null) {
         _currentFilter.userLat = position.latitude.toString();
         _currentFilter.userLong = position.longitude.toString();
-        _currentFilter.sortType = 'location'; // Set sort type to location
+        // Removed automatic switch to 'location' sort
         _logger.i(
-          'Location fetched: ${position.latitude}, ${position.longitude}. Sort type set to location.',
+          'Location fetched: ${position.latitude}, ${position.longitude}. Sort type preserved: ${_currentFilter.sortType}',
         );
       } else {
         _logger.w('Location could not be fetched. Using default sort.');
-        _currentFilter.sortType = 'default';
+        // Only fallback to default if we were strictly trying to use location??
+        // Actually, if location fails, we just don't have coords.
+        // We shouldn't force 'default' unless we were stuck in 'location' mode without coords.
+        // But for safety, leaving it as default is fine if we failed to get location.
+        // However, sticking to the plan: we just want to avoid forcing 'location'.
         _currentFilter.userLat = "";
         _currentFilter.userLong = "";
       }
     } catch (e) {
       _logger.e('Error fetching location: $e');
-      _currentFilter.sortType = 'default';
+      // On error, clear coords
       _currentFilter.userLat = "";
       _currentFilter.userLong = "";
     }
@@ -71,7 +75,7 @@ class ProductViewModel extends ChangeNotifier {
   void updateLocation(double lat, double long) {
     _currentFilter.userLat = lat.toString();
     _currentFilter.userLong = long.toString();
-    _currentFilter.sortType = 'location';
+    // Removed automatic switch to 'location' sort
     _logger.i('Location updated externally: $lat, $long');
     fetchProducts(isRefresh: true);
   }
