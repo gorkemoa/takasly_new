@@ -217,6 +217,8 @@ class _ProductDetailViewState extends State<ProductDetailView> {
 
                   _buildPromoteSection(product),
 
+                  _buildTradePreferenceSection(product),
+
                   _buildDescription(product),
 
                   const SizedBox(height: 56),
@@ -738,6 +740,35 @@ class _ProductDetailViewState extends State<ProductDetailView> {
               height: 1.5,
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTradePreferenceSection(ProductDetail product) {
+    if (product.tradeFor == null || product.tradeFor!.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            "Takas Tercihi",
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            product.tradeFor!,
+            style: const TextStyle(
+              fontSize: 14,
+              color: Color(0xFF424242),
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 12),
         ],
       ),
     );

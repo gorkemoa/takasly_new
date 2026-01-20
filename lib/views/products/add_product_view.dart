@@ -592,12 +592,33 @@ Future<bool> _showProfileCompletionDialog(
                     return;
                   }
 
-                  // Submit update
+                  // Get existing profile data to prevent data loss
+                  final user = authViewModel.userProfile;
+
+                  // Map gender string to int
+                  int gender = 3; // Default: Belirtilmemiş
+                  if (user?.userGender == "Erkek") {
+                    gender = 1;
+                  } else if (user?.userGender == "Kadın") {
+                    gender = 2;
+                  }
+
+                  // Map ShowContact
+                  int showContact = (user?.isShowContact == true) ? 1 : 0;
+
+                  // Submit update with ALL fields
                   await authViewModel.updateAccount(
                     UpdateUserRequestModel(
-                      userFirstname: isNameMissing ? name : null,
-                      userLastname: isNameMissing ? surname : null,
-                      userPhone: isPhoneMissing ? phone : null,
+                      userFirstname: isNameMissing ? name : user?.userFirstname,
+                      userLastname: isNameMissing
+                          ? surname
+                          : user?.userLastname,
+                      userPhone: isPhoneMissing ? phone : user?.userPhone,
+                      userEmail: user?.userEmail,
+                      userBirthday: user?.userBirthday,
+                      userGender: gender,
+                      profilePhoto: user?.profilePhoto,
+                      showContact: showContact,
                     ),
                   );
 

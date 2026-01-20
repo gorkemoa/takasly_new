@@ -441,8 +441,9 @@ class AuthViewModel extends ChangeNotifier {
         clientId: Platform.isIOS
             ? '422264804561-llio284tijfqkh873at3ci09fna2epl0.apps.googleusercontent.com'
             : null,
-        serverClientId:
-            '422264804561-jo429jh0c16gk38d3jdaikob0iet5mpd.apps.googleusercontent.com',
+        serverClientId: Platform.isIOS
+            ? null
+            : '422264804561-jo429jh0c16gk38d3jdaikob0iet5mpd.apps.googleusercontent.com',
         scopes: <String>['email'],
       );
 

@@ -134,10 +134,17 @@ class _RootViewState extends State<RootView> {
   Future<void> _initializeAppData() async {
     // 0. Request App Tracking Transparency (ATT)
     try {
-      final status = await AppTrackingTransparency.trackingAuthorizationStatus;
+      // iPadOS/iOS requires the app to be in the 'active' state to show the ATT prompt.
+      // If called too early (e.g., during Splash screen), the OS may ignore the request.
+      await Future.delayed(const Duration(milliseconds: 2000));
+
+      var status = await AppTrackingTransparency.trackingAuthorizationStatus;
+
       if (status == TrackingStatus.notDetermined) {
-        await AppTrackingTransparency.requestTrackingAuthorization();
+        status = await AppTrackingTransparency.requestTrackingAuthorization();
       }
+
+      debugPrint("ATT Status after request: $status");
     } catch (e) {
       debugPrint("ATT Error: $e");
     }
